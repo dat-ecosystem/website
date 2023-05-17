@@ -1,0 +1,30 @@
+{
+  "name": "dat-ecosystem-website",
+  "version": "0.0.1",
+  "description": "The Dat ecosystem garden: Nurturing open-source projects that strengthen P2P foundations. Focused on builder tools, infrastructure, research, and community resources. Join us in shaping the future of decentralized collaboration and innovation.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "budo page/page.js:bundle.js --open --live",
+    "build": "browserify page/page.js > bundle.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mehrabbruno/dat-ecosystem-website.git"
+  },
+  "keywords": [
+    "open-source",
+    "dat",
+    "ecosystem"
+  ],
+  "author": "Mehrab Gazbur",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Mehrabbruno/dat-ecosystem-website/issues"
+  },
+  "homepage": "https://github.com/Mehrabbruno/dat-ecosystem-website#readme",
+  "devDependencies": {
+    "browserify": "^17.0.0",
+    "budo": "^11.8.4"
+  }
+}
