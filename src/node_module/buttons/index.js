@@ -15,6 +15,8 @@ function icon_button(props){
     const theme = get_theme()
     sheet.replaceSync(theme)
 
+    const { src } = props
+
     const el = document.createElement('div')
     const shadow = el.attachShadow({mode:'closed'})
 
@@ -22,7 +24,7 @@ function icon_button(props){
     icon_button.classList.add('icon_btn')
     
     const icon = document.createElement('img')
-    icon.src = props.src
+    icon.src = src
     icon_button.append(icon)
 
     icon_button.onclick = (e) => toggle_class(e)
@@ -106,7 +108,7 @@ function text_button(props){
                 padding:10px 5px;
                 height:40px;
                 box-sizing:border-box;
-                width: max-content !important;
+                width: 100%;
                 cursor:pointer;
                 border: 1px solid var(--ac-4);
                 background-color: var(--white);
@@ -161,7 +163,7 @@ function logo_button(){
                 --ac-4: #293648;
             }
             .logo_button{
-                width: max-content;
+                width: 100%;
                 height:40px;
                 box-sizing:border-box;
                 padding: 10px;
