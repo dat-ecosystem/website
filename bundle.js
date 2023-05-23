@@ -35,6 +35,8 @@ function icon_button(props){
     const theme = get_theme()
     sheet.replaceSync(theme)
 
+    const { src } = props
+
     const el = document.createElement('div')
     const shadow = el.attachShadow({mode:'closed'})
 
@@ -42,7 +44,7 @@ function icon_button(props){
     icon_button.classList.add('icon_btn')
     
     const icon = document.createElement('img')
-    icon.src = props.src
+    icon.src = src
     icon_button.append(icon)
 
     icon_button.onclick = (e) => toggle_class(e)
@@ -126,7 +128,7 @@ function text_button(props){
                 padding:10px 5px;
                 height:40px;
                 box-sizing:border-box;
-                width: max-content !important;
+                width: 100%;
                 cursor:pointer;
                 border: 1px solid var(--ac-4);
                 background-color: var(--white);
@@ -181,7 +183,7 @@ function logo_button(){
                 --ac-4: #293648;
             }
             .logo_button{
-                width: max-content;
+                width: 100%;
                 height:40px;
                 box-sizing:border-box;
                 padding: 10px;
@@ -222,36 +224,72 @@ function navbar(){
     const navbar = document.createElement('div')
     navbar.classList.add('navbar')
 
-    // Adding page list buttons
+    shadow.innerHTML = `
+    <div class="navbar_wrapper">
+        <div class="navbar">
+            <div class="nav_toggle_wrapper"></div>
+            <div class="page_btns_wrapper"></div>
+            <div class="icon_btn_wrapper"></div>
+        </div>
+    </div>
+    <style>${get_theme()}</style>
+  `
+
+
+
+    // Nav Toggle Buttons
     const consortium_btn = buttons.icon_button({src:'terminal_icon.png'})
-    const home_btn = buttons.text_button({text:'HOME'})
-    const project_btn = buttons.text_button({text:'PROJECTS'})
-    const growth_program_btn = buttons.text_button({text:'GROWTH PROGRAM'})
-    const timeline = buttons.text_button({text:'TIMELINE'})
     const logo_btn = buttons.logo_button()
-    const page_btn_list = document.createElement('div')
-    page_btn_list.classList.add('page_list')
-    page_btn_list.append(consortium_btn, logo_btn, home_btn, project_btn, growth_program_btn, timeline)
+    logo_btn.classList.add('logo_btn')
+    const filter_btn = buttons.icon_button({src:'terminal_icon.png'})
+    filter_btn.classList.add('filter_btn')
+
+    const nav_toggle_wrapper = shadow.querySelector('.nav_toggle_wrapper');
+    nav_toggle_wrapper.append(consortium_btn, logo_btn, filter_btn);
+
+
+
+
+
+    // Page List Buttons
+    const text_btns = [
+        { text: 'HOME', element: buttons.text_button({ text: 'HOME' }) },
+        { text: 'PROJECTS', element: buttons.text_button({ text: 'PROJECTS' }) },
+        { text: 'GROWTH PROGRAM', element: buttons.text_button({ text: 'GROWTH PROGRAM' }) },
+        { text: 'TIMELINE', element: buttons.text_button({ text: 'TIMELINE' }) }
+    ]; 
+    for (const button_data of text_btns) {
+        const { element } = button_data;
+        element.classList.add('text_button');
+    }
+    const page_btns_wrapper = shadow.querySelector('.page_btns_wrapper');
+    page_btns_wrapper.append(...text_btns.map(button_data => button_data.element));
+
+
+
 
 
     // Adding social and action buttons
-    const theme_btn = buttons.icon_button({src:'terminal_icon.png'})
-    const terminal_btn = buttons.icon_button({src:'terminal_icon.png'})
-    const discord_btn = buttons.icon_button({src:'terminal_icon.png'})
-    const twitter_btn = buttons.icon_button({src:'terminal_icon.png'})
-    const github_btn = buttons.icon_button({src:'terminal_icon.png'})
-    const blogger_btn = buttons.icon_button({src:'terminal_icon.png'})
-    const social_list = document.createElement('div')
-    social_list.classList.add('socials_list')
-    social_list.append(theme_btn, terminal_btn, discord_btn, twitter_btn, github_btn, blogger_btn)
+    const icon_btns = [
+        { src: 'terminal_icon.png', element: buttons.icon_button({ src: 'terminal_icon.png' }) },
+        { src: 'terminal_icon.png', element: buttons.icon_button({ src: 'terminal_icon.png' }) },
+        { src: 'terminal_icon.png', element: buttons.icon_button({ src: 'terminal_icon.png' }) },
+        { src: 'terminal_icon.png', element: buttons.icon_button({ src: 'terminal_icon.png' }) },
+        { src: 'terminal_icon.png', element: buttons.icon_button({ src: 'terminal_icon.png' }) },
+        { src: 'terminal_icon.png', element: buttons.icon_button({ src: 'terminal_icon.png' }) }
+    ]; 
+    for (const button_data of icon_btns) {
+        const { element } = button_data;
+        element.classList.add('icon_btn');
+    }
+    const icon_btn_wrapper = shadow.querySelector('.icon_btn_wrapper');
+    icon_btn_wrapper.append(...icon_btns.map(button_data => button_data.element));
 
-    // Appending to navbar
-    navbar.append(page_btn_list, social_list)
 
-    const style = document.createElement('style')
-    style.textContent = get_theme()
 
-    shadow.append(navbar, style)
+
+
+    // shadow.append(navbar)
     shadow.adoptedStyleSheets = [sheet]
     return el
 
@@ -264,10 +302,14 @@ function navbar(){
                 --ac-3: #88559D;
                 --ac-4: #293648;
             }
+            .navbar_wrapper{
+                container-type: inline-size;
+            }
             .navbar{
-                display: flex;
-                justify-content: space-between;
+                display: block;
                 width:100%;
+                height:40px;
+                overflow:hidden;
                 border-bottom: 1px solid var(--ac-4);
 
                 // background-color: #EEECE9;
@@ -280,12 +322,80 @@ function navbar(){
                     repeating-conic-gradient(at 33% 33%,var(--_g)),
                     repeating-conic-gradient(at 66% 66%,var(--_g)),
                     #777674;  /* second color */ 
-                background-size: var(--s) var(--s); 
-                  
+                background-size: var(--s) var(--s);                   
             }
-            .page_list{
+            .navbar.active{
+                height:max-content;
+            }
+
+
+            /* Starting buttons wrapper */
+            .nav_toggle_wrapper{
                 display: flex;
+                width:100%;
+                justify-content:stretch;
             }
+            .nav_toggle_wrapper .logo_btn{
+                width:100% !important;
+                flex-grow:1;
+            }
+            .page_btns_wrapper{
+                width:100%;
+                display:flex;
+                flex-direction:column;
+            }
+            .page_btns_wrapper .text_button{
+                width:100%;
+                flex-grow:1;
+            }
+            .icon_btn_wrapper{
+                display:flex;
+                justify-content:flex-start;
+                // grid-template-columns: repeat(6, 2fr)
+            }
+
+
+
+
+
+
+
+
+
+
+            .page_list{
+                display: none;
+            }
+
+            @container(min-width: 856px) {
+
+                .navbar{
+                    display: flex;
+                }
+
+                .nav_toggle_wrapper{
+                    width:max-content;
+                    display:flex;
+                }
+                .nav_toggle_wrapper .logo_btn{
+                    width: max-content !important;
+                }
+                .page_list{
+                    display:flex;
+                }
+
+                .nav_toggle_wrapper .filter_btn{
+                    display: none;
+                }
+                .page_btns_wrapper{
+                    flex-direction: row;
+                }
+                .page_btns_wrapper .text_button{
+                    width:max-content !important;
+                    flex-grow: unset;
+                }
+            }
+            
             .socials_list{
                 display: flex;
             }
