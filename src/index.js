@@ -27,7 +27,10 @@ function home_page () {
     const body_style = document.body.style;
     Object.assign(body_style, {
         margin: '0',
-        padding: '0'
+        padding: '0',
+        opacity: `1`,
+        backgroundImage: `radial-gradient(#A7A6A4 2px, #EEECE9 2px)`,
+        backgroundSize: `16px 16px`
     });
 
     
