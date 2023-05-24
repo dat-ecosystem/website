@@ -1,6 +1,6 @@
 module.exports = home_page
 const navbar = require('navbar')
-const window_bar = require('window_bar')
+const cover_app = require('app_cover')
 
 
 // CSS Boiler Plat
@@ -16,7 +16,7 @@ function home_page () {
 
 
     const navbar_component = navbar()
-    const cover_window = window_bar({name:'Learn_about_us.pdf'})
+    const cover_application = cover_app()
 
     // adding a `main-wrapper` 
     const main = document.createElement('div')
@@ -34,7 +34,7 @@ function home_page () {
     });
 
     
-    main.append(cover_window, style)
+    main.append(cover_application,  style)
     main.adoptedStyleSheets = [sheet]
     shadow.append(navbar_component, main)
     return el
