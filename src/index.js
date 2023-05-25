@@ -33,6 +33,12 @@ function home_page () {
         backgroundSize: `16px 16px`
     });
 
+    // Adding font link
+    var link = document.createElement('link')
+    link.setAttribute('rel', 'stylesheet')
+    link.setAttribute('type', 'text/css')
+    link.setAttribute('href', 'https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap')
+    document.head.appendChild(link)
     
     main.append(cover_application,  style)
     main.adoptedStyleSheets = [sheet]
@@ -50,9 +56,11 @@ function get_theme(){
             --ac-2: #F9A5E4;
             --ac-3: #88559D;
             --ac-4: #293648;
+            font-family: Silkscreen;
         }
         .main-wrapper{
             padding:10px;
+            
         }
 
         @media(min-width: 856px){
