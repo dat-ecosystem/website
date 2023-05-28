@@ -1,6 +1,7 @@
 module.exports = home_page
 const navbar = require('navbar')
 const cover_app = require('app_cover')
+const app_timeline_mini = require('app_timeline_mini')
 
 
 // CSS Boiler Plat
@@ -17,6 +18,7 @@ function home_page () {
 
     const navbar_component = navbar()
     const cover_application = cover_app()
+    const app_timeline = app_timeline_mini()
 
     // adding a `main-wrapper` 
     const main = document.createElement('div')
@@ -40,9 +42,9 @@ function home_page () {
     link.setAttribute('href', 'https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap')
     document.head.appendChild(link)
     
-    main.append(cover_application,  style)
+    main.append(cover_application, app_timeline, style)
     main.adoptedStyleSheets = [sheet]
-    shadow.append(navbar_component, main)
+    shadow.append(main, navbar_component)
     return el
 
 }
@@ -59,13 +61,13 @@ function get_theme(){
             font-family: Silkscreen;
         }
         .main-wrapper{
-            padding:10px;
+            padding:60px 10px;
             
         }
 
         @media(min-width: 856px){
             .main-wrapper{
-                padding:20px;
+                padding:60px 20px;
             }
         }
 
