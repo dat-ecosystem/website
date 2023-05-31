@@ -3,6 +3,8 @@ const navbar = require('navbar')
 const cover_app = require('app_cover')
 const app_timeline_mini = require('app_timeline_mini')
 const app_projects_mini = require('app_projects_mini')
+const app_about_us = require('app_about_us')
+const app_footer = require('app_footer')
 
 
 // CSS Boiler Plat
@@ -21,6 +23,8 @@ function home_page () {
     const cover_application = cover_app()
     const app_timeline = app_timeline_mini()
     const app_projects = app_projects_mini()
+    const app_aboutus = app_about_us()
+    const application_footer = app_footer()
 
     // adding a `main-wrapper` 
     const main = document.createElement('div')
@@ -44,7 +48,7 @@ function home_page () {
     link.setAttribute('href', 'https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap')
     document.head.appendChild(link)
     
-    main.append(cover_application, app_timeline, app_projects, style)
+    main.append(cover_application, app_timeline, app_projects, app_aboutus, application_footer, style)
     main.adoptedStyleSheets = [sheet]
     shadow.append(main, navbar_component)
     return el
