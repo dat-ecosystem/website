@@ -1,4 +1,5 @@
 module.exports = home_page
+
 const navbar = require('navbar')
 const cover_app = require('app_cover')
 const app_timeline_mini = require('app_timeline_mini')
@@ -6,32 +7,40 @@ const app_projects_mini = require('app_projects_mini')
 const app_about_us = require('app_about_us')
 const app_footer = require('app_footer')
 
+const components = [
+    cover_app(),
+    app_timeline_mini(),
+    app_projects_mini(),
+    app_about_us(),
+    app_footer()
+];
 
-// CSS Boiler Plat
-const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
 
+function home_page (opts, protocol) {
 
-function home_page () {
+    // console.log(opts.light_theme)
+    // CSS Boiler Plat
+    const sheet = new CSSStyleSheet
+    sheet.replaceSync(get_theme(opts.light_theme))
+    // Listening to toggle event 
+    const listen = (props) =>{
+        const {active_state} = props
+        if ( active_state === 'light_theme' )  {
+            // active_state = 'dark_theme'
+            sheet.replaceSync( get_theme( opts.dark_theme ) )
+            navbar(listen, {active_state: 'dark_theme'})
+        } else {
+            // active_state = 'light_theme'
+            sheet.replaceSync( get_theme( opts.light_theme ) ) 
+            navbar(listen, {active_state: 'light_theme'})
+        }
+    }
+
+    
 
     const el = document.createElement('div');
     const shadow = el.attachShadow({mode: 'closed'})
 
-
-    const navbar_component = navbar()
-    const cover_application = cover_app()
-    const app_timeline = app_timeline_mini()
-    const app_projects = app_projects_mini()
-    const app_aboutus = app_about_us()
-    const application_footer = app_footer()
-
-    // adding a `main-wrapper` 
-    const main = document.createElement('div')
-    main.classList.add('main-wrapper')
-    const style = document.createElement('style')
-    style.textContent = get_theme()
-    
     const body_style = document.body.style;
     Object.assign(body_style, {
         margin: '0',
@@ -41,34 +50,33 @@ function home_page () {
         backgroundSize: `16px 16px`
     });
 
-    // Adding font link
-    var link = document.createElement('link')
-    link.setAttribute('rel', 'stylesheet')
-    link.setAttribute('type', 'text/css')
-    link.setAttribute('href', 'https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap')
-    document.head.appendChild(link)
+    // adding a `main-wrapper` 
+    shadow.innerHTML = `
+        <div class="main-wrapper"></div>
+        <style>${get_theme}</style>
+    `
+    const main = shadow.querySelector('.main-wrapper')
+    main.append(...components)
     
-    main.append(cover_application, app_timeline, app_projects, app_aboutus, application_footer, style)
-    main.adoptedStyleSheets = [sheet]
-    shadow.append(main, navbar_component)
+    
+    shadow.append(main, navbar(listen, {active_state: 'light_theme'}))
+    shadow.adoptedStyleSheets = [sheet]
     return el
 
 }
 
-
-function get_theme(){
+function get_theme(props){
     return`
         :host{ 
-            --white: white;
-            --ac-1: #2ACA4B;
-            --ac-2: #F9A5E4;
-            --ac-3: #88559D;
-            --ac-4: #293648;
+            --bg_color: ${props.bg_color};
+            --ac-1: ${props.ac_1};
+            --ac-2: ${props.ac_2};
+            --ac-3: ${props.ac_3};
+            --primary_color: ${props.primary_color};
             font-family: Silkscreen;
         }
         .main-wrapper{
             padding:60px 10px;
-            
         }
 
         @media(min-width: 856px){
