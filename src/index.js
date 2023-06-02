@@ -22,21 +22,8 @@ function home_page (opts, protocol) {
     // CSS Boiler Plat
     const sheet = new CSSStyleSheet
     sheet.replaceSync(get_theme(opts.light_theme))
-    // Listening to toggle event 
-    const listen = (props) =>{
-        const {active_state} = props
-        if ( active_state === 'light_theme' )  {
-            // active_state = 'dark_theme'
-            sheet.replaceSync( get_theme( opts.dark_theme ) )
-            navbar(listen, {active_state: 'dark_theme'})
-        } else {
-            // active_state = 'light_theme'
-            sheet.replaceSync( get_theme( opts.light_theme ) ) 
-            navbar(listen, {active_state: 'light_theme'})
-        }
-    }
-
     
+    const state = {}    
 
     const el = document.createElement('div');
     const shadow = el.attachShadow({mode: 'closed'})
@@ -46,7 +33,7 @@ function home_page (opts, protocol) {
         margin: '0',
         padding: '0',
         opacity: `1`,
-        backgroundImage: `radial-gradient(#A7A6A4 2px, #EEECE9 2px)`,
+        backgroundImage: `radial-gradient(${opts.light_theme.primary_color} 2px, ${opts.light_theme.bg_color} 2px)`,
         backgroundSize: `16px 16px`
     });
 
@@ -59,9 +46,33 @@ function home_page (opts, protocol) {
     main.append(...components)
     
     
-    shadow.append(main, navbar(listen, {active_state: 'light_theme'}))
+    shadow.append(main, navbar(opts, protocol))
     shadow.adoptedStyleSheets = [sheet]
     return el
+
+
+
+
+
+    function protocol(message, notify){
+        const { from } = message
+        state[from] = { active_state: 'light_theme', notify}
+        return listen
+    }
+    function listen ( message ){
+        const {from, active_state} = message
+        if ( active_state === 'light_theme' )  {
+            let notify = state['navbar-0'].notify
+            sheet.replaceSync( get_theme( opts.dark_theme ) )
+            Object.assign(body_style, { backgroundImage: `radial-gradient(${opts.dark_theme.primary_color} 2px, ${opts.dark_theme.bg_color} 2px)`, });
+            notify( active_state )
+        } else {
+            let notify = state['navbar-0'].notify
+            Object.assign(body_style, { backgroundImage: `radial-gradient(${opts.light_theme.primary_color} 2px, ${opts.light_theme.bg_color} 2px)`, });
+            sheet.replaceSync( get_theme( opts.light_theme ) ) 
+            notify( active_state )
+        }
+    }
 
 }
 
