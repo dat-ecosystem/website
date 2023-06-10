@@ -4,24 +4,30 @@ const navbar = require('navbar')
 const cover_app = require('app_cover')
 const app_timeline_mini = require('app_timeline_mini')
 const app_projects_mini = require('app_projects_mini')
+const app_projects = require('app_projects')
 const app_about_us = require('app_about_us')
 const app_footer = require('app_footer')
+const project_filter = require('project_filter')
 
 const components = [
+    app_projects(),
+    project_filter(),
     cover_app(),
     app_timeline_mini(),
     app_projects_mini(),
     app_about_us(),
-    app_footer()
+    app_footer(),
 ];
 
+
+// HOME PAGE
 
 function home_page (opts, protocol) {
 
     // console.log(opts.light_theme)
     // CSS Boiler Plat
     const sheet = new CSSStyleSheet
-    sheet.replaceSync(get_theme(opts.light_theme))
+    sheet.replaceSync(home_theme(opts.light_theme))
     
     const state = {}    
 
@@ -40,7 +46,7 @@ function home_page (opts, protocol) {
     // adding a `main-wrapper` 
     shadow.innerHTML = `
         <div class="main-wrapper"></div>
-        <style>${get_theme}</style>
+        <style>${home_theme}</style>
     `
     const main = shadow.querySelector('.main-wrapper')
     main.append(...components)
@@ -63,20 +69,19 @@ function home_page (opts, protocol) {
         const {from, active_state} = message
         if ( active_state === 'light_theme' )  {
             let notify = state['navbar-0'].notify
-            sheet.replaceSync( get_theme( opts.dark_theme ) )
+            sheet.replaceSync( home_theme( opts.dark_theme ) )
             Object.assign(body_style, { backgroundImage: `radial-gradient(${opts.dark_theme.primary_color} 2px, ${opts.dark_theme.bg_color} 2px)`, });
             notify( active_state )
         } else {
             let notify = state['navbar-0'].notify
             Object.assign(body_style, { backgroundImage: `radial-gradient(${opts.light_theme.primary_color} 2px, ${opts.light_theme.bg_color} 2px)`, });
-            sheet.replaceSync( get_theme( opts.light_theme ) ) 
+            sheet.replaceSync( home_theme( opts.light_theme ) ) 
             notify( active_state )
         }
     }
 
 }
-
-function get_theme(props){
+function home_theme(props){
     return`
         :host{ 
             --bg_color: ${props.bg_color};
@@ -98,3 +103,12 @@ function get_theme(props){
 
     `
 }
+
+
+
+
+
+// PROJECT PAGE
+// function project_page(opts, protocol){
+
+// }
