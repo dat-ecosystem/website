@@ -1,6 +1,5 @@
 module.exports = home_page
 
-const navbar = require('navbar')
 const cover_app = require('app_cover')
 const app_timeline_mini = require('app_timeline_mini')
 const app_projects_mini = require('app_projects_mini')
@@ -9,106 +8,85 @@ const app_about_us = require('app_about_us')
 const app_footer = require('app_footer')
 const project_filter = require('project_filter')
 
-const components = [
-    app_projects(),
-    project_filter(),
-    cover_app(),
-    app_timeline_mini(),
-    app_projects_mini(),
-    app_about_us(),
-    app_footer(),
-];
-
 
 // HOME PAGE
 
 function home_page (opts, protocol) {
 
-    // console.log(opts.light_theme)
     // CSS Boiler Plat
     const sheet = new CSSStyleSheet
-    sheet.replaceSync(home_theme(opts.light_theme))
-    
-    const state = {}    
+    const theme = get_theme()
 
-    const el = document.createElement('div');
+    const components = [
+        // app_projects(),
+        // project_filter(),
+        cover_app(),
+        app_timeline_mini(),
+        app_projects_mini(),
+        app_about_us(),
+        app_footer(),
+    ]
+
+    const el = document.createElement('div')
     const shadow = el.attachShadow({mode: 'closed'})
-
-    const body_style = document.body.style;
-    Object.assign(body_style, {
-        margin: '0',
-        padding: '0',
-        opacity: `1`,
-        backgroundImage: `radial-gradient(${opts.light_theme.primary_color} 2px, ${opts.light_theme.bg_color} 2px)`,
-        backgroundSize: `16px 16px`
-    });
 
     // adding a `main-wrapper` 
     shadow.innerHTML = `
         <div class="main-wrapper"></div>
-        <style>${home_theme}</style>
+        <style>${get_theme()}</style>
     `
     const main = shadow.querySelector('.main-wrapper')
     main.append(...components)
-    
-    
-    shadow.append(main, navbar(opts, protocol))
+    shadow.append(main)
     shadow.adoptedStyleSheets = [sheet]
     return el
 
 
-
-
-
-    function protocol(message, notify){
-        const { from } = message
-        state[from] = { active_state: 'light_theme', notify}
-        return listen
-    }
-    function listen ( message ){
-        const {from, active_state} = message
-        if ( active_state === 'light_theme' )  {
-            let notify = state['navbar-0'].notify
-            sheet.replaceSync( home_theme( opts.dark_theme ) )
-            Object.assign(body_style, { backgroundImage: `radial-gradient(${opts.dark_theme.primary_color} 2px, ${opts.dark_theme.bg_color} 2px)`, });
-            notify( active_state )
-        } else {
-            let notify = state['navbar-0'].notify
-            Object.assign(body_style, { backgroundImage: `radial-gradient(${opts.light_theme.primary_color} 2px, ${opts.light_theme.bg_color} 2px)`, });
-            sheet.replaceSync( home_theme( opts.light_theme ) ) 
-            notify( active_state )
+    // Placeholder code for learning purposes
+    // Will be removed
+    function home_protocol (handshake, send){
+        listen.id  = id
+        if (send) return listen
+        const PROTOCOL = {
+            'toggle_display' : toggle_display
+        }
+        send = handshake(null, listen)
+        function listen (message){
+            function format (new_message = {
+                head: [from = 'alice', to = 'bob', message_id = 1],
+                refs: { cause: message.head }, // reply to received message
+                type: 'change_theme',
+                data: `.foo { background-color: red; }`
+            }) { return new_message }
+            console.log(format())
+            // const { head, type, data } = message
+            // const [by, to, id] = head
+            // if (to !== id) return console.error('address unknown', message)
+            // const action = PROTOCOL[type] || invalid
+            // action(message)
+        }
+        function invalid (message) { console.error('invalid type', message) }
+        async function toggle_display ({ head: [to], data: theme }) {
+            // @TODO: apply theme to `sheet` and/or `style` and/or css `var(--property)`
         }
     }
-
 }
-function home_theme(props){
-    return`
-        :host{ 
-            --bg_color: ${props.bg_color};
-            --ac-1: ${props.ac_1};
-            --ac-2: ${props.ac_2};
-            --ac-3: ${props.ac_3};
-            --primary_color: ${props.primary_color};
-            font-family: Silkscreen;
-        }
-        .main-wrapper{
-            padding:60px 10px;
-        }
 
+
+
+function get_theme() {
+    return`
+        .main-wrapper{
+            margin: 0;
+            padding:30px 10px;
+            opacity: 1;
+            background-image: radial-gradient(var(--primary_color) 2px, var(--bg_color) 2px);
+            background-size: 16px 16px;
+        }
         @media(min-width: 856px){
             .main-wrapper{
-                padding:60px 20px;
+                padding-inline:20px;
             }
         }
-
     `
 }
-
-
-
-
-
-// PROJECT PAGE
-// function project_page(opts, protocol){
-
-// }
