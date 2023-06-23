@@ -2,15 +2,13 @@ const home_page = require('..')
 const navbar = require('../src/node_modules/navbar/index')
 const light_theme = require('../src/node_modules/theme/light_theme/index')
 const dark_theme = require('../src/node_modules/theme/dark_theme/index')
-const my_theme = require('../src/node_modules/my_theme/index')
-
 
 // Default Theme
 let current_theme = light_theme
 const sheet = new CSSStyleSheet()
 
 document.body.append( navbar({data: current_theme}, page_protocol))
-document.body.append(home_page(my_theme))
+document.body.append(home_page({data: current_theme}))
 
 // Adding font link
 document.head.innerHTML = ` 
@@ -18,7 +16,6 @@ document.head.innerHTML = `
     <style>${get_theme(current_theme)}</style>
 `
 document.adoptedStyleSheets = [sheet]
-
 
 
 function page_protocol (handshake, send, mid = 0) {
@@ -64,6 +61,9 @@ function get_theme(opts) {
         html, body{
             padding:0px;
             margin: 0px;
+        }
+        img{
+            fill: var(--bg_color);
         }
     `
 }

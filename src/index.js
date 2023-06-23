@@ -13,6 +13,8 @@ const project_filter = require('project_filter')
 
 function home_page (opts, protocol) {
 
+    const {data} = opts
+
     // CSS Boiler Plat
     const sheet = new CSSStyleSheet
     const theme = get_theme()
@@ -20,11 +22,11 @@ function home_page (opts, protocol) {
     const components = [
         // app_projects(),
         // project_filter(),
-        cover_app(),
-        app_timeline_mini(),
-        app_projects_mini(),
-        app_about_us(),
-        app_footer(),
+        cover_app({data}),
+        app_timeline_mini({data}),
+        app_projects_mini({data}),
+        app_about_us({data}),
+        app_footer({data}),
     ]
 
     const el = document.createElement('div')
