@@ -1,4 +1,10 @@
-const home_page = require('..')
+const home_page = require('../src/node_modules/home_page')
+const growth_page = require('../src/node_modules/growth_page')
+const timeline_page = require('../src/node_modules/timeline_page')
+const projects_page = require('../src/node_modules/projects_page')
+const consortium_page = require('../src/node_modules/consortium_page')
+
+
 const navbar = require('../src/node_modules/navbar/index')
 const light_theme = require('../src/node_modules/theme/light_theme/index')
 const dark_theme = require('../src/node_modules/theme/dark_theme/index')
@@ -7,8 +13,32 @@ const dark_theme = require('../src/node_modules/theme/dark_theme/index')
 let current_theme = light_theme
 const sheet = new CSSStyleSheet()
 
+//Default Page
+let current_page = consortium_page({data: current_theme})
+let notify
+const PROTOCOL = {
+    'active_page': 'HOME',
+    'handle_page_change': handle_page_change,
+    'handle_theme_change': handle_theme_change,
+}
+
+
+const page_list = {
+    'HOME': home_page({data: current_theme}),
+    'PROJECTS': projects_page({data: current_theme}),
+    'GROWTH PROGRAM': growth_page({data: current_theme}),
+    'TIMELINE': timeline_page({data: current_theme}),
+    'DEFAULT': consortium_page({data: current_theme})
+}
+
+const theme_list = {
+    'DARK': dark_theme,
+    'LIGHT': light_theme
+}
+
 document.body.append( navbar({data: current_theme}, page_protocol))
-document.body.append(home_page({data: current_theme}))
+document.body.append(current_page)
+handle_page_change('DEFAULT')
 
 // Adding font link
 document.head.innerHTML = ` 
@@ -18,34 +48,49 @@ document.head.innerHTML = `
 document.adoptedStyleSheets = [sheet]
 
 
+function handle_page_change(active_page){
+    PROTOCOL.active_page = active_page;
+    document.body.removeChild(current_page)
+    current_page = page_list[active_page]
+    document.body.append(current_page)
+    const message = {
+        head: ['root', 'navbar', 'navbar'],
+        type: 'theme',
+        data: active_page,
+    }
+    notify(message)
+}
+
+function handle_theme_change(){
+    ;current_theme = current_theme === light_theme ? dark_theme : light_theme
+    sheet.replaceSync( get_theme(current_theme) )
+}
+
 function page_protocol (handshake, send, mid = 0) {
+    notify = send
+
     if (send) return listen
     
-    send = handshake(null, listen)
-    function listen (message) {
-        const PROTOCOL = {
-            'change_theme': change_theme
-        }
-        const {type} = message
-        // const { head, type, data } = message
-        // const [by, to, id] = head
+    function listen (message) {        
+        const { head, type, data } = message
+        const {by, to, id} = head
         // if (to !== id) return console.error('address unknown', message)
         const action = PROTOCOL[type] || invalid
-        action(message)
+        action(data)
     }
-    function invalid (message) { console.error('invalid type', message) }
-    async function change_theme () {
-        // const [to] = head
-        ;current_theme = current_theme === light_theme ? dark_theme : light_theme
-        sheet.replaceSync( get_theme(current_theme) )
-        return send({
-            // head: [id, to, mid++],
-            // refs: { cause: head },
-            // type: 'theme',
-            from: 'page updated',
-            data: current_theme
-        })
-    }
+    // function invalid (message) { console.error('invalid type', message) }
+    // async function change_theme () {
+    //     // const [to] = head
+    //     ;current_theme = current_theme === light_theme ? dark_theme : light_theme
+    //     sheet.replaceSync( get_theme(current_theme) )
+    //     return send({
+    //         // head: [id, to, mid++],
+    //         // refs: { cause: head },
+    //         // type: 'theme',
+    //         from: 'page updated',
+    //         data: current_theme
+    //     })
+    // }
 }
 
 function get_theme(opts) {
@@ -62,7 +107,7 @@ function get_theme(opts) {
             padding:0px;
             margin: 0px;
         }
-        img{
+        svg{
             fill: var(--bg_color);
         }
     `
