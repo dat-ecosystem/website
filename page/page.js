@@ -4,10 +4,11 @@ const timeline_page = require('../src/node_modules/timeline_page')
 const projects_page = require('../src/node_modules/projects_page')
 const consortium_page = require('../src/node_modules/consortium_page')
 
+const terminal = require('../src/node_modules/terminal')
 
-const navbar = require('../src/node_modules/navbar/index')
-const light_theme = require('../src/node_modules/theme/light_theme/index')
-const dark_theme = require('../src/node_modules/theme/dark_theme/index')
+const navbar = require('../src/node_modules/navbar')
+const light_theme = require('../src/node_modules/theme/light_theme')
+const dark_theme = require('../src/node_modules/theme/dark_theme')
 
 // Default Theme
 let current_theme = light_theme
@@ -20,7 +21,10 @@ const PROTOCOL = {
     'active_page': 'HOME',
     'handle_page_change': handle_page_change,
     'handle_theme_change': handle_theme_change,
+    'toggle_terminal': toggle_terminal
 }
+
+const terminal_wrapper = terminal({data: current_theme})
 
 
 const page_list = {
@@ -36,8 +40,7 @@ const theme_list = {
     'LIGHT': light_theme
 }
 
-document.body.append( navbar({data: current_theme}, page_protocol))
-document.body.append(current_page)
+document.body.append( navbar({data: current_theme}, page_protocol), current_page)
 handle_page_change('DEFAULT')
 
 // Adding font link
@@ -66,6 +69,12 @@ function handle_theme_change(){
     sheet.replaceSync( get_theme(current_theme) )
 }
 
+function toggle_terminal(){
+    ;document.body.contains(terminal_wrapper) ? 
+    document.body.removeChild(terminal_wrapper) :
+    document.body.append(terminal_wrapper)
+}
+
 function page_protocol (handshake, send, mid = 0) {
     notify = send
 
@@ -78,7 +87,7 @@ function page_protocol (handshake, send, mid = 0) {
         const action = PROTOCOL[type] || invalid
         action(data)
     }
-    // function invalid (message) { console.error('invalid type', message) }
+    function invalid (message) { console.error('invalid type', message) }
     // async function change_theme () {
     //     // const [to] = head
     //     ;current_theme = current_theme === light_theme ? dark_theme : light_theme
@@ -102,6 +111,7 @@ function get_theme(opts) {
             --ac-3: ${opts.ac_3};
             --primary_color: ${opts.primary_color};
             font-family: Silkscreen;
+            color: var(--primary_color);
         }
         html, body{
             padding:0px;
