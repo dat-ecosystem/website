@@ -724,10 +724,11 @@ const timeline_page = require('../src/node_modules/timeline_page')
 const projects_page = require('../src/node_modules/projects_page')
 const consortium_page = require('../src/node_modules/consortium_page')
 
+const terminal = require('../src/node_modules/terminal')
 
-const navbar = require('../src/node_modules/navbar/index')
-const light_theme = require('../src/node_modules/theme/light_theme/index')
-const dark_theme = require('../src/node_modules/theme/dark_theme/index')
+const navbar = require('../src/node_modules/navbar')
+const light_theme = require('../src/node_modules/theme/light_theme')
+const dark_theme = require('../src/node_modules/theme/dark_theme')
 
 // Default Theme
 let current_theme = light_theme
@@ -740,7 +741,10 @@ const PROTOCOL = {
     'active_page': 'HOME',
     'handle_page_change': handle_page_change,
     'handle_theme_change': handle_theme_change,
+    'toggle_terminal': toggle_terminal
 }
+
+const terminal_wrapper = terminal({data: current_theme})
 
 
 const page_list = {
@@ -756,8 +760,7 @@ const theme_list = {
     'LIGHT': light_theme
 }
 
-document.body.append( navbar({data: current_theme}, page_protocol))
-document.body.append(current_page)
+document.body.append( navbar({data: current_theme}, page_protocol), current_page)
 handle_page_change('DEFAULT')
 
 // Adding font link
@@ -786,6 +789,12 @@ function handle_theme_change(){
     sheet.replaceSync( get_theme(current_theme) )
 }
 
+function toggle_terminal(){
+    ;document.body.contains(terminal_wrapper) ? 
+    document.body.removeChild(terminal_wrapper) :
+    document.body.append(terminal_wrapper)
+}
+
 function page_protocol (handshake, send, mid = 0) {
     notify = send
 
@@ -798,7 +807,7 @@ function page_protocol (handshake, send, mid = 0) {
         const action = PROTOCOL[type] || invalid
         action(data)
     }
-    // function invalid (message) { console.error('invalid type', message) }
+    function invalid (message) { console.error('invalid type', message) }
     // async function change_theme () {
     //     // const [to] = head
     //     ;current_theme = current_theme === light_theme ? dark_theme : light_theme
@@ -822,6 +831,7 @@ function get_theme(opts) {
             --ac-3: ${opts.ac_3};
             --primary_color: ${opts.primary_color};
             font-family: Silkscreen;
+            color: var(--primary_color);
         }
         html, body{
             padding:0px;
@@ -832,7 +842,7 @@ function get_theme(opts) {
         }
     `
 }
-},{"../src/node_modules/consortium_page":17,"../src/node_modules/growth_page":18,"../src/node_modules/home_page":19,"../src/node_modules/navbar/index":20,"../src/node_modules/projects_page":23,"../src/node_modules/theme/dark_theme/index":26,"../src/node_modules/theme/light_theme/index":27,"../src/node_modules/timeline_page":29}],4:[function(require,module,exports){
+},{"../src/node_modules/consortium_page":21,"../src/node_modules/growth_page":22,"../src/node_modules/home_page":23,"../src/node_modules/navbar":28,"../src/node_modules/projects_page":32,"../src/node_modules/terminal":37,"../src/node_modules/theme/dark_theme":39,"../src/node_modules/theme/light_theme":40,"../src/node_modules/timeline_page":43}],4:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = app_about_us
 
@@ -1010,7 +1020,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_about_us")
-},{"_process":2,"buttons/sm_text_button":15,"path":1,"window_bar":30}],5:[function(require,module,exports){
+},{"_process":2,"buttons/sm_text_button":17,"path":1,"window_bar":45}],5:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = cover_app
 
@@ -1162,7 +1172,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_cover")
-},{"_process":2,"buttons/sm_text_button":15,"path":1,"window_bar":30}],6:[function(require,module,exports){
+},{"_process":2,"buttons/sm_text_button":17,"path":1,"window_bar":45}],6:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = app_footer
 
@@ -1332,7 +1342,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_footer")
-},{"_process":2,"buttons/sm_text_button":15,"path":1,"window_bar":30}],7:[function(require,module,exports){
+},{"_process":2,"buttons/sm_text_button":17,"path":1,"window_bar":45}],7:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = app_projects
 
@@ -1357,7 +1367,7 @@ function app_projects(opts, protocol){
 
     const {data} = opts
     const PROTOCOL = {
-
+        setFilter
     }
      // Assigning all the icons
      const { img_src: {
@@ -1398,7 +1408,8 @@ function app_projects(opts, protocol){
             link: '/',
             socials: [icon_github, icon_twitter, icon_discord],
             desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-            tags: ['Hypercore', 'Hypercore', 'Hypercore'],
+            tags: ['Hypercore', 'Decentralized', 'DApp'],
+            active_state: 'ACTIVE',
             data: data,
         },{
             title: 'Official starting of the web course.',
@@ -1407,7 +1418,8 @@ function app_projects(opts, protocol){
             link: '/',
             socials: [icon_github, icon_twitter, icon_discord],
             desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-            tags: ['Hypercore', 'Hypercore', 'Hypercore'],
+            tags: ['p2p', 'tag', 'DeFi'],
+            active_state: 'ACTIVE',
             data: data,
         },{
             title: 'Official starting of the web course.',
@@ -1416,7 +1428,8 @@ function app_projects(opts, protocol){
             link: '/',
             socials: [icon_github, icon_twitter, icon_discord],
             desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-            tags: ['Hypercore', 'Hypercore', 'Hypercore'],
+            tags: ['p2p', 'Decentralized', 'Hypercore'],
+            active_state: 'UNACTIVE',
             data: data
         },{ 
             title: 'Official starting of the web course.',
@@ -1425,7 +1438,8 @@ function app_projects(opts, protocol){
             link: '/',
             socials: [icon_github, icon_twitter, icon_discord],
             desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-            tags: ['Hypercore', 'Hypercore', 'Hypercore'],
+            tags: ['DAO', 'Web3', 'DApp'],
+            active_state: 'PAUSED',
             data: data
         },{
             title: 'Official starting of the web course.',
@@ -1434,7 +1448,8 @@ function app_projects(opts, protocol){
             link: '/',
             socials: [icon_github, icon_twitter, icon_discord],
             desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-            tags: ['Hypercore', 'Hypercore', 'Hypercore'],
+            tags: ['DeFi', 'tag', 'Hypercore'],
+            active_state: 'UNACTIVE',
             data: data
         },{
             title: 'Official starting of the web course.',
@@ -1443,7 +1458,8 @@ function app_projects(opts, protocol){
             link: '/',
             socials: [icon_github, icon_twitter, icon_discord],
             desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-            tags: ['Hypercore', 'Hypercore', 'Hypercore'],
+            tags: ['DApp', 'Hypercore', 'DeFi'],
+            active_state: 'PAUSED',
             data: data
         },{
             title: 'Official starting of the web course.',
@@ -1452,10 +1468,14 @@ function app_projects(opts, protocol){
             link: '/',
             socials: [icon_github, icon_twitter, icon_discord],
             desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-            tags: ['Hypercore', 'Hypercore', 'Hypercore'],
+            tags: ['DAO', 'Decentralized', 'Web3'],
+            active_state: 'ACTIVE',
             data: data
         },
     ]
+    const tags = new Set()
+    cardsData.forEach(card_data => card_data.tags.forEach(tag => tags.add(tag))) 
+
     const project_cards = cardsData.map((card_data) => project_card(card_data))
     project_cards.forEach((card) => {
         project_wrapper.append(card)
@@ -1466,7 +1486,8 @@ function app_projects(opts, protocol){
     main_wrapper.append(scrollbar({data}, app_projects_protocol))
 
     const filter_wrapper = shadow.querySelector('.filter_wrapper')
-    filter_wrapper.append(project_filter({data}, app_projects_protocol))
+    filter_wrapper.append(project_filter({data, tags: Array.from(tags)}, app_projects_protocol))
+    
     shadow.adoptedStyleSheets = [ sheet ]
     shadow.prepend(app_project_window)
     return el
@@ -1476,6 +1497,8 @@ function app_projects(opts, protocol){
     //protocol
     function app_projects_protocol(handshake, send){
         if(handshake.from.includes('scrollbar')){
+            const ro = new ResizeObserver(entries => send[0]());
+            ro.observe(main_wrapper);
             project_wrapper.onscroll = send[0]
             PROTOCOL['handleScroll'] = send[0]
             PROTOCOL['getScrollInfo'] = send[1]
@@ -1485,8 +1508,8 @@ function app_projects(opts, protocol){
             return listen
         }
         else if(handshake.from.includes('window_bar')){
-            PROTOCOL['toggle_active_state'] = toggle_active_state
-            return listen
+            PROTOCOL['toggle_active_state'] = toggle_active_state;
+            return listen;
         }
         function listen (message){
             const {head, type, data} = message
@@ -1498,39 +1521,39 @@ function app_projects(opts, protocol){
                 PROTOCOL.getScrollInfo(message)
             }
             else if(by.includes('project_filter')){
-                PROTOCOL[type] = data
-                setFilter()
+                PROTOCOL[type](data)
             }
             else if(by.includes('window_bar')){
                 PROTOCOL[type](message)
             }
         }
-        
-        async function setScrollTop(value){
-            project_wrapper.scrollTop = value
-        }
-        async function setFilter(){
-            if(PROTOCOL.search){
-                project_wrapper.innerHTML = ''
-                const cardfilter = cardsData.filter((card_data) => {return card_data.project.toLowerCase().match(PROTOCOL.search.toLowerCase())})
-                const project_cards = cardfilter.map((card_data) => project_card(card_data))
-                project_cards.forEach((card) => {
-                    project_wrapper.append(card)
-                })
-            }
-            else{
-                const project_cards = cardsData.map((card_data) => project_card(card_data))
-                project_cards.forEach((card) => {
-                    project_wrapper.append(card)
-                })
-            }
-            PROTOCOL['handleScroll']()
-        }
-        async function toggle_active_state (message) {
-            const {head, refs, type, data, meta} = message
-            const {active_state} = data
-            ;( active_state === 'active')?el.style.display = 'none':''
-        }
+    }
+    async function setScrollTop(value){
+        project_wrapper.scrollTop = value
+    }
+    async function setFilter(data){
+        PROTOCOL[data.filter] = data.value
+        project_wrapper.innerHTML = ''
+        let cardfilter = [...cardsData]
+        if(PROTOCOL.SEARCH)
+            cardfilter = cardfilter.filter((card_data) => {return card_data.project.toLowerCase().match(PROTOCOL.SEARCH.toLowerCase())})
+
+        if(PROTOCOL.STATUS && PROTOCOL.STATUS !== 'NULL')
+            cardfilter = cardfilter.filter((card_data) => {return card_data.active_state === PROTOCOL.STATUS && card_data })
+
+        if(PROTOCOL.TAGS && PROTOCOL.TAGS !== 'NULL')
+            cardfilter = cardfilter.filter((card_data) => {return card_data.tags.includes(PROTOCOL.TAGS) && card_data })
+
+        const project_cards = cardfilter.map((card_data) => project_card(card_data))
+            project_cards.forEach((card) => {
+                project_wrapper.append(card)
+        })
+        PROTOCOL['handleScroll']()
+    }
+    async function toggle_active_state (message) {
+        const {head, refs, type, data, meta} = message
+        const {active_state} = data
+        ;( active_state === 'active')?el.style.display = 'none':''
     }
 
 
@@ -1598,7 +1621,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_projects")
-},{"_process":2,"path":1,"project_card":21,"project_filter":22,"scrollbar":24,"window_bar":30}],8:[function(require,module,exports){
+},{"_process":2,"path":1,"project_card":30,"project_filter":31,"scrollbar":33,"window_bar":45}],8:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = app_projects_mini
 
@@ -1773,7 +1796,298 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_projects_mini")
-},{"_process":2,"buttons/sm_icon_button":13,"buttons/sm_text_button":15,"path":1,"project_card":21,"window_bar":30}],9:[function(require,module,exports){
+},{"_process":2,"buttons/sm_icon_button":15,"buttons/sm_text_button":17,"path":1,"project_card":30,"window_bar":45}],9:[function(require,module,exports){
+(function (process,__dirname){(function (){
+module.exports = app_timeline
+
+
+const path = require('path')
+const cwd = process.cwd()
+const prefix = path.relative(cwd, __dirname)
+
+const window_bar = require('window_bar')
+const timeline_card = require('timeline_card')
+const timeline_filter = require('timeline_filter')
+const year_filter = require('year_filter')
+const month_filter = require('month_filter')
+const scrollbar = require('scrollbar')
+
+// CSS Boiler Plat
+const sheet = new CSSStyleSheet
+const theme = get_theme()
+sheet.replaceSync(theme)
+
+
+let id = 0;
+
+function app_timeline (opts, protocol) {
+
+    const name = `app_timeline-${id++}`
+    const {data} = opts
+    const PROTOCOL = {
+        YEAR: '',
+        MONTH: '',
+    }
+    // Assigning all the icons
+    const { img_src: {
+        icon_folder= `${prefix}/icon_folder.svg`,
+    } } = data
+
+    const el = document.createElement('div')
+    const shadow = el.attachShadow ( { mode : 'closed' } )
+
+    shadow.innerHTML = `
+        <div class="main_wrapper">
+            <div class="filter_wrapper">
+                <div class="month_wrapper">
+                    <div class="scrollbar_wrapper">
+                        <div class="timeline_wrapper"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <style> ${get_theme} </style>
+    `
+
+    // Adding Applicatin window Bar
+    const cover_window = window_bar({
+        name:'TIMELINE', 
+        src: icon_folder,
+        data: data
+    }, app_timeline_protocol)
+
+
+    // Adding timeline cards
+    const timeline_wrapper = shadow.querySelector('.timeline_wrapper')
+    const cards_data = [
+        { title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data: data, active_state: 'ACTIVE'
+        },{ title: 'Official starting of the web course.', date: 'May 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data: data, active_state: 'ACTIVE'
+        },{ title: 'Official starting of the web course.', date: 'March 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data: data, active_state: 'ACTIVE'
+        },{ title: 'Official starting of the web course.', date: 'March 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data: data, active_state: 'UNACTIVE'
+        },{ title: 'Official starting of the web course.', date: 'March 11, 2021', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data: data, active_state: 'UNACTIVE'
+        },{ title: 'Official starting of the web course.', date: 'July 11, 2021', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data: data, active_state: 'UNACTIVE'
+        },{ title: 'Official starting of the web course.', date: 'April 11, 2021', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data: data, active_state: 'UNACTIVE'
+        },{ title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data: data, active_state: 'PAUSED'
+        },{ title: 'Official starting of the web course.', date: 'April 11, 2023', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data: data, active_state: 'PAUSED'
+        },{ title: 'Official starting of the web course.', date: 'July 11, 2023', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data: data, active_state: 'PAUSED'
+        },
+    ]
+
+    const tags = new Set()
+    let latest_date = new Date(0);
+    cards_data.forEach(card_data => {
+        card_data.tags.forEach(tag => tags.add(tag))
+        const date = new Date(card_data.date)
+        if(date > latest_date){
+            latest_date = date
+        }
+    })
+    const month = latest_date.toLocaleString('default', { month: 'long' });
+    const year = latest_date.getFullYear()
+
+    const timeline_cards = cards_data.map((card_data) => timeline_card(card_data))
+    timeline_cards.forEach((card) => {
+        timeline_wrapper.append(card)
+    })
+
+    const main_wrapper = shadow.querySelector('.main_wrapper')
+    
+    main_wrapper.append(timeline_filter({data, tags: Array.from(tags), month, year}, app_timeline_protocol))
+
+    const filter_wrapper = shadow.querySelector('.filter_wrapper')
+    const year_filter_wrapper = year_filter({data}, app_timeline_protocol)
+
+    const month_wrapper = shadow.querySelector('.month_wrapper')
+    const month_filter_wrapper = month_filter({data}, app_timeline_protocol)
+
+    const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
+    scrollbar_wrapper.append(scrollbar({data: data}, app_timeline_protocol))
+
+    shadow.adoptedStyleSheets = [ sheet ]
+    shadow.prepend(cover_window)
+    return el
+
+
+
+    
+    //protocol
+    function app_timeline_protocol(handshake, send){
+        if(handshake.from.includes('scrollbar')){
+            const ro = new ResizeObserver(entries => send[0]());
+            ro.observe(scrollbar_wrapper);
+            timeline_wrapper.onscroll = send[0]
+            PROTOCOL['handleScroll'] = send[0]
+            PROTOCOL['getScrollInfo'] = send[1]
+            return [listen, setScrollTop]
+        }
+        else if(handshake.from.includes('window_bar')){
+            PROTOCOL['toggle_active_state'] = toggle_active_state
+        }
+        else if(handshake.from.includes('timeline_filter')){
+            PROTOCOL['setFilter'] = setFilter
+            PROTOCOL['toggle_month_filter'] = toggle_month_filter
+            PROTOCOL['toggle_year_filter'] = toggle_year_filter
+            PROTOCOL['get_date'] = send
+        }
+        else if(handshake.from.includes('year_filter')){
+            PROTOCOL['setFilter'] = setFilter
+        }
+        else if(handshake.from.includes('month_filter')){
+            PROTOCOL['setFilter'] = setFilter
+        }
+        return listen
+        function listen (message){
+            const {head, type, data} = message
+            const {by, to, mid} = head
+            // if( to !== name) return console.error('address unknown', message)
+            if(by.includes('scrollbar'))
+            {
+                message.data = {sh: timeline_wrapper.scrollHeight, ch: timeline_wrapper.clientHeight, st: timeline_wrapper.scrollTop}
+                PROTOCOL.getScrollInfo(message)
+            }
+            else if(by.includes('timeline_filter') || by.includes('year_filter') || by.includes('month_filter')){
+                PROTOCOL[type](data)
+            }
+            else if(by.includes('window_bar')){
+                PROTOCOL[type](message)
+            }
+        }
+        
+        async function setScrollTop(value){
+            timeline_wrapper.scrollTop = value
+        }
+        async function setFilter(data){
+            PROTOCOL[data.filter] = data.value
+
+            timeline_wrapper.innerHTML = ''
+            let cardfilter = [...cards_data]
+
+            if(PROTOCOL.SEARCH)
+                cardfilter = cardfilter.filter((card_data) => {return card_data.title.toLowerCase().match(PROTOCOL.SEARCH.toLowerCase())})
+
+            if(PROTOCOL.STATUS && PROTOCOL.STATUS !== 'NULL')
+                cardfilter = cardfilter.filter((card_data) => {return card_data.active_state === PROTOCOL.STATUS && card_data })
+
+            if(PROTOCOL.TAGS && PROTOCOL.TAGS !== 'NULL')
+                cardfilter = cardfilter.filter((card_data) => {return card_data.tags.includes(PROTOCOL.TAGS) && card_data })
+            
+            if(PROTOCOL.YEAR)
+                cardfilter = cardfilter.filter((card_data) => {return card_data.date.toLowerCase().match(PROTOCOL.YEAR.toLowerCase())})
+
+            if(PROTOCOL.MONTH)
+                cardfilter = cardfilter.filter((card_data) => {return card_data.date.toLowerCase().match(PROTOCOL.MONTH.toLowerCase())})
+
+
+            const timeline_cards = cardfilter.map((card_data) => timeline_card(card_data))
+                timeline_cards.forEach((card) => {
+                    timeline_wrapper.append(card)
+            })
+            PROTOCOL['handleScroll']()
+            PROTOCOL['get_date']({
+                    head: {by:name, to:'timeline_filter', mid:0},
+                    type: null,
+                    data: {month: PROTOCOL.MONTH , year: PROTOCOL.YEAR}
+            })
+        }
+        async function toggle_active_state (message) {
+            const {head, refs, type, data, meta} = message
+            const {active_state} = data
+            ;( active_state === 'active')?el.style.display = 'none':''
+        }
+        async function toggle_month_filter (message) {
+            if(month_wrapper.contains(month_filter_wrapper))
+                month_wrapper.removeChild(month_filter_wrapper)
+            else
+                month_wrapper.append(month_filter_wrapper)
+        }
+        async function toggle_year_filter (message) {
+            if(filter_wrapper.contains(year_filter_wrapper))
+                filter_wrapper.removeChild(year_filter_wrapper)
+            else
+                filter_wrapper.append(year_filter_wrapper)
+        }
+    }
+}
+
+
+
+
+function get_theme(){
+    return`
+        *{
+            box-sizing: border-box;
+        }
+        .main_wrapper{
+            display: flex;
+            flex-direction: column;
+            container-type: inline-size;
+            width: 100%;
+            height: 100%;
+            margin-bottom: 30px;
+        }
+        .filter_wrapper{
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+        .scrollbar_wrapper{
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+        .month_wrapper{
+            width:100%;
+            height: 100%;
+            overflow: hidden;
+            border: 1px solid var(--primary_color);
+        }
+        .timeline_wrapper{
+            --s: 20px; /* control the size */
+            --_g: var(--bg_color) /* first color */ 0 25%, #0000 0 50%;
+            background:
+                repeating-conic-gradient(at 66% 66%,var(--_g)),
+                repeating-conic-gradient(at 33% 33%,var(--_g)),
+                var(--primary_color);  /* second color */ 
+            background-size: var(--s) var(--s);  
+            overflow: scroll;
+            scrollbar-width: none; /* For Firefox */
+            border:1px solid var(--primary_color);
+            width:100%;
+            height: 400px;
+            padding: 0px;
+            display: grid;
+            gap:20px;
+            grid-template-columns: 12fr;
+        }
+        .timeline_wrapper::-webkit-scrollbar {
+            display: none;
+        }
+        @container(min-width: 768px) {
+            .timeline_wrapper{
+                grid-template-columns: repeat(2, 6fr);
+            }
+        }
+    
+        @container(min-width: 1200px) {
+            .timeline_wrapper{
+                grid-template-columns: repeat(3, 4fr);
+            }
+        }
+          
+        /*---------- Mobile devices ----------*/
+        @media (min-width: 480px) {
+        }
+
+        /*---------- iPads, Tablets ----------*/
+        @media (min-width: 768px) {
+        }
+
+        /*---------- Mediuem screens, laptops ----------*/
+        @media (min-width: 1024px) {}
+    `
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/app_timeline")
+},{"_process":2,"month_filter":27,"path":1,"scrollbar":33,"timeline_card":41,"timeline_filter":42,"window_bar":45,"year_filter":46}],10:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = app_timeline_mini
 
@@ -1859,6 +2173,8 @@ function app_timeline_mini (opts, protocol) {
     function timeline_mini_protocol(handshake, send){
         if(handshake.from.includes('scrollbar')){
             timeline_wrapper.onscroll = send[0];
+            const ro = new ResizeObserver(entries => send[0]());
+            ro.observe(main_wrapper);
             PROTOCOL['getScrollInfo'] = send[1]
             return [listen, setScrollTop]
         }
@@ -1950,7 +2266,72 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_timeline_mini")
-},{"_process":2,"buttons/sm_text_button":15,"path":1,"scrollbar":24,"timeline_card":28,"window_bar":30}],10:[function(require,module,exports){
+},{"_process":2,"buttons/sm_text_button":17,"path":1,"scrollbar":33,"timeline_card":41,"window_bar":45}],11:[function(require,module,exports){
+
+module.exports = day_button
+
+// CSS Boiler Plat
+const sheet = new CSSStyleSheet
+const theme = get_theme()
+sheet.replaceSync(theme)
+
+
+
+// Props - icon/img src
+function day_button (props) {
+
+    const el = document.createElement('div')
+    const shadow = el.attachShadow({mode:'closed'})
+
+    shadow.innerHTML = `
+        <div class="day_button">
+        </div>
+    `
+    const day_button = shadow.querySelector(".day_button")
+    
+    // Toggle Icon
+    day_button.onclick = (e) => toggle_class(e)
+
+    const style = document.createElement('style')
+    style.textContent = get_theme()
+
+    shadow.append(day_button, style)
+    shadow.adoptedStyleSheets = [sheet]
+    return el
+}
+
+
+
+function get_theme(){
+    return`
+        .day_button{
+            display:flex;
+            justify-content: center;
+            align-items:center;
+            height:20px;
+            box-sizing:border-box;
+            aspect-ratio:1/1;
+            cursor:pointer;
+            border: 1px solid var(--primary_color);
+            // border-left: var(--bg_color);
+            background-color: var(--bg_color);
+        }
+        .day_button.active{
+            background-color: var(--ac-2)
+        }
+        svg, svg *{
+            pointer-events:none !important;
+        }
+    `
+}
+
+
+
+function toggle_class(e){
+    let selector = e.target.classList
+    ;( selector.contains('active') ) ? selector.remove('active') : selector.add('active')
+}
+},{}],12:[function(require,module,exports){
 
 module.exports = icon_button
 
@@ -2059,7 +2440,7 @@ function get_theme(){
         }
     `
 }
-},{}],11:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = logo_button
 
@@ -2127,7 +2508,7 @@ function toggle_class(e){
     ;( selector.contains('active') ) ? selector.remove('active') : selector.add('active')
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/buttons")
-},{"_process":2,"path":1}],12:[function(require,module,exports){
+},{"_process":2,"path":1}],14:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = select_button
 
@@ -2145,7 +2526,7 @@ function select_button (opts, protocol) {
     const notify = protocol(null, listen)
     let message = {
         head: ['select_button', 'project_filter', 'project_filter'],
-        type: 'status',
+        type: 'setFilter',
     }
 
     const {data} = opts
@@ -2161,12 +2542,10 @@ function select_button (opts, protocol) {
     shadow.innerHTML = `
         <div class="select_button_wrapper bottom">
             <div class="option_wrapper">
-                <div class="option">ACTIVE</div>
-                <div class="option">UNACTIVE</div>
-                <div class="option">PAUSED</div>
+                ${opts.choices.map(choice => `<div class="option">${choice}</div>`).join('')}
             </div>
             <div class="button_wrapper">
-                <span class="button_name">${'STATUS: '}</span>
+                <span class="button_name">${opts.name}: </span>
                 <span class="selected_option">${'NULL'}</span>
                 <span class="arrow_icon">
                     ${icon_arrow_up}
@@ -2178,21 +2557,21 @@ function select_button (opts, protocol) {
 
     // Adding Select Toggle function
     const select_toggle_btn = shadow.querySelector('.button_wrapper')
-    let active_state = true
+    let active_state = true;
     select_toggle_btn.onclick = (e) => {
-        shadow.querySelector('.select_button_wrapper').classList.toggle('active')
+        shadow.querySelector('.select_button_wrapper').classList.toggle('active');
         ;(active_state)?shadow.querySelector('.arrow_icon').innerHTML = icon_arrow_down: shadow.querySelector('.arrow_icon').innerHTML = icon_arrow_up
         active_state = !active_state
     }
     // select_toggle_btn.addEventListener('click', function() {
-    //     shadow.querySelector('.select_button_wrapper').classList.toggle('active')
-    // })
+    //     shadow.querySelector('.select_button_wrapper').classList.toggle('active');
+    // });
 
 
     // Use event delegation
     // document.addEventListener('click', (e) => {
-    //     console.log(e.target.className)
-    // })
+    //     console.log(e.target.className);
+    // });
 
     // Select all .option divs
     const options = shadow.querySelectorAll('.option')
@@ -2213,18 +2592,17 @@ function select_button (opts, protocol) {
             } else {
                 // Remove 'active' class from the clicked option
                 option.classList.remove('active')
-                selected_option.innerHTML = 'Null'
+                selected_option.innerHTML = 'NULL'
             }
 
             // Update the selected_option innerHTML
             const active_options = shadow.querySelectorAll('.option.active')
             if (active_options.length > 0) {
                 selected_option.innerHTML = active_options[0].innerHTML
-                message['data'] = selected_option.innerHTML
-                notify(message)
             }
             shadow.querySelector('.select_button_wrapper').classList.toggle('active')
-
+            message['data'] = {filter: opts.name, value:selected_option.innerHTML}
+            notify(message)
         })
     })
 
@@ -2247,7 +2625,7 @@ function get_theme(){
             position: relative;
             z-index:100;
             width: 100%;
-            height: 40px;
+            height: 30px;
             font-size: 0.875em;
             line-height: 1.5em;
             background-color: var(--bg_color);
@@ -2267,7 +2645,7 @@ function get_theme(){
             border: 1px solid var(--primary_color);
         }
         .select_button_wrapper.bottom .option_wrapper{
-            bottom: 40px;
+            bottom: 30px;
             left: 0px;
         }
         .select_button_wrapper.top .option_wrapper{
@@ -2322,7 +2700,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/buttons")
-},{"_process":2,"path":1}],13:[function(require,module,exports){
+},{"_process":2,"path":1}],15:[function(require,module,exports){
 
 module.exports = sm_icon_button
 
@@ -2336,7 +2714,7 @@ sheet.replaceSync(theme)
 
 // Props - icon/img src
 function sm_icon_button (props) {
-    let {src, src_active} = props
+    let {src, src_active, activate} = props
 
     const el = document.createElement('div')
     const shadow = el.attachShadow({mode:'closed'})
@@ -2349,17 +2727,18 @@ function sm_icon_button (props) {
     const sm_icon_button = shadow.querySelector(".sm_icon_button")
     
     // Toggle Icon
-    if(src_active){
-        let activeState = true;
-        sm_icon_button.onclick = (e) =>{
-            ;(activeState)?icon.src = src_active: icon.src = src
-            activeState = !activeState
-            toggle_class(e)
+    if(activate)
+        if(src_active){
+            let activeState = true;
+            sm_icon_button.onclick = (e) =>{
+                ;(activeState)?sm_icon_button.innerHTML = src_active: sm_icon_button.innerHTML = src
+                activeState = !activeState
+                toggle_class(e)
+            }
+        }else{
+            // Toggle Class
+            sm_icon_button.onclick = (e) => toggle_class(e)
         }
-    }else{
-        // Toggle Class
-        sm_icon_button.onclick = (e) => toggle_class(e)
-    }
 
     const style = document.createElement('style')
     style.textContent = get_theme()
@@ -2385,11 +2764,6 @@ function get_theme(){
             // border-left: var(--bg_color);
             background-color: var(--bg_color);
         }
-        .sm_icon_button img{
-            height: 20px;
-            width: 20px;
-            pointer-events:none;
-        }
         .sm_icon_button.active{
             background-color: var(--ac-2)
         }
@@ -2405,7 +2779,7 @@ function toggle_class(e){
     let selector = e.target.classList
     ;( selector.contains('active') ) ? selector.remove('active') : selector.add('active')
 }
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 
 module.exports = sm_icon_button_alt
 
@@ -2506,7 +2880,7 @@ function toggle_class(e){
     let selector = e.target.classList
     ;( selector.contains('active') ) ? selector.remove('active') : selector.add('active')
 }
-},{}],15:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 module.exports = sm_text_button
 
 
@@ -2567,7 +2941,117 @@ function toggle_class(e){
     let selector = e.target.classList
     ;( selector.contains('active') ) ? selector.remove('active') : selector.add('active')
 }
-},{}],16:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
+module.exports = tab_button
+
+
+// CSS Boiler Plat
+const sheet = new CSSStyleSheet
+const theme = get_theme()
+sheet.replaceSync(theme)
+
+
+let id = 0
+
+function tab_button (props, protocol) {
+    const name = `tab_button-${id++}`
+
+    const notify = protocol({from: name}, listen)
+
+    const {data} = props
+    const { img_src : {
+        icon_close_dark= `${prefix}/icon_close_dark.svg`,
+    }} = data
+
+    const el = document.createElement('div')
+    const shadow = el.attachShadow({mode:'closed'})
+    shadow.innerHTML = `
+        <div class="tab_button">
+            <div class="text_wrapper"> ${props.name} </div>
+            <div class="close_button"> ${icon_close_dark} </div>
+        </div>
+        <style> ${get_theme} </style>
+    `
+    const tab_button = shadow.querySelector('.tab_button')
+
+    const text_wrapper = shadow.querySelector('.text_wrapper')
+    text_wrapper.onclick = (e) => {
+        toggle_class()
+        notify({
+            head: {by:name, to:'terminal', mid: 0},
+            type: 'tab_btn_click',
+            data: el.id
+        })
+    }
+    toggle_class()
+
+    const close_btn = shadow.querySelector('.close_button')
+    close_btn.onclick = () => {
+        el.remove()
+        notify({
+            head: {by:name, to:'terminal', mid: 0},
+            type: 'close_tab',
+            data: el.id
+        })
+    }
+
+
+
+    shadow.adoptedStyleSheets = [sheet]
+    return el
+
+    function toggle_class(){
+        tab_button.classList.toggle('active')
+    }
+    function listen(message){
+        toggle_class()
+    }
+}
+
+
+
+function get_theme(){
+    return`
+        .tab_button{
+            display: flex;
+            cursor:pointer;
+            box-sizing: border-box;
+            border: 1px solid var(--primary_color);
+            background-color: var(--bg_color);
+            color:var(--primary_color);
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            height:30px;
+            width: 100%;
+        }
+        .text_wrapper{
+            text-align: center;
+            font-size: 0.875em;
+            line-height: .5em;
+            padding: 12px 0;
+            height:30px;
+            box-sizing:border-box;
+            width: 90px;
+        }
+        .close_button{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .tab_button.active{
+            background-color: var(--primary_color);
+            color: var(--bg_color);
+        }
+        .tab_button.active svg path{
+            fill: var(--bg_color)
+        }
+    `
+}
+
+
+
+},{}],19:[function(require,module,exports){
 module.exports = text_button
 
 
@@ -2637,26 +3121,277 @@ function get_theme(){
         }
     `
 }
-},{}],17:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
+module.exports = year_button
+
+
+// CSS Boiler Plat
+const sheet = new CSSStyleSheet
+const theme = get_theme()
+sheet.replaceSync(theme)
+
+
+
+
+function year_button (props, protocol) {
+    const name = 'year_button'
+    const notify = protocol({from: name}, listen)
+
+    const {data} = props
+    const { img_src : {
+        icon_arrow_up= `${prefix}/icon_arrow_up.svg`,
+    }} = data
+
+    const el = document.createElement('div')
+    const shadow = el.attachShadow({mode:'closed'})
+    shadow.innerHTML = `
+        <div class="year_button">
+            <div class="text_wrapper"> <b>${props.month.slice(0,3)}</b>/${props.year} </div>
+            ${icon_arrow_up}
+        </div>
+        <style> ${get_theme} </style>
+    `
+    const year_button = shadow.querySelector('.year_button')
+    year_button.onclick = (e) => toggle_class(e)
+
+    const text_wrapper = shadow.querySelector('.text_wrapper')
+
+
+    shadow.adoptedStyleSheets = [sheet]
+    return el
+
+    function toggle_class(e){
+        year_button.classList.toggle('active')
+    }
+    function listen(message){
+        const {head, type, data} = message
+        const {by, to, id} = head
+        text_wrapper.innerHTML = `<b>${data.month ? data.month.slice(0,3) : props.month.slice(0,3)}</b>/${data.year ? data.year : props.year}`
+    }
+}
+
+
+
+function get_theme(){
+    return`
+        .year_button{
+            display: flex;
+            cursor:pointer;
+            box-sizing: border-box;
+            border: 1px solid var(--primary_color);
+            background-color: var(--bg_color);
+            color:var(--primary_color);
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            height:30px;
+            width: 100%;
+        }
+        .text_wrapper{
+            text-align:center;
+            font-size: 0.875em;
+            line-height: .5em;
+            padding: 12px 0;
+            height:30px;
+            box-sizing:border-box;
+            width: 90px;
+        }
+        .year_button.active svg{
+            rotate: 90deg;
+        }
+    `
+}
+
+
+
+},{}],21:[function(require,module,exports){
 module.exports = consortium_page
 
+const mission_statement = require('mission_statement')
+const important_documents = require('important_documents')
+const our_member = require('our_member')
+const tools = require('tools')
+
 function consortium_page (opts, protocol) {
+
+    // Image data
+    const {data} = opts
+    const {img_src} = data
+    const {
+        icon_pdf_reader,
+        icon_folder,
+    } = img_src
+
+    // Communication data
+    const PROTOCOLS = {}
+
     const el = document.createElement('div')
     const shadow = el.attachShadow({mode: 'closed'})
 
-    // adding a `main-wrapper` 
+    // adding a `main_wrapper` 
     shadow.innerHTML = `
-        <div class="main-wrapper">consortium</div>
+        <div class="main_wrapper">
+            <div class="icon_wrapper">
+            </div>
+            <div class="popup_wrapper">
+                <div class="mini_popup_wrapper">
+                </div>
+            </div>
+        </div>
         <style>${get_theme()}</style>
     `
+
+
+    const icons_data = [
+        {
+            name: 'mission_ statement',
+            type: '.md',
+            img: icon_pdf_reader,
+            window: 'mission_statement'
+        },
+        {
+            name: 'important_ documents',
+            type: '.md',
+            img: icon_pdf_reader,
+            window: 'important_documents'
+        },
+        {
+            name: 'our_ member',
+            type: '.md',
+            img: icon_pdf_reader,
+            window: 'our_member'
+        },
+        {
+            name: 'tools',
+            type: '',
+            img: icon_folder,
+            window: 'tools'
+        },
+    ]
+
+    const icon_wrapper = shadow.querySelector('.icon_wrapper')
+    icons_data.forEach((icon_data) => {
+        const icon = document.createElement('div')
+        icon.classList.add('icon')
+        icon.innerHTML = `
+            ${icon_data.img}
+            <span>${icon_data.name}${icon_data.type}</span>
+        `
+        icon.ondblclick = () => {PROTOCOLS['notify_'+icon_data.window]()}
+        icon.ontouchend = () => {PROTOCOLS['notify_'+icon_data.window]()}
+        icon_wrapper.append(icon)
+    })
+
+    const mini_popup_wrapper = shadow.querySelector('.mini_popup_wrapper')
+    mini_popup_wrapper.append(
+        important_documents({data}, consortium_protocol), 
+        our_member({data}, consortium_protocol),
+        tools({data}, consortium_protocol)
+    )
+
+    const popup_wrapper = shadow.querySelector('.popup_wrapper')
+    popup_wrapper.append(mission_statement({data}, consortium_protocol))
+
+    
     // shadow.adoptedStyleSheets = [sheet]
     return el
+
+    function consortium_protocol (handshake, send, mid=0){
+        PROTOCOLS['notify_'+handshake.from] = send
+    }
 }
 
 function get_theme() {
-    return ``
+    return `
+        .main_wrapper{
+            display: flex;
+            gap: 20px;
+            flex-direction: column;
+            justify-content: space-between;
+            margin: 0;
+            padding:30px 10px;
+            opacity: 1;
+            background-image: radial-gradient(var(--primary_color) 2px, var(--bg_color) 2px);
+            background-size: 16px 16px;
+        }
+        .icon_wrapper{
+            display: flex;
+            flex-wrap: wrap;
+            flex-direction: row;
+            gap: 25px;
+            width: fit-content;
+            height: fit-content;
+            align-items: center;
+            user-select: none;
+        }
+        .icon{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            
+        }
+        .icon span{
+            background-color: var(--bg_color);
+            width: 150px;
+            padding: 10px 0;
+            text-align: center;
+            word-wrap: break-word;
+        }
+        .icon_wrapper:hover{
+            cursor: default;
+        }
+        .popup_wrapper {
+            display: inline;
+            position: absolute;
+            top: 42px;
+            left: 0;
+            z-index: 20;
+        }
+        .mini_popup_wrapper {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        svg{
+            height: 50px;
+            width: 50px;
+            margin: 5px 0;
+            background-color: white;
+
+        }
+        svg path{
+            fill: black;
+        }
+        @media (min-width: 510px){
+            .icon_wrapper{
+                flex-direction: column;
+            }
+            .main_wrapper{
+                flex-direction: row;
+            }
+            .popup_wrapper{
+                display: flex;
+                flex-direction: column;
+                position: relative;
+                top: 0;
+            }
+        }
+        @media (min-width: 768px){
+            .popup_wrapper{
+                margin-left: 100px;
+            }
+        }
+
+        @media (min-width: 1200px){
+            .popup_wrapper{
+                flex-direction: row;
+                gap: 20px;
+                margin-left: 200px;
+            }
+        }
+    `
 }
-},{}],18:[function(require,module,exports){
+},{"important_documents":24,"mission_statement":25,"our_member":29,"tools":44}],22:[function(require,module,exports){
 module.exports = growth_page
 
 function growth_page (opts, protocol) {
@@ -2675,7 +3410,7 @@ function growth_page (opts, protocol) {
 function get_theme() {
     return ``
 }
-},{}],19:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 module.exports = home_page
 
 const cover_app = require('app_cover')
@@ -2766,7 +3501,452 @@ function get_theme() {
         }
     `
 }
-},{"app_about_us":4,"app_cover":5,"app_footer":6,"app_projects_mini":8,"app_timeline_mini":9}],20:[function(require,module,exports){
+},{"app_about_us":4,"app_cover":5,"app_footer":6,"app_projects_mini":8,"app_timeline_mini":10}],24:[function(require,module,exports){
+module.exports = important_documents
+
+const window_bar = require('window_bar')
+
+// CSS Boiler Plat
+const sheet = new CSSStyleSheet
+const theme = get_theme()
+sheet.replaceSync(theme)
+
+
+let id = 0
+
+
+function important_documents (opts, protocol) {
+    const name = `important_documents`
+
+    protocol({from: name}, listen)
+    function listen(){
+        important_documents_wrapper.style.display = 'inline'
+    }
+
+    const {data} = opts
+    // Assigning all the icons
+    const {img_src} = data
+    const {
+        icon_pdf_reader
+    } = img_src
+
+    const el = document.createElement('div')
+    const shadow = el.attachShadow ( { mode : 'closed' } )
+
+    shadow.innerHTML = `
+        <div class="important_documents">
+            <div class="documents_content">
+                <h2>Visit links for more info</h2>
+                <ol type="1">
+                    <li>Manifesto</li>
+                    <li>Organization github repository</li>
+                </ol>  
+            </div>
+        </div>
+        <style> ${get_theme} </style>
+    `
+
+
+    const window = window_bar({
+        name:'important_documents.md', 
+        src: icon_pdf_reader,
+        data: data
+    }, important_documents_protocol)
+    const important_documents_wrapper = shadow.querySelector('.important_documents')
+    important_documents_wrapper.prepend(window)
+
+
+    shadow.adoptedStyleSheets = [ sheet ]
+    return el
+
+    
+    // cover protocol
+    function important_documents_protocol(message, send){
+        return listen
+        // Listening to toggle event 
+        function listen (message) {
+            const {head, refs, type, data, meta} = message  
+            const PROTOCOL = {
+                'toggle_active_state': toggle_active_state
+            }
+            const action = PROTOCOL[type] || invalid      
+            action(message)
+        }
+        function invalid (message) { console.error('invalid type', message) }
+        async function toggle_active_state (message) {
+            const {head, refs, type, data, meta} = message
+            const {active_state} = data
+            ;( active_state === 'active')?important_documents_wrapper.style.display = 'none':''
+        }
+    }
+    
+
+}
+
+function get_theme(){
+    return`
+        *{
+            box-sizing: border-box;
+        }
+        .important_documents{
+            display: none;
+        }
+        .documents_content{
+            position:relative;
+            display:flex;
+            width: 100vw;
+            height: 100vh;
+            flex-direction: column;
+            padding: 10px;
+            background-size: 10px 10px;
+            background-color:var(--bg_color);
+            border: 1px solid var(--primary_color);
+            margin-bottom: 30px;
+        }
+        h2{
+            margin: 0;
+        }
+        @media (min-width: 510px){
+            .documents_content{
+                width: auto;
+                height: auto;
+            }
+        }
+
+    `
+}
+},{"window_bar":45}],25:[function(require,module,exports){
+module.exports = mission_statement
+
+const window_bar = require('window_bar')
+
+// CSS Boiler Plat
+const sheet = new CSSStyleSheet
+const theme = get_theme()
+sheet.replaceSync(theme)
+
+
+let id = 0
+
+
+function mission_statement (opts, protocol) {
+    const name = `mission_statement`
+
+    protocol({from: name}, listen)
+    function listen(){
+        mission_statement_wrapper.style.display = 'inline'
+    }
+
+    const {data} = opts
+    // Assigning all the icons
+    const {img_src} = data
+    const {
+        icon_pdf_reader
+    } = img_src
+
+    const el = document.createElement('div')
+    const shadow = el.attachShadow ( { mode : 'closed' } )
+
+    shadow.innerHTML = `
+        <div class="mission_statement">
+            <div class="mission_content">
+                <h2>OUR MISSION</h2>
+                <p>We aim to connect and support the dat community, promoting user rights and decentralized democracy, dat ecosystem provides resources to advance your hyprecore project.</p>
+                <h2>OUR MISSION</h2>
+                <p>We aim to connect and support the dat community, promoting user rights and decentralized democracy, dat ecosystem provides resources to advance your hyprecore project.</p>    
+            </div>
+        </div>
+        <style> ${get_theme} </style>
+    `
+
+
+    const window = window_bar({
+        name:'Mission_statement.md', 
+        src: icon_pdf_reader,
+        data: data
+    }, mission_statement_protocol)
+    const mission_statement_wrapper = shadow.querySelector('.mission_statement')
+    mission_statement_wrapper.prepend(window)
+
+
+    shadow.adoptedStyleSheets = [ sheet ]
+    return el
+
+    
+    // cover protocol
+    function mission_statement_protocol(message, send){
+        return listen
+        // Listening to toggle event 
+        function listen (message) {
+            const {head, refs, type, data, meta} = message  
+            const PROTOCOL = {
+                'toggle_active_state': toggle_active_state
+            }
+            const action = PROTOCOL[type] || invalid      
+            action(message)
+        }
+        function invalid (message) { console.error('invalid type', message) }
+        async function toggle_active_state (message) {
+            const {head, refs, type, data, meta} = message
+            const {active_state} = data
+            ;( active_state === 'active')?mission_statement_wrapper.style.display = 'none':''
+        }
+    }
+    
+
+}
+
+function get_theme(){
+    return`
+        *{
+            box-sizing: border-box;
+            color: var(--primary_color);
+        }
+        .mission_statement{
+            display: none;
+        }
+        .mission_content{
+            position:relative;
+            display:flex;
+            flex-direction: column;
+            width: 100vw;
+            height: 100vh;
+            padding: 10px;
+            background-size: 10px 10px;
+            background-color:var(--bg_color);
+            border: 1px solid var(--primary_color);
+            margin-bottom: 30px;
+        }
+        h2{
+            margin: 0;
+        }
+        @media (min-width: 510px){
+            .mission_content{
+                width: auto;
+                height: auto;
+            }
+        }
+    `
+}
+},{"window_bar":45}],26:[function(require,module,exports){
+module.exports = month_card
+
+const sheet = new CSSStyleSheet
+const theme = get_theme()
+sheet.replaceSync(theme)
+
+const day_button = require('buttons/day_button')
+
+let id = 0;
+
+function month_card (opts, protocol) {
+    const name = `month_card-${id++}`
+    const notify = protocol({from: name}, listen)
+
+    const el = document.createElement('div')
+    const shadow = el.attachShadow({mode: 'closed'})
+
+    shadow.innerHTML = `
+        <div class="month_card">
+            <span class="month_name"><b>${opts.name}</b></span>
+            <div class="days_wrapper"></div>
+        </div>
+        <style>${get_theme}</style>
+    `
+    const days_wrapper = shadow.querySelector('.days_wrapper')
+    for(let i=1; i<=opts.days; i++){
+        const btn = day_button()
+        btn.id = i
+        btn.onclick = e => {
+            notify({
+                head: {by:name, to:'month_filter', mid: 0},
+                type: 'toggle_day_button',
+                data: e.target.id
+            })
+        }
+        days_wrapper.append(btn)
+    }
+    
+    const month_name = shadow.querySelector('.month_name')
+    month_name.onclick = e => {
+        notify({
+            head: {by:name, to:'month_filter', mid: 0},
+            type: 'toggle_active_state',
+            data: opts.name
+        })
+    }
+
+    shadow.adoptedStyleSheets = [sheet]
+    return el
+
+    function listen (message){
+        month_name.classList.toggle('active')
+
+    }
+}
+
+function get_theme() {
+    return `
+    .month_card {
+        width: 140px;
+        height: 130px;
+        border: 1px solid var(--primary_color);
+        border-right-width: 4px;
+        background-color: var(--bg_color);
+        margin-top: -1px;
+        margin-left: -1px;
+    }
+    .month_name {
+        display: block;
+        text-align: center;
+        padding: 5px 0;
+        cursor: pointer;
+    }
+    .month_name.active{
+        background-color: var(--ac-1)
+    }
+    .days_wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        border-top: 1px solid var(--primary_color);
+        
+    }
+    `
+}
+},{"buttons/day_button":11}],27:[function(require,module,exports){
+module.exports = month_filter
+
+const sheet = new CSSStyleSheet
+const theme = get_theme()
+sheet.replaceSync(theme)
+
+const month_card = require('month_card')
+const scrollbar = require('scrollbar_hor')
+
+let id = 0
+
+function month_filter (opts, protocol) {
+
+    const name = `month_filter-${id++}`
+    const notify = protocol({from: name}, listen)
+
+    const PROTOCOL = {}
+    let active_state = '';
+    const month_buttons = {}
+
+    const el = document.createElement('div')
+    const shadow = el.attachShadow({mode: 'closed'})
+
+    shadow.innerHTML = `
+        <div class="scrollbar_wrapper">
+            <div class="month_filter_wrapper"></div>
+        </div>
+        <style>${get_theme}</style>
+    `
+
+    const month_data = [
+        {name: 'January', days: 31},
+        {name: 'February', days: 28},
+        {name: 'March', days: 31},
+        {name: 'April', days: 30},
+        {name: 'May', days: 31},
+        {name: 'June', days: 30},
+        {name: 'July', days: 31},
+        {name: 'August', days: 31},
+        {name: 'September', days: 30},
+        {name: 'October', days: 31},
+        {name: 'November', days: 30},
+        {name: 'December', days: 31},
+    ]
+
+    const month_filter_wrapper = shadow.querySelector('.month_filter_wrapper')
+    month_data.forEach(month => {
+        month_buttons[month.name] = month_card(month, month_filter_protocol)
+        month_filter_wrapper.append(month_buttons[month.name])
+    })
+
+    const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
+    scrollbar_wrapper.append(scrollbar( opts, month_filter_protocol))
+
+    shadow.adoptedStyleSheets = [sheet]
+    return el
+
+    function month_filter_protocol(handshake, send){
+        if(handshake.from.includes('scrollbar')){
+            month_filter_wrapper.onscroll = send[0]
+            const ro = new ResizeObserver(entries => send[0]());
+            ro.observe(scrollbar_wrapper);
+            PROTOCOL['handleScroll'] = send[0]
+            PROTOCOL['getScrollInfo'] = send[1]
+            return [listen, setScrollLeft]
+        }
+        if(handshake.from.includes('month_card')){
+            PROTOCOL['toggle_active_state'] = toggle_active_state
+            PROTOCOL['toggle_day_button'] = toggle_day_button
+            PROTOCOL[handshake.from] = send
+        }
+        return listen
+        function listen (message){
+            const {head, type, data} = message
+            const {by, to, mid} = head
+            // if( to !== name) return console.error('address unknown', message)
+            if(by.includes('scrollbar'))
+            {
+                message.data = {sh: month_filter_wrapper.scrollWidth, ch: month_filter_wrapper.clientWidth, st: month_filter_wrapper.scrollLeft}
+                PROTOCOL.getScrollInfo(message)
+            }
+            else if(by.includes('month_card'))
+                PROTOCOL[type](by, data)
+        }
+        async function setScrollLeft(value){
+            month_filter_wrapper.scrollLeft = value
+        }
+        async function toggle_active_state(by, data){
+            if(active_state)
+                PROTOCOL[active_state](null)
+                
+            if(active_state === by){
+                active_state = ''
+                data = ''
+            }
+            else{
+                active_state = by
+                PROTOCOL[by](null)
+            }
+
+            notify({
+                head: {by: name, to: 'app_timeline', mid: 0},
+                type: 'setFilter',
+                data: {filter: 'MONTH', value: data}
+            })
+        }
+        async function toggle_day_button (by, data){
+            console.log(data)
+        }
+    }
+
+    function listen(message){
+
+    }
+}
+
+function get_theme() {
+    return `
+    .month_filter_wrapper {
+        display: flex;
+        height: 131px;
+        width: 100%;
+        border: 1px solid var(--primary_color);
+        overflow-x: scroll;
+        overflow-y: hidden;
+    }
+    .month_filter_wrapper::-webkit-scrollbar {
+        display: none;
+    }
+
+    `
+}
+},{"month_card":26,"scrollbar_hor":34}],28:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = navbar
 
@@ -2884,8 +4064,16 @@ function navbar(opts, protocol){
         {element: icon_button({src:icon_discord}) },
         {element: icon_button({src:icon_twitter}) },
         {element: icon_button({src:icon_github}) },
-        {element: icon_button({src:icon_terminal}) },
+        {element: icon_button({src:icon_terminal}), type: 'toggle_terminal' },
     ]
+
+    icon_btns.forEach(icon_btn => {if(icon_btn.type) icon_btn.element.onclick = e => {
+        notify({
+            head: {from: name, to: 'page', mid: 0},
+            type: icon_btn.type,
+            data: ''
+        })
+    }})
     
     const theme_btn = icon_button({src:icon_theme});
     theme_btn.onclick = e => {
@@ -3039,7 +4227,166 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/navbar")
-},{"_process":2,"buttons/icon_button":10,"buttons/logo_button":11,"buttons/text_button":16,"path":1}],21:[function(require,module,exports){
+},{"_process":2,"buttons/icon_button":12,"buttons/logo_button":13,"buttons/text_button":19,"path":1}],29:[function(require,module,exports){
+module.exports = our_member
+
+const window_bar = require('window_bar')
+
+// CSS Boiler Plat
+const sheet = new CSSStyleSheet
+const theme = get_theme()
+sheet.replaceSync(theme)
+
+
+let id = 0
+
+
+function our_member (opts, protocol) {
+    const name = `our_member`
+
+    protocol({from: name}, listen)
+    function listen(){
+        our_member_wrapper.style.display = 'inline'
+    }
+
+    const {data} = opts
+    // Assigning all the icons
+    const {img_src} = data
+    const {
+        icon_pdf_reader
+    } = img_src
+
+    const el = document.createElement('div')
+    const shadow = el.attachShadow ( { mode : 'closed' } )
+
+    shadow.innerHTML = `
+        <div class="our_member">
+            <div class="member_content">
+                <h2>## our members</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <td>
+                                s.no
+                            </td>
+                            <td>
+                                names
+                            </td>
+                            <td>
+                                socials
+                            </td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                01
+                            </td>
+                            <td>
+                                alexander
+                            </td>
+                            <td>
+                                cabal
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                02
+                            </td>
+                            <td>
+                                alexander praetorius
+                            </td>
+                            <td>
+                                geut/she
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>  
+            </div>
+        </div>
+        <style> ${get_theme} </style>
+    `
+
+
+    const window = window_bar({
+        name:'our_member.md', 
+        src: icon_pdf_reader,
+        data: data
+    }, our_member_protocol)
+    const our_member_wrapper = shadow.querySelector('.our_member')
+    our_member_wrapper.prepend(window)
+
+
+    shadow.adoptedStyleSheets = [ sheet ]
+    return el
+
+    
+    // cover protocol
+    function our_member_protocol(message, send){
+        return listen
+        // Listening to toggle event 
+        function listen (message) {
+            const {head, refs, type, data, meta} = message  
+            const PROTOCOL = {
+                'toggle_active_state': toggle_active_state
+            }
+            const action = PROTOCOL[type] || invalid      
+            action(message)
+        }
+        function invalid (message) { console.error('invalid type', message) }
+        async function toggle_active_state (message) {
+            const {head, refs, type, data, meta} = message
+            const {active_state} = data
+            ;( active_state === 'active')?our_member_wrapper.style.display = 'none':''
+        }
+    }
+    
+
+}
+
+function get_theme(){
+    return`
+        *{
+            box-sizing: border-box;
+        }
+        .our_member{
+            display: none;
+        }
+        .member_content{
+            position:relative;
+            display:flex;
+            flex-direction: column;
+            width: 100vw;
+            height: 100vh;
+            padding: 10px;
+            background-size: 10px 10px;
+            background-color:var(--bg_color);
+            border: 1px solid var(--primary_color);
+            margin-bottom: 30px;
+        }
+        h2{
+            margin: 0;
+        }
+        table{
+            border-collapse: collapse;
+        }
+        td{
+            border: 1px solid var(--primary_color);
+            padding: 8px;
+        }
+        thead{
+            font-weight: bold;
+        }
+        @media (min-width: 510px){
+            .member_content{
+                width: auto;
+                height: auto;
+            }
+        }
+
+    `
+}
+},{"window_bar":45}],30:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = project_card
 
@@ -3079,6 +4426,7 @@ function project_card (opts) {
                 <div class="project_title">
                     ${opts.project}
                 </div>
+                <div class="status"> ${opts.active_state} </div>
                 <div class="socials_wrapper"></div>
             </div>
             <div class="content_wrapper">
@@ -3185,7 +4533,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/project_card")
-},{"_process":2,"buttons/sm_icon_button":13,"path":1}],22:[function(require,module,exports){
+},{"_process":2,"buttons/sm_icon_button":15,"path":1}],31:[function(require,module,exports){
 module.exports = project_filter
 
 
@@ -3217,8 +4565,8 @@ function project_filter(opts, protocol){
     `
 
     const search_project = search_input(opts, project_filter_protocol)
-    const status_button = select_button(opts, project_filter_protocol)
-    const tag_button = select_button(opts, project_filter_protocol)
+    const status_button = select_button({data: opts.data, name: 'STATUS', choices: ['ACTIVE', 'UNACTIVE', 'PAUSED']}, project_filter_protocol)
+    const tag_button = select_button({data: opts.data, name: 'TAGS', choices: opts.tags}, project_filter_protocol)
 
     const project_filter = shadow.querySelector('.project_filter')
     project_filter.append(status_button, tag_button, search_project)
@@ -3275,10 +4623,11 @@ function get_theme(){
         }
     `
 }
-},{"../buttons/select_button":12,"search_input":25}],23:[function(require,module,exports){
+},{"../buttons/select_button":14,"search_input":35}],32:[function(require,module,exports){
 module.exports = projects_page
 
 const app_projects = require('app_projects')
+const the_dat = require('the_dat')
 
 function projects_page (opts, protocol) {
     const {data} = opts
@@ -3288,6 +4637,7 @@ function projects_page (opts, protocol) {
     const theme = get_theme()
 
     const components = [
+        the_dat({data}, projects_protocol),
         app_projects({data}),
     ]
 
@@ -3309,7 +4659,6 @@ function projects_page (opts, protocol) {
     // Placeholder code for learning purposes
     // Will be removed
     function projects_protocol (handshake, send){
-        listen.id  = id
         if (send) return listen
         const PROTOCOL = {
             'toggle_display' : toggle_display
@@ -3352,7 +4701,7 @@ function get_theme() {
         }
     `
 }
-},{"app_projects":7}],24:[function(require,module,exports){
+},{"app_projects":7,"the_dat":38}],33:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = scrollbar
 
@@ -3409,29 +4758,24 @@ function scrollbar(opts, protocol){
     `
     const bar = shadow.querySelector('.bar')
     let lastPageY;
-    let isMouseDown = false
     bar.onmousedown = handle_mousedown;
     function handle_mousedown(e){
         lastPageY = e.pageY;
-        isMouseDown = true;
-    }
-    bar.onmousemove = handle_mousemove;
-    function handle_mousemove(e){
-        if(isMouseDown){
-            notify(message)
-            const delta = e.pageY - lastPageY;
-            lastPageY = e.pageY;
-            const ratio = content_clientHeight / content_scrollHeight
-            setScrollTop(content_scrollTop + delta / ratio)
+        window.onmousemove = handle_mousemove;
+        function handle_mousemove(e){
+                notify(message)
+                const delta = e.pageY - lastPageY;
+                lastPageY = e.pageY;
+                const ratio = content_clientHeight / content_scrollHeight
+                setScrollTop(content_scrollTop + delta / ratio)
+        }
+        window.onmouseup = handle_mouseup;
+        function handle_mouseup(){
+            window.onmousemove = null;
+            window.onmouseup = null;
         }
     }
-    bar.onmouseup = handle_mouseup;
-    bar.onmouseleave = handle_mouseup;
-    function handle_mouseup(){
-        isMouseDown = false;
-    }
 
-    window.onresize = handle_scroll;
     function handle_scroll(){
         notify(message)
         const ratio = content_clientHeight / content_scrollHeight
@@ -3442,10 +4786,8 @@ function scrollbar(opts, protocol){
         bar.style.cssText = 'height:' + Math.max(ratio * 100, 10) + '%; top:' + (content_scrollTop / content_scrollHeight ) * 100 + '%;'
     }
 
-    window.requestAnimationFrame(handle_scroll);
-    
 
-    const arrow_down_btn = sm_icon_button({src: icon_arrow_down, src_active: icon_arrow_down, activate: true})
+    const arrow_down_btn = sm_icon_button({src: icon_arrow_down, activate: false})
     arrow_down_btn.classList.add('arrow_down_btn')
     arrow_down_btn.onclick = () => {
         notify(message)
@@ -3453,7 +4795,7 @@ function scrollbar(opts, protocol){
         setScrollTop(content_scrollTop + 30 / ratio)
     }
 
-    const arrow_up_btn = sm_icon_button({src: icon_arrow_up, src_active: icon_arrow_up, activate: true})
+    const arrow_up_btn = sm_icon_button({src: icon_arrow_up, activate: false})
     arrow_up_btn.classList.add('arrow_up_btn')
     arrow_up_btn.onclick = () => {
         notify(message)
@@ -3462,8 +4804,21 @@ function scrollbar(opts, protocol){
     }
 
     const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
-    scrollbar_wrapper.append(arrow_down_btn, arrow_up_btn)
+    
+    setTimeout(() => {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if(entry.isIntersecting) {
+                    handle_scroll()
+                    observer.unobserve(entry.target)
+                }
+            })
+        });
+        observer.observe(scrollbar_wrapper)}, 2000)
+    // setTimeout(window.requestAnimationFrame(handle_scroll), 5000);
 
+    scrollbar_wrapper.append(arrow_up_btn, arrow_down_btn)
+    
 
     shadow.adoptedStyleSheets = [ sheet ]
     return el;
@@ -3490,7 +4845,7 @@ function get_theme() {
             width: 30px;
             cursor: pointer;
             transition: opacity 0.25s linear;
-            box-shadow:inset 0px 0px 0px 1px #fff;
+            box-shadow:inset 0px 0px 0px 1px var(--bg_color);
             
         }
         .bar:hover {
@@ -3506,7 +4861,172 @@ function get_theme() {
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/scrollbar")
-},{"_process":2,"buttons/sm_icon_button":13,"path":1}],25:[function(require,module,exports){
+},{"_process":2,"buttons/sm_icon_button":15,"path":1}],34:[function(require,module,exports){
+(function (process,__dirname){(function (){
+module.exports = scrollbar
+
+const path = require('path')
+const cwd = process.cwd()
+const prefix = path.relative(cwd, __dirname)
+
+const sm_icon_button = require('buttons/sm_icon_button')
+
+
+const sheet = new CSSStyleSheet
+const theme = get_theme()
+sheet.replaceSync(theme)
+
+let id = 0;
+
+function scrollbar(opts, protocol){
+
+    const name = "scrollbar-"+id++;
+    const {data} = opts
+    let message = {
+        head: {by: name, to:'app_projects', mid:0},
+        type: 'status',
+        data: null
+    }
+    let content_scrollWidth, content_clientWidth, content_scrollLeft;
+    
+    const [notify, setScrollLeft] = protocol({from: name}, [handle_scroll, listen])
+    function listen(message){
+        const {head, type, data} = message
+        const {by, to, id} = head
+        const { sh, ch, st } = data
+        content_clientWidth = ch;
+        content_scrollWidth = sh;
+        content_scrollLeft = st;
+    }
+
+    // Assigning all the icons
+    const { img_src: { 
+        icon_arrow_right = `${prefix}/icon_arrow_right.svg`,
+        icon_arrow_left = `${prefix}/icon_arrow_left.svg`
+    } } = data
+
+    const el = document.createElement('div')
+    el.classList.add('container')
+    const shadow = el.attachShadow({ mode: 'closed'})
+    shadow.innerHTML = `
+        <div class="scrollbar_wrapper">
+            <div class="bar_wrapper">
+                <div class="bar"> </div>
+            </div>
+        </div>
+        <style> ${get_theme} </style>
+    `
+    const bar = shadow.querySelector('.bar')
+    let lastPageX;
+    bar.onmousedown = handle_mousedown;
+    function handle_mousedown(e){
+        lastPageX = e.pageX;
+        window.onmousemove = handle_mousemove;
+        function handle_mousemove(e){
+            notify(message)
+            const delta = e.pageX - lastPageX;
+            lastPageX = e.pageX;
+            const ratio = content_clientWidth / content_scrollWidth
+            setScrollLeft(content_scrollLeft + delta / ratio)
+        }
+        window.onmouseup = handle_mouseup;
+        function handle_mouseup(){
+            window.onmousemove = null;
+            window.onmouseup = null;
+        }
+    }
+    
+      
+      // Observe one or multiple elements
+    function handle_scroll(){
+        notify(message)
+        const ratio = content_clientWidth / content_scrollWidth
+        if(!ratio || ratio >= 1) 
+            el.style.cssText = 'display: none;'
+        else
+            el.style.cssText = 'display: inline;'
+        bar.style.cssText = 'width:' + Math.max(ratio * 100, 10) + '%; left:' + (content_scrollLeft / content_scrollWidth ) * 100 + '%;'
+    }
+
+
+    const arrow_down_btn = sm_icon_button({src: icon_arrow_right, activate: false})
+    arrow_down_btn.classList.add('arrow_down_btn')
+    arrow_down_btn.onclick = () => {
+        notify(message)
+        const ratio = content_clientWidth / content_scrollWidth
+        setScrollLeft(content_scrollLeft + 30 / ratio)
+    }
+
+    const arrow_up_btn = sm_icon_button({src: icon_arrow_left, activate: false})
+    arrow_up_btn.classList.add('arrow_up_btn')
+    arrow_up_btn.onclick = () => {
+        notify(message)
+        const ratio = content_clientWidth / content_scrollWidth
+        setScrollLeft(content_scrollLeft - 30 / ratio)
+    }
+
+    const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
+    
+    
+
+    setTimeout(() => {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if(entry.isIntersecting) {
+                    handle_scroll()
+                    observer.unobserve(entry.target)
+                }
+            })
+        });
+        observer.observe(scrollbar_wrapper)}, 2000)
+    // setTimeout(window.requestAnimationFrame(handle_scroll), 5000);
+
+    scrollbar_wrapper.append(arrow_up_btn, arrow_down_btn)
+
+
+    shadow.adoptedStyleSheets = [ sheet ]
+    return el;
+}
+
+function get_theme() {
+    return `
+        *{
+            box-sizing: border-box;
+        }
+        .scrollbar_wrapper{
+            height: 32px;
+            width: 100%;
+            display: flex;
+            box-sizing: border-box;
+            border:1px solid var(--primary_color);
+        }
+        .bar_wrapper{
+            display: flex;
+            width: 100%;
+        }
+        .bar {
+            position: relative;
+            background-color: var(--primary_color);
+            height: 30px;
+            cursor: pointer;
+            transition: opacity 0.25s linear;
+            box-shadow:inset 0px 0px 0px 1px var(--bg_color);
+            
+        }
+        .bar:hover {
+            cursor: pointer
+        }
+        .bar:active {
+            -o-user-select: none;
+            -ms-user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+    `
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/scrollbar_hor")
+},{"_process":2,"buttons/sm_icon_button":15,"path":1}],35:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = input_search
 
@@ -3525,7 +5045,7 @@ function input_search (opts, protocol){
     const {data} = opts
     let message = {
         head: ['input_search', 'project_filter', 'project_filter'],
-        type: 'search',
+        type: 'setFilter',
     }
 
     // Assigning all the icons
@@ -3547,7 +5067,7 @@ function input_search (opts, protocol){
     `
     const input = shadow.querySelector('.input')
     input.onchange = (e) => {
-        message['data'] = e.target.value
+        message['data'] = {filter: 'SEARCH', value:e.target.value}
         notify(message)
     }
 
@@ -3570,7 +5090,7 @@ function get_theme(){
         .search_input{
             width: 100%;
             min-width: 100% !important;
-            height: 40px;
+            height: 30px;
             max-height: 40px;
             position: relative;
             flex-grow: 1;
@@ -3601,7 +5121,402 @@ function get_theme(){
     
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/search_input")
-},{"_process":2,"path":1}],26:[function(require,module,exports){
+},{"_process":2,"path":1}],36:[function(require,module,exports){
+module.exports = tab_window
+
+// CSS Boiler Plat
+const sheet = new CSSStyleSheet
+const theme = get_theme()
+sheet.replaceSync(theme)
+
+function tab_window (opts, protocol) {
+    const el = document.createElement('div')
+    const shadow = el.attachShadow({mode: 'closed'})
+
+    // adding a `main-wrapper` 
+    shadow.innerHTML = `
+        <div class="main-wrapper">${opts.text}</div>
+        <style>${get_theme()}</style>
+    `
+    shadow.adoptedStyleSheets = [sheet]
+    return el
+}
+
+function get_theme() {
+    return ``
+}
+},{}],37:[function(require,module,exports){
+module.exports = terminal
+
+const tab_window = require('tab_window')
+const tab_button = require('buttons/tab_button')
+const sm_icon_button_alt = require('buttons/sm_icon_button_alt')
+const scrollbar = require('scrollbar_hor')
+
+// CSS Boiler Plat
+const sheet = new CSSStyleSheet
+const theme = get_theme()
+sheet.replaceSync(theme)
+
+
+let id = 0
+
+function terminal (opts, protocol) {
+    const name = `terminal-${id++}`
+
+    let active_tab = 0
+    const tabs = {}
+    const tab_buttons_id = {}
+    let tab_id = 0
+    
+    const PROTOCOL = {
+        close_tab,
+        tab_btn_click
+    }
+    
+    const {data} = opts
+    // Assigning all the icons
+    const {img_src} = data
+    const {
+        icon_terminal,
+        icon_close_light,
+        icon_pdf_reader
+    } = img_src
+
+    const el = document.createElement('div')
+    const shadow = el.attachShadow ( { mode : 'closed' } )
+
+    shadow.innerHTML = `
+        <div class="terminal">
+            <div class="header">${icon_terminal}Terminal</div>
+            <div class="tab_wrapper"></div>
+            <div class="footer">
+                <div class="scrollbar_wrapper">
+                    <div class="tab_buttons"></div>
+                </div>
+                <div class="buttons"></div>
+            </div>
+        </div>
+        <style> ${get_theme} </style>
+    `
+
+    const tab = tab_window({data: opts.data, text: 'Home'})
+    tabs[tab_id] = tab
+    active_tab = tab_id
+    
+    const tab_buttons = shadow.querySelector('.tab_buttons')
+    const tab_btn = tab_button({data, name:'Home'}, terminal_protocol)
+    tab_btn.id = tab_id
+    tab_buttons.append(tab_btn)
+
+    const tab_wrapper = shadow.querySelector('.tab_wrapper')
+    tab_wrapper.append(tab)
+
+    const terminal_wrapper = shadow.querySelector('.terminal')
+    
+    const add_btn = sm_icon_button_alt({src: icon_pdf_reader})
+    add_btn.onclick = e => {
+        tab_id++
+        const tab = tab_window({data: opts.data, text: 'New Tab' + tab_id})
+        tabs[tab_id] = tab
+        tab_wrapper.replaceChildren(tab)
+        PROTOCOL[`tab_button-${active_tab}`]()
+        active_tab = tab_id
+        const tab_btn = tab_button({data, name:'New Tab' + tab_id}, terminal_protocol)
+        tab_btn.id = tab_id
+        tab_buttons_id[tab_id] = tab_btn
+        tab_buttons.append(tab_btn)
+
+        PROTOCOL['handleScroll']()
+    }
+    const buttons = shadow.querySelector('.buttons')
+    buttons.append(add_btn)
+
+    if(screen.width > 510){
+        const fullscreen_btn = sm_icon_button_alt({src: icon_pdf_reader})
+        fullscreen_btn.onclick = e => terminal_wrapper.style.height === '100vh' ? 
+                    terminal_wrapper.style.height = '300px' : 
+                    terminal_wrapper.style.height = '100vh'
+        buttons.append(fullscreen_btn)
+    }
+    
+    const close_btn = sm_icon_button_alt({src: icon_close_light})
+    // add_btn.onclick = e => toggle_terminal()
+
+    buttons.append(close_btn)
+
+    const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
+    scrollbar_wrapper.append(scrollbar( opts, terminal_protocol))
+    
+
+    shadow.adoptedStyleSheets = [ sheet ]
+    return el
+
+    
+    // cover protocol
+    function terminal_protocol(handshake, send){
+        if(handshake.from.includes('scrollbar')){
+            tab_buttons.onscroll = send[0]
+            const ro = new ResizeObserver(entries => send[0]());
+            ro.observe(tab_buttons);
+            PROTOCOL['handleScroll'] = send[0]
+            PROTOCOL['getScrollInfo'] = send[1]
+            return [listen, setScrollLeft]
+        }
+        if(handshake.from.includes('tab_button')){
+            PROTOCOL[handshake.from] = send
+        }
+        return listen
+        // Listening to toggle event 
+        function listen (message) {
+            const {head, refs, type, data, meta} = message  
+            const {by, to, mid} = head
+            if(by.includes('scrollbar'))
+            {
+                message.data = {sh: tab_buttons.scrollWidth, ch: tab_buttons.clientWidth, st: tab_buttons.scrollLeft}
+                PROTOCOL.getScrollInfo(message)
+            }
+            else
+                PROTOCOL[type](data)
+        }
+    }
+    async function invalid (message) { console.error('invalid type', message) }
+
+    async function setScrollLeft(value){
+        tab_buttons.scrollLeft = value
+    }
+    async function close_tab(id){
+        if (Object.keys(tabs).length == 1)
+            tab_wrapper.removeChild(tabs[id])
+        delete tabs[id]
+
+        if(active_tab == id && !Object.keys(tabs).length == 0){
+            const temp = Object.values(tabs)[0]
+            tab_wrapper.replaceChildren(temp)
+            active_tab = Object.keys(tabs)[0]
+            PROTOCOL[`tab_button-${active_tab}`]()
+        }
+
+        PROTOCOL['handleScroll']()
+    }
+    async function tab_btn_click(id){
+        active_tab && PROTOCOL[`tab_button-${active_tab}`]()
+        active_tab = id
+        tab_wrapper.replaceChildren(tabs[active_tab])
+    }
+}
+
+function get_theme(){
+    return`
+        *{
+            box-sizing: border-box;
+        }
+        .terminal{
+            width: 100vw;
+            height: 100vh;
+            min-height: 100vh;
+            max-width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 10;
+            background-color: var(--bg_color);
+        }
+        .header{
+            display: flex;
+            background-color: var(--primary_color);
+            color: var(--bg_color);
+            padding: 10px 5px;
+            align-items: center;
+            gap: 5px;
+        }
+        .header svg path{
+            fill: white;
+        }
+        .tab_wrapper{
+            background-color: var(--bg_color);
+            border: 5px solid var(--primary_color);
+            height: 100%;
+        }
+        .footer{
+            position: fixed;
+            bottom: 0;
+            width: 100vw;
+            max-width: 100%;
+            --s: 20px; /* control the size */
+            --_g: var(--bg_color) /* first color */ 0 25%, #0000 0 50%;
+            background:
+                repeating-conic-gradient(at 66% 66%,var(--_g)),
+                repeating-conic-gradient(at 33% 33%,var(--_g)),
+                var(--primary_color);  /* second color */ 
+            background-size: var(--s) var(--s);
+            display: flex;
+            justify-content: space-between;
+        }
+        .scrollbar_wrapper{
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .tab_buttons{
+            display: flex;
+            overflow-x: scroll;
+            overflow-y: hidden;
+        }
+        .tab_buttons::-webkit-scrollbar {
+            display: none;
+        }
+        .buttons{
+            display: flex;
+            widht: fit-content;
+        }
+        .buttons > div {
+            height: fit-content;
+        }
+        @media (min-width: 510px){
+            .terminal{
+                height: 300px;
+                min-height: 300px;
+                bottom: 0;
+                top: auto;
+            }
+        }
+    `
+}
+},{"buttons/sm_icon_button_alt":16,"buttons/tab_button":18,"scrollbar_hor":34,"tab_window":36}],38:[function(require,module,exports){
+module.exports = the_dat
+
+const window_bar = require('window_bar')
+
+// CSS Boiler Plat
+const sheet = new CSSStyleSheet
+const theme = get_theme()
+sheet.replaceSync(theme)
+
+
+let id = 0
+
+
+function the_dat (opts, protocol) {
+    const name = `the_dat-${id++}`
+    const PROTOCOL = {
+        'toggle_fullscreen': toggle_fullscreen,
+        'toggle_VR': toggle_VR,
+        'toggle_active_state': toggle_active_state
+    }
+
+    protocol({from: name}, listen)
+    function listen(){
+        the_dat_wrapper.style.display = 'inline'
+    }
+
+    const {data} = opts
+    // Assigning all the icons
+    const {img_src} = data
+    const {
+        icon_pdf_reader
+    } = img_src
+
+    const el = document.createElement('div')
+    const shadow = el.attachShadow ( { mode : 'closed' } )
+
+    shadow.innerHTML = `
+        <div class="the_dat">
+            <div class="dat_content">
+                <iframe style="background-color: black"></iframe>
+            </div>
+        </div>
+        <style> ${get_theme} </style>
+    `
+
+
+    const window = window_bar({
+        name:'the_dat', 
+        src: icon_pdf_reader,
+        icon_buttons: [{icon: icon_pdf_reader, action: 'toggle_VR'}, {icon:icon_pdf_reader, action: 'toggle_fullscreen'}],
+        data: data
+    }, the_dat_protocol)
+    const the_dat_wrapper = shadow.querySelector('.the_dat')
+    the_dat_wrapper.prepend(window)
+    const dat_content = shadow.querySelector('.dat_content')
+
+
+
+    shadow.adoptedStyleSheets = [ sheet ]
+    return el
+
+    
+    // cover protocol
+    function the_dat_protocol(message, send){
+        return listen
+        // Listening to toggle event 
+        function listen (message) {
+            const {head, refs, type, data, meta} = message  
+            const action = PROTOCOL[type] || invalid      
+            action(message)
+        }
+        function invalid (message) { console.error('invalid type', message) }
+        
+    }
+    async function toggle_active_state (message) {
+        const {head, refs, type, data, meta} = message
+        const {active_state} = data
+        ;( active_state === 'active')?the_dat_wrapper.style.display = 'none':''
+        if(document.fullscreenElement)
+            document.exitFullscreen()
+    }
+    async function toggle_fullscreen(message){
+        the_dat_wrapper.classList.toggle('active')
+        dat_content.classList.toggle('active')
+        if(document.fullscreenElement)
+            document.exitFullscreen()
+        else
+            the_dat_wrapper.requestFullscreen()    
+    }
+    async function toggle_VR(message){
+        console.log('VR')
+    }
+}
+
+function get_theme(){
+    return`
+        *{
+            box-sizing: border-box;
+            color: var(--primary_color);
+        }
+        .the_dat.active{
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            z-index: 20;
+        }
+        .dat_content.active{
+            height: 100vh;
+        }
+        .dat_content{
+            position:relative;
+            display:flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            background-size: 10px 10px;
+            background-color:var(--bg_color);
+            border: 1px solid var(--primary_color);
+            margin-bottom: 30px;
+        }
+        h2{
+            margin: 0;
+        }
+        @media (min-width: 510px){
+            .dat_content{
+                width: auto;
+                height: auto;
+            }
+        }
+    `
+}
+},{"window_bar":45}],39:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const cwd = process.cwd()
@@ -3648,7 +5563,7 @@ const dark_theme = {
 
 module.exports = dark_theme
 }).call(this)}).call(this,require('_process'),"/src/node_modules/theme/dark_theme")
-},{"_process":2,"path":1}],27:[function(require,module,exports){
+},{"_process":2,"path":1}],40:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const cwd = process.cwd()
@@ -3678,6 +5593,8 @@ const light_theme = {
     icon_arrow_up: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.5789 9H18.4211V17H7.89473V27.6667H0V41H18.4211V33H31.5789V41H50V27.6667H42.1053V17H31.5789V9Z" fill="#293648"/></svg>`,
     icon_arrow_down_light: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="white"/></svg>`,
     icon_arrow_up_light: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.579 9L18.421 9V17H7.89475V27.6667H1.2659e-06L0 41H18.421V33H31.579V41H50V27.6667H42.1054V17H31.579V9Z" fill="white"/></svg>`,
+    icon_arrow_right: `<svg transform="rotate(90 0 0)" width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.5789 9H18.4211V17H7.89473V27.6667H0V41H18.4211V33H31.5789V41H50V27.6667H42.1053V17H31.5789V9Z" fill="#293648"/></svg>`,
+    icon_arrow_left: `<svg transform="rotate(90 0 0)" width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="#293648"/></svg>`,
     icon_search : `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.7627 2.27344H25.5832V4.73044H12.7627V2.27344Z" fill="#293648"/><path d="M12.7627 32.9844H25.5832V35.4414H12.7627V32.9844Z" fill="#293648"/><path d="M6.93457 4.73047H12.7621V7.18747H6.93457V4.73047Z" fill="#293648"/><path d="M6.93457 30.5273H12.7621V32.9844H6.93457V30.5273Z" fill="#293648"/><path d="M4.60352 7.1875H6.93452V14.5585H4.60352V7.1875Z" fill="#293648"/><path d="M4.60352 23.1562H6.93452V30.5272H4.60352V23.1562Z" fill="#293648"/><path d="M2.27246 13.3281H4.60346V24.3846H2.27246V13.3281Z" fill="#293648"/><path d="M31.4102 7.1875H33.7413V14.5585H31.4102V7.1875Z" fill="#293648"/><path d="M33.7416 35.4433H31.4105V32.9863H25.583V30.5292H31.4105V24.3867H33.7416V30.5292H36.0726V32.9863H38.4035V35.4433H40.7346V37.9004H43.0655V40.3574H45.3966V42.8142H47.7276V47.7283H43.0655V45.2713H40.7346V42.8142H38.4035V40.3574H36.0726V37.9004H33.7416V35.4433Z" fill="#293648"/><path d="M33.7412 13.3281H36.0721V24.3846H33.7412V13.3281Z" fill="#293648"/><path d="M25.583 4.73047H31.4105V7.18747H25.583V4.73047Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12.1936 1.70312H26.1505V4.16012H31.978V6.61712H34.3091V12.7596H36.64V24.9524H34.3091V29.9586H36.64V32.4156H38.9709V34.8727H41.3021V37.3297H43.633V39.7868H45.9641V42.2436H48.295V48.294H42.4966V45.837H40.1657V43.3799H37.8346V40.9231H35.5036V38.4661H33.1727V36.009H30.8416V33.552H26.1505V36.009H12.1936V33.552H6.3661V31.0949H4.0351V24.9524H1.7041V12.7596H4.0351V6.61712H6.3661V4.16012H12.1936V1.70312ZM12.7618 4.72831H6.93428V7.18531H4.60328V13.3278H2.27228V24.3843H4.60328V30.5268H6.93428V32.9838H12.7618V35.4409H25.5823V32.9838H31.4098V35.4409H33.7409V37.8979H36.0718V40.3549H38.4027V42.8118H40.7339V45.2688H43.0648V47.7259H47.7268V42.8118H45.3959V40.3549H43.0648V37.8979H40.7339V35.4409H38.4027V32.9838H36.0718V30.5268H33.7409V24.3843H36.0718V13.3278H33.7409V7.18531H31.4098V4.72831H25.5823V2.27131H12.7618V4.72831ZM25.5823 4.72831H12.7618V7.18531H6.93428V14.5563H4.60328V23.1559H6.93428V30.5268H12.7618V32.9838H25.5823V30.5268H31.4098V24.3843H33.7409V14.5563H31.4098V7.18531H25.5823V4.72831ZM25.0141 5.29649H13.33V7.75349H7.50247V15.1245H5.17147V22.5876H7.50247V29.9586H13.33V32.4156H25.0141V29.9586H30.8416V23.8161H33.1727V15.1245H30.8416V7.75349H25.0141V5.29649Z" fill="#293648"/></svg>`,
     banner_cover : `${prefix}/../assets/images/banner_cover.svg`,
     about_us_cover : `${prefix}/../assets/images/about_us_cover.png`,
@@ -3695,7 +5612,7 @@ const light_theme = {
 
 module.exports = light_theme
 }).call(this)}).call(this,require('_process'),"/src/node_modules/theme/light_theme")
-},{"_process":2,"path":1}],28:[function(require,module,exports){
+},{"_process":2,"path":1}],41:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = timeline_card
 
@@ -3836,26 +5753,331 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/timeline_card")
-},{"_process":2,"path":1}],29:[function(require,module,exports){
+},{"_process":2,"path":1}],42:[function(require,module,exports){
+module.exports = timeline_filter
+
+
+const search_input = require('search_input')
+const select_button = require('../buttons/select_button')
+const sm_icon_button = require('buttons/sm_icon_button')
+const year_button = require('buttons/year_button')
+
+// CSS Boiler Plat
+const sheet = new CSSStyleSheet
+const theme = get_theme()
+sheet.replaceSync(theme)
+
+var id = 0;
+function timeline_filter(opts, protocol){
+
+    const name = 'timeline_filter-'+id++;
+    const notify = protocol({from: name}, listen)
+    
+    const PROTOCOL = {
+
+    }
+
+    const {data} = opts
+    const { img_src : {
+        icon_arrow_up= `${prefix}/icon_arrow_up.svg`,
+    }} = data
+
+    const el = document.createElement('div')
+    const shadow = el.attachShadow( { mode:`closed` } )
+    shadow.innerHTML = `
+        <div class="filter_wrapper">
+            <div class="timeline_filter">
+                <div class="date_wrapper"></div>
+            </div>
+        </div>
+        <style> ${get_theme} </style>
+    `
+
+    const search_project = search_input(opts, timeline_filter_protocol)
+    const status_button = select_button({data: opts.data, name: 'STATUS', choices: ['ACTIVE', 'UNACTIVE', 'PAUSED']}, timeline_filter_protocol)
+    const tag_button = select_button({data: opts.data, name: 'TAGS', choices: opts.tags}, timeline_filter_protocol)
+    const month_button = sm_icon_button({src: icon_arrow_up, activate: true})
+    const year_btn = year_button({month: opts.month, year: opts.year , data}, timeline_filter_protocol)
+
+    month_button.onclick = e => notify({
+        head: {by:name, to:'app_timeline', mid:0},
+        type: 'toggle_month_filter',
+        data: null
+    })
+    year_btn.onclick = e => notify({
+        head: {by:name, to:'app_timeline', mid:0},
+        type: 'toggle_year_filter',
+        data: null
+    })
+
+    const timeline_filter = shadow.querySelector('.timeline_filter')
+    timeline_filter.prepend(status_button, tag_button, search_project)
+
+    const date_wrapper = shadow.querySelector('.date_wrapper')
+    date_wrapper.append( month_button, year_btn)
+
+    // shadow.append(timeline_filter)
+    shadow.adoptedStyleSheets = [sheet]
+    return el
+
+    function timeline_filter_protocol(handshake, send, mid = 0){
+        if(handshake && handshake.from.includes('year_button'))
+            PROTOCOL['get_date'] = send
+        return listen
+        function listen(message){
+            const {head, type, data} = message
+            const {by, to, id} = head
+            // if( to !== id) return console.error('address unknown', message)
+            message = {
+                head: {by:name, to:'app_timeline', mid:0},
+                type: type,
+                data: data
+            }
+            notify(message)
+        }
+    }
+    function listen(message){
+        message.head.to = 'year_button'
+        PROTOCOL['get_date'](message)
+    }
+
+}
+
+function get_theme(){
+    return`
+        .filter_wrapper{
+            container-type: inline-size;
+        }
+        .timeline_filter{
+            display: grid;
+            grid-template-columns: 12fr;
+            align-items:flex-end;
+        }
+        .timeline_filter > div{
+            flex-grow: 1;
+        }
+        .timeline_filter .select_button_wrapper{
+            width: 100% !important;
+        }
+        .date_wrapper{
+            display: grid;
+            grid-template-columns: 0.1fr 12fr;
+        }
+
+
+        @container(min-width: 450px) {
+            .timeline_filter{
+                grid-template-columns: 1fr 1fr 9fr 0.1fr;
+            }
+        }
+    `
+}
+},{"../buttons/select_button":14,"buttons/sm_icon_button":15,"buttons/year_button":20,"search_input":35}],43:[function(require,module,exports){
 module.exports = timeline_page
 
+const app_timeline = require('app_timeline')
+
 function timeline_page (opts, protocol) {
+    const {data} = opts
+
+    // CSS Boiler Plat
+    const sheet = new CSSStyleSheet
+    const theme = get_theme()
+
+    const components = [
+        app_timeline({data}),
+    ]
+
     const el = document.createElement('div')
     const shadow = el.attachShadow({mode: 'closed'})
 
     // adding a `main-wrapper` 
     shadow.innerHTML = `
-        <div class="main-wrapper">Timeline</div>
+        <div class="main-wrapper"></div>
         <style>${get_theme()}</style>
     `
-    // shadow.adoptedStyleSheets = [sheet]
+    const main = shadow.querySelector('.main-wrapper')
+    main.append(...components)
+    shadow.append(main)
+    shadow.adoptedStyleSheets = [sheet]
     return el
+
+
+    // Placeholder code for learning purposes
+    // Will be removed
+    function projects_protocol (handshake, send){
+        if (send) return listen
+        const PROTOCOL = {
+            'toggle_display' : toggle_display
+        }
+        send = handshake(null, listen)
+        function listen (message){
+            function format (new_message = {
+                head: [from = 'alice', to = 'bob', message_id = 1],
+                refs: { cause: message.head }, // reply to received message
+                type: 'change_theme',
+                data: `.foo { background-color: red; }`
+            }) { return new_message }
+            console.log(format())
+            // const { head, type, data } = message
+            // const [by, to, id] = head
+            // if (to !== id) return console.error('address unknown', message)
+            // const action = PROTOCOL[type] || invalid
+            // action(message)
+        }
+        function invalid (message) { console.error('invalid type', message) }
+        async function toggle_display ({ head: [to], data: theme }) {
+            // @TODO: apply theme to `sheet` and/or `style` and/or css `var(--property)`
+        }
+    }
 }
 
 function get_theme() {
-    return ``
+    return`
+        .main-wrapper{
+            margin: 0;
+            padding:30px 10px;
+            opacity: 1;
+            background-image: radial-gradient(var(--primary_color) 2px, var(--bg_color) 2px);
+            background-size: 16px 16px;
+        }
+        @media(min-width: 856px){
+            .main-wrapper{
+                padding-inline:20px;
+            }
+        }
+    `
 }
-},{}],30:[function(require,module,exports){
+},{"app_timeline":9}],44:[function(require,module,exports){
+module.exports = tools
+
+const window_bar = require('window_bar')
+
+// CSS Boiler Plat
+const sheet = new CSSStyleSheet
+const theme = get_theme()
+sheet.replaceSync(theme)
+
+
+let id = 0
+
+
+function tools (opts, protocol) {
+    const name = `tools`
+
+    protocol({from: name}, listen)
+    function listen(){
+        tools_wrapper.style.display = 'inline'
+    }
+
+    const {data} = opts
+    // Assigning all the icons
+    const {img_src} = data
+    const {
+        icon_folder,
+        icon_discord,
+        icon_github,
+    } = img_src
+
+    const el = document.createElement('div')
+    const shadow = el.attachShadow ( { mode : 'closed' } )
+
+    shadow.innerHTML = `
+        <div class="tools">
+            <div class="tools_content">
+                <div class="icon">
+                    ${icon_discord}
+                    <span>discord link</span>
+                </div>
+                <div class="icon">
+                    ${icon_github}
+                    <span>github link</span>
+                </div>
+            </div>
+        </div>
+        <style> ${get_theme} </style>
+    `
+
+
+    const window = window_bar({
+        name:'tools.md', 
+        src: icon_folder,
+        data: data
+    }, tools_protocol)
+    const tools_wrapper = shadow.querySelector('.tools')
+    tools_wrapper.prepend(window)
+
+
+    shadow.adoptedStyleSheets = [ sheet ]
+    return el
+
+    
+    // cover protocol
+    function tools_protocol(message, send){
+        return listen
+        // Listening to toggle event 
+        function listen (message) {
+            const {head, refs, type, data, meta} = message  
+            const PROTOCOL = {
+                'toggle_active_state': toggle_active_state
+            }
+            const action = PROTOCOL[type] || invalid      
+            action(message)
+        }
+        function invalid (message) { console.error('invalid type', message) }
+        async function toggle_active_state (message) {
+            const {head, refs, type, data, meta} = message
+            const {active_state} = data
+            ;( active_state === 'active')?tools_wrapper.style.display = 'none':''
+        }
+    }
+    
+
+}
+
+function get_theme(){
+    return`
+        *{
+            box-sizing: border-box;
+        }
+        .tools{
+            display: none;
+        }
+        .tools_content{
+            position:relative;
+            display:flex;
+            padding: 10px;
+            width: 100vw;
+            height: 100vh;
+            background-size: 10px 10px;
+            background-color:var(--bg_color);
+            border: 1px solid var(--primary_color);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        .icon{
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            align-items: center;
+        }
+        .icon svg{
+            width: 50px;
+            height: 50px;
+        }
+        h2{
+            margin: 0;
+        }
+        @media (min-width: 510px){
+            .tools_content{
+                width: auto;
+                height: auto;
+            }
+        }
+
+    `
+}
+},{"window_bar":45}],45:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = window_bar
 
@@ -3933,6 +6155,7 @@ function window_bar (opts, protocol) {
     if(opts.action_buttons){
         
         // adding additional actions wrapper
+
         opts.action_buttons.forEach((btn_name) => {
             const button = sm_text_button({text: btn_name})
             actions_wrapper.append(button)
@@ -3952,6 +6175,23 @@ function window_bar (opts, protocol) {
         window_bar_actions.append(actions_toggle_btn)
 
     }
+
+
+    // Adding icon buttons
+    if(opts.icon_buttons)
+    opts.icon_buttons.forEach((btn) => {
+        const button = sm_icon_button_alt({src: btn.icon}, window_bar_protoocol)
+        button.onclick = () => send({
+            head: {
+                by: name,
+                to: 'app_cover_0',
+                mid: 0,
+            },
+            type: btn.action, 
+            data: {} 
+        })
+        window_bar_actions.append(button)
+    })
 
 
     window_bar_actions.append(close_window_btn)
@@ -4064,4 +6304,92 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/window_bar")
-},{"_process":2,"buttons/sm_icon_button_alt":14,"buttons/sm_text_button":15,"path":1}]},{},[3]);
+},{"_process":2,"buttons/sm_icon_button_alt":16,"buttons/sm_text_button":17,"path":1}],46:[function(require,module,exports){
+module.exports = year_filter
+
+const sheet = new CSSStyleSheet
+const theme = get_theme()
+sheet.replaceSync(theme)
+
+let id = 0;
+
+function year_filter (opts, protocol) {
+
+    const name = 'year_filter-'+id++;
+    const notify = protocol({from: name}, listen)
+
+    const el = document.createElement('div')
+    const shadow = el.attachShadow({mode: 'closed'})
+
+    shadow.innerHTML = `
+        <div class="year_wrapper"></div>
+        <style>${get_theme}</style>
+    `
+    let active_state = '';
+    const year_buttons = {}
+
+    const year_wrapper = shadow.querySelector('.year_wrapper')
+    for(let i=2013; i<=2023; i++){
+        const year_button = document.createElement('span')
+        year_button.classList.add('year_button')
+        year_button.innerHTML = i.toString()
+        year_button.onclick = e => toggle_active_state(e)
+        year_buttons[i.toString()] = year_button
+        year_wrapper.append(year_button)
+    }
+
+    shadow.adoptedStyleSheets = [sheet]
+    return el
+
+    function toggle_active_state(e){
+        if(active_state)
+            year_buttons[active_state].classList.toggle('active')
+        if(active_state === e.target.innerHTML)
+            active_state = ''
+        else{
+            active_state = e.target.innerHTML
+            e.target.classList.toggle('active')
+        }
+        notify({
+            head: {by:name, to:'app_timeline', mid:0},
+            type: 'setFilter',
+            data: {filter: 'YEAR', value: active_state}
+        })
+    }
+    function listen(message){
+
+    }
+}
+
+function get_theme() {
+    return `
+    .year_wrapper {
+        --s: 20px; /* control the size */
+        --_g: var(--bg_color) /* first color */ 0 25%, #0000 0 50%;
+        background:
+            repeating-conic-gradient(at 66% 66%,var(--_g)),
+            repeating-conic-gradient(at 33% 33%,var(--_g)),
+            var(--primary_color);  /* second color */ 
+        background-size: var(--s) var(--s);  
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        width: 87px;
+        height: 100%;
+        border: 1px solid var(--primary_color);
+    }
+    .year_button{
+        display: block;
+        text-align: center;
+        background-color: var(--bg_color);
+        border: 1px solid var(--primary_color);
+        padding: 5px 10px;
+        cursor: pointer;
+    }
+    .year_button.active{
+        background-color: var(--ac-1);
+        color: var(--primary_color);
+    }
+    `
+}
+},{}]},{},[3]);
