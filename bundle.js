@@ -755,12 +755,9 @@ const page_list = {
     'DEFAULT': consortium_page({data: current_theme})
 }
 
-const theme_list = {
-    'DARK': dark_theme,
-    'LIGHT': light_theme
-}
-
-document.body.append( navbar({data: current_theme}, page_protocol), current_page)
+const page_filler = document.createElement('div')
+page_filler.classList.add('page_filler')
+document.body.append(page_filler, navbar({data: current_theme}, page_protocol), current_page)
 handle_page_change('DEFAULT')
 
 // Adding font link
@@ -840,9 +837,18 @@ function get_theme(opts) {
         svg{
             fill: var(--bg_color);
         }
+        .page_filler{
+            background-image: radial-gradient(var(--primary_color) 2px, var(--bg_color) 2px);
+            background-size: 16px 16px;
+            width: 100vw;
+            height: 100vh;
+            z-index: -100;
+            position: fixed;
+            top: 41px;
+        }
     `
 }
-},{"../src/node_modules/consortium_page":21,"../src/node_modules/growth_page":22,"../src/node_modules/home_page":23,"../src/node_modules/navbar":28,"../src/node_modules/projects_page":32,"../src/node_modules/terminal":37,"../src/node_modules/theme/dark_theme":39,"../src/node_modules/theme/light_theme":40,"../src/node_modules/timeline_page":43}],4:[function(require,module,exports){
+},{"../src/node_modules/consortium_page":22,"../src/node_modules/growth_page":23,"../src/node_modules/home_page":24,"../src/node_modules/navbar":29,"../src/node_modules/projects_page":33,"../src/node_modules/terminal":38,"../src/node_modules/theme/dark_theme":40,"../src/node_modules/theme/light_theme":41,"../src/node_modules/timeline_page":44}],4:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = app_about_us
 
@@ -1020,7 +1026,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_about_us")
-},{"_process":2,"buttons/sm_text_button":17,"path":1,"window_bar":45}],5:[function(require,module,exports){
+},{"_process":2,"buttons/sm_text_button":17,"path":1,"window_bar":46}],5:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = cover_app
 
@@ -1172,7 +1178,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_cover")
-},{"_process":2,"buttons/sm_text_button":17,"path":1,"window_bar":45}],6:[function(require,module,exports){
+},{"_process":2,"buttons/sm_text_button":17,"path":1,"window_bar":46}],6:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = app_footer
 
@@ -1342,7 +1348,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_footer")
-},{"_process":2,"buttons/sm_text_button":17,"path":1,"window_bar":45}],7:[function(require,module,exports){
+},{"_process":2,"buttons/sm_text_button":17,"path":1,"window_bar":46}],7:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = app_projects
 
@@ -1408,7 +1414,7 @@ function app_projects(opts, protocol){
             link: '/',
             socials: [icon_github, icon_twitter, icon_discord],
             desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-            tags: ['Hypercore', 'Decentralized', 'DApp'],
+            tags: ['Hypercore', 'Hyperplane', 'Hypertension'],
             active_state: 'ACTIVE',
             data: data,
         },{
@@ -1418,7 +1424,7 @@ function app_projects(opts, protocol){
             link: '/',
             socials: [icon_github, icon_twitter, icon_discord],
             desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-            tags: ['p2p', 'tag', 'DeFi'],
+            tags: ['Dag', 'tag', 'Decentralized'],
             active_state: 'ACTIVE',
             data: data,
         },{
@@ -1428,7 +1434,7 @@ function app_projects(opts, protocol){
             link: '/',
             socials: [icon_github, icon_twitter, icon_discord],
             desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-            tags: ['p2p', 'Decentralized', 'Hypercore'],
+            tags: ['Dag', 'Hyperplane', 'Hypercore'],
             active_state: 'UNACTIVE',
             data: data
         },{ 
@@ -1438,7 +1444,7 @@ function app_projects(opts, protocol){
             link: '/',
             socials: [icon_github, icon_twitter, icon_discord],
             desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-            tags: ['DAO', 'Web3', 'DApp'],
+            tags: ['Daff', 'Dep1', 'Hypertension'],
             active_state: 'PAUSED',
             data: data
         },{
@@ -1448,7 +1454,7 @@ function app_projects(opts, protocol){
             link: '/',
             socials: [icon_github, icon_twitter, icon_discord],
             desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-            tags: ['DeFi', 'tag', 'Hypercore'],
+            tags: ['Decentralized', 'tag', 'Hypercore'],
             active_state: 'UNACTIVE',
             data: data
         },{
@@ -1458,7 +1464,7 @@ function app_projects(opts, protocol){
             link: '/',
             socials: [icon_github, icon_twitter, icon_discord],
             desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-            tags: ['DApp', 'Hypercore', 'DeFi'],
+            tags: ['Hypertension', 'Hypercore', 'Decentralized'],
             active_state: 'PAUSED',
             data: data
         },{
@@ -1468,7 +1474,7 @@ function app_projects(opts, protocol){
             link: '/',
             socials: [icon_github, icon_twitter, icon_discord],
             desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-            tags: ['DAO', 'Decentralized', 'Web3'],
+            tags: ['Daff', 'Hyperplane', 'Dep1'],
             active_state: 'ACTIVE',
             data: data
         },
@@ -1566,6 +1572,8 @@ function get_theme(){
             container-type: inline-size;
             width:100%;
             height: 100%;
+            margin-bottom: 30px;
+            border:1px solid var(--primary_color);
         }
         .filter_wrapper{
             width:100%;
@@ -1621,7 +1629,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_projects")
-},{"_process":2,"path":1,"project_card":30,"project_filter":31,"scrollbar":33,"window_bar":45}],8:[function(require,module,exports){
+},{"_process":2,"path":1,"project_card":31,"project_filter":32,"scrollbar":34,"window_bar":46}],8:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = app_projects_mini
 
@@ -1796,9 +1804,9 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_projects_mini")
-},{"_process":2,"buttons/sm_icon_button":15,"buttons/sm_text_button":17,"path":1,"project_card":30,"window_bar":45}],9:[function(require,module,exports){
+},{"_process":2,"buttons/sm_icon_button":15,"buttons/sm_text_button":17,"path":1,"project_card":31,"window_bar":46}],9:[function(require,module,exports){
 (function (process,__dirname){(function (){
-module.exports = app_timeline
+module.exports = app_timeline_mini
 
 
 const path = require('path')
@@ -1820,13 +1828,15 @@ sheet.replaceSync(theme)
 
 let id = 0;
 
-function app_timeline (opts, protocol) {
+function app_timeline_mini (opts, protocol) {
 
-    const name = `app_timeline-${id++}`
+    const name = `app_timeline_mini-${id++}`
     const {data} = opts
     const PROTOCOL = {
         YEAR: '',
         MONTH: '',
+        DATE: '',
+        updateCalendar,
     }
     // Assigning all the icons
     const { img_src: {
@@ -1858,7 +1868,6 @@ function app_timeline (opts, protocol) {
 
 
     // Adding timeline cards
-    const timeline_wrapper = shadow.querySelector('.timeline_wrapper')
     const cards_data = [
         { title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data: data, active_state: 'ACTIVE'
         },{ title: 'Official starting of the web course.', date: 'May 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data: data, active_state: 'ACTIVE'
@@ -1873,35 +1882,96 @@ function app_timeline (opts, protocol) {
         },
     ]
 
-    const tags = new Set()
-    let latest_date = new Date(0);
-    cards_data.forEach(card_data => {
-        card_data.tags.forEach(tag => tags.add(tag))
-        const date = new Date(card_data.date)
-        if(date > latest_date){
-            latest_date = date
+    const convert_time_format = (time) => {
+        let temp = time.slice(0,2)
+        if(time.includes('PM')){
+            temp = parseInt(temp) + 12
         }
-    })
-    const month = latest_date.toLocaleString('default', { month: 'long' });
-    const year = latest_date.getFullYear()
+        return temp + time.slice(2,-2)
+    }
+    const tags = new Set()
+    const new_cards_data = []
+    // let latest_date = new Date(0);
+    cards_data.forEach((card_data, i) => {
+        card_data.tags.forEach(tag => tags.add(tag))
+        const date = new Date(card_data.date + ' ' + convert_time_format(card_data.time))
+        card_data = {...card_data, date_raw: date.getTime()}
+        cards_data[i] = card_data
 
-    const timeline_cards = cards_data.map((card_data) => timeline_card(card_data))
-    timeline_cards.forEach((card) => {
-        timeline_wrapper.append(card)
+        // if(date > latest_date){
+        //     latest_date = date
+        // }
     })
+    cards_data.sort(function(a, b){
+        return  b.date_raw - a.date_raw
+    })
+    // const month = latest_date.toLocaleString('default', { month: 'long' });
+    // const year = latest_date.getFullYear()
+
+    PROTOCOL.YEAR = new Date(cards_data[0].date_raw).getFullYear()
+    
+    const card_groups = []
+    let year_cache, card_group
+    const timeline_cards = cards_data.map((card_data) => timeline_card(card_data))
+
+    timeline_cards.forEach((card) => {
+        const slice = cards_data[card.id.slice(-1)].date.slice(-4)
+        if(year_cache !== slice){
+            card_group = document.createElement('div')
+            card_group.classList.add('card_group')
+            card_groups.push(card_group)
+            year_cache = slice
+        }
+        card_group.append(card)
+    })
+
+    const timeline_wrapper = shadow.querySelector('.timeline_wrapper')
+    card_groups.forEach((card_group) => {
+        timeline_wrapper.append(card_group)
+    })
+
+    
+
+    
 
     const main_wrapper = shadow.querySelector('.main_wrapper')
     
-    main_wrapper.append(timeline_filter({data, tags: Array.from(tags), month, year}, app_timeline_protocol))
+    main_wrapper.append(timeline_filter({data, tags: Array.from(tags), latest_date: cards_data[0].date_raw}, app_timeline_protocol))
 
     const filter_wrapper = shadow.querySelector('.filter_wrapper')
-    const year_filter_wrapper = year_filter({data}, app_timeline_protocol)
+    const year_filter_wrapper = year_filter({data, latest_date: cards_data[0].date_raw}, app_timeline_protocol)
 
     const month_wrapper = shadow.querySelector('.month_wrapper')
     const month_filter_wrapper = month_filter({data}, app_timeline_protocol)
 
     const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
     scrollbar_wrapper.append(scrollbar({data: data}, app_timeline_protocol))
+    
+    updateCalendar()
+
+    timeline_wrapper.onscroll = () => {
+        PROTOCOL['handleScroll']()
+        const parent_top = timeline_wrapper.getBoundingClientRect().top
+        timeline_cards.some(card => {
+            const child_top = card.getBoundingClientRect().top
+            if(child_top >= parent_top -100 && child_top < parent_top + 200){
+                const year = cards_data[card.id.slice(-1)].date.slice(-4)
+                PROTOCOL.YEAR = year
+                PROTOCOL.updateCalendar()
+                PROTOCOL['year_filter']({
+                    head: {by:name, to:'year_filter', mid:0},
+                    type: null,
+                    data: year
+                })
+                return true
+            }
+        })
+        PROTOCOL['get_date']({
+            head: {by:name, to:'timeline_filter', mid:0},
+            type: null,
+            data: {month: PROTOCOL.MONTH , year: PROTOCOL.YEAR}
+        })
+    }
 
     shadow.adoptedStyleSheets = [ sheet ]
     shadow.prepend(cover_window)
@@ -1910,12 +1980,11 @@ function app_timeline (opts, protocol) {
 
 
     
-    //protocol
+    //Setting protocols
     function app_timeline_protocol(handshake, send){
         if(handshake.from.includes('scrollbar')){
             const ro = new ResizeObserver(entries => send[0]());
             ro.observe(scrollbar_wrapper);
-            timeline_wrapper.onscroll = send[0]
             PROTOCOL['handleScroll'] = send[0]
             PROTOCOL['getScrollInfo'] = send[1]
             return [listen, setScrollTop]
@@ -1930,10 +1999,12 @@ function app_timeline (opts, protocol) {
             PROTOCOL['get_date'] = send
         }
         else if(handshake.from.includes('year_filter')){
-            PROTOCOL['setFilter'] = setFilter
+            PROTOCOL['setScroll'] = setScroll
+            PROTOCOL['year_filter'] = send
         }
         else if(handshake.from.includes('month_filter')){
             PROTOCOL['setFilter'] = setFilter
+            PROTOCOL['month_filter'] = send
         }
         return listen
         function listen (message){
@@ -1945,14 +2016,39 @@ function app_timeline (opts, protocol) {
                 message.data = {sh: timeline_wrapper.scrollHeight, ch: timeline_wrapper.clientHeight, st: timeline_wrapper.scrollTop}
                 PROTOCOL.getScrollInfo(message)
             }
-            else if(by.includes('timeline_filter') || by.includes('year_filter') || by.includes('month_filter')){
+            else if(by.includes('timeline_filter') || by.includes('month_filter')){
                 PROTOCOL[type](data)
+            }
+            else if(by.includes('year_filter')){
+                PROTOCOL[type](data)
+                PROTOCOL.updateCalendar()
             }
             else if(by.includes('window_bar')){
                 PROTOCOL[type](message)
             }
         }
-        
+        async function setScroll(data){
+            PROTOCOL[data.filter] = data.value
+            
+            timeline_cards.some(card => {
+                const card_date = cards_data[card.id.slice(-1)].date
+                if(card_date.includes(data.value) && card_date.includes(PROTOCOL.YEAR)){
+                    // console.log(card.getBoundingClientRect().top)
+                    setScrollTop(card.getBoundingClientRect().top - timeline_wrapper.getBoundingClientRect().top + timeline_wrapper.scrollTop)
+                    return true
+                }
+            })
+            PROTOCOL['get_date']({
+                head: {by:name, to:'timeline_filter', mid:0},
+                type: null,
+                data: {month: PROTOCOL.MONTH , year: PROTOCOL.YEAR}
+            })
+            PROTOCOL['year_filter']({
+                head: {by:name, to:'year_filter', mid:0},
+                type: null,
+                data: PROTOCOL.YEAR
+            })
+        }
         async function setScrollTop(value){
             timeline_wrapper.scrollTop = value
         }
@@ -1970,24 +2066,30 @@ function app_timeline (opts, protocol) {
 
             if(PROTOCOL.TAGS && PROTOCOL.TAGS !== 'NULL')
                 cardfilter = cardfilter.filter((card_data) => {return card_data.tags.includes(PROTOCOL.TAGS) && card_data })
+
+                const card_groups = []
+                let year_cache, card_group
             
-            if(PROTOCOL.YEAR)
-                cardfilter = cardfilter.filter((card_data) => {return card_data.date.toLowerCase().match(PROTOCOL.YEAR.toLowerCase())})
-
-            if(PROTOCOL.MONTH)
-                cardfilter = cardfilter.filter((card_data) => {return card_data.date.toLowerCase().match(PROTOCOL.MONTH.toLowerCase())})
-
-
-            const timeline_cards = cardfilter.map((card_data) => timeline_card(card_data))
                 timeline_cards.forEach((card) => {
-                    timeline_wrapper.append(card)
-            })
+                    const card_data = cards_data[card.id.slice(-1)]
+                    if(cardfilter.includes(card_data)){
+                        const slice = card_data.date.slice(-4)
+                        if(year_cache !== slice){
+                            card_group = document.createElement('div')
+                            card_group.classList.add('card_group')
+                            card_groups.push(card_group)
+                            year_cache = slice
+                        }
+                        card_group.append(card)
+                    }
+                })
+            
+                card_groups.forEach((card_group) => {
+                    timeline_wrapper.append(card_group)
+                })
+            
             PROTOCOL['handleScroll']()
-            PROTOCOL['get_date']({
-                    head: {by:name, to:'timeline_filter', mid:0},
-                    type: null,
-                    data: {month: PROTOCOL.MONTH , year: PROTOCOL.YEAR}
-            })
+            PROTOCOL.setScroll({filter: 'YEAR', value: String(new Date(cardfilter[0].date_raw).getFullYear())})
         }
         async function toggle_active_state (message) {
             const {head, refs, type, data, meta} = message
@@ -2006,6 +2108,20 @@ function app_timeline (opts, protocol) {
             else
                 filter_wrapper.append(year_filter_wrapper)
         }
+        }
+    async function updateCalendar (){
+        let dates = []
+        if(PROTOCOL.YEAR)
+            cards_data.forEach(card_data => {
+                if(card_data.date.includes(PROTOCOL.YEAR)){
+                    dates.push(card_data.date)
+                }
+            })
+        PROTOCOL.month_filter({
+            head: {by:name, to:'month_filter', mid:0},
+            type: null,
+            data: dates
+    })
     }
 }
 
@@ -2049,11 +2165,17 @@ function get_theme(){
                 repeating-conic-gradient(at 33% 33%,var(--_g)),
                 var(--primary_color);  /* second color */ 
             background-size: var(--s) var(--s);  
-            overflow: scroll;
-            scrollbar-width: none; /* For Firefox */
             border:1px solid var(--primary_color);
-            width:100%;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
             height: 400px;
+            overflow: scroll;
+            gap:20px;
+            scrollbar-width: none; /* For Firefox */
+        }
+        .card_group{
+            width:100%;
             padding: 0px;
             display: grid;
             gap:20px;
@@ -2063,13 +2185,13 @@ function get_theme(){
             display: none;
         }
         @container(min-width: 768px) {
-            .timeline_wrapper{
+            .card_group{
                 grid-template-columns: repeat(2, 6fr);
             }
         }
     
         @container(min-width: 1200px) {
-            .timeline_wrapper{
+            .card_group{
                 grid-template-columns: repeat(3, 4fr);
             }
         }
@@ -2087,7 +2209,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_timeline")
-},{"_process":2,"month_filter":27,"path":1,"scrollbar":33,"timeline_card":41,"timeline_filter":42,"window_bar":45,"year_filter":46}],10:[function(require,module,exports){
+},{"_process":2,"month_filter":28,"path":1,"scrollbar":34,"timeline_card":42,"timeline_filter":43,"window_bar":46,"year_filter":47}],10:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = app_timeline_mini
 
@@ -2251,6 +2373,7 @@ function get_theme(){
             width: 100%;
             height: 100%;
             margin-bottom: 30px;
+            border:1px solid var(--primary_color);
         }
           
         /*---------- Mobile devices ----------*/
@@ -2266,7 +2389,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_timeline_mini")
-},{"_process":2,"buttons/sm_text_button":17,"path":1,"scrollbar":33,"timeline_card":41,"window_bar":45}],11:[function(require,module,exports){
+},{"_process":2,"buttons/sm_text_button":17,"path":1,"scrollbar":34,"timeline_card":42,"window_bar":46}],11:[function(require,module,exports){
 
 module.exports = day_button
 
@@ -2278,8 +2401,16 @@ sheet.replaceSync(theme)
 
 
 // Props - icon/img src
-function day_button (props) {
+function day_button (protocol) {
+    const name = `day_button`
 
+    const notify = protocol({from: name}, listen)
+
+    const PROTOCOL = {
+        toggle_active,
+        add_highlight,
+        remove_highlight
+    }
     const el = document.createElement('div')
     const shadow = el.attachShadow({mode:'closed'})
 
@@ -2290,7 +2421,14 @@ function day_button (props) {
     const day_button = shadow.querySelector(".day_button")
     
     // Toggle Icon
-    day_button.onclick = (e) => toggle_class(e)
+    day_button.onclick = (e) => {
+        toggle_active()
+        notify({
+            head: {by:name, to:'month_card', mid: 0},
+            type: 'toggle_day_button',
+            data: el.id
+        })
+    }
 
     const style = document.createElement('style')
     style.textContent = get_theme()
@@ -2298,6 +2436,21 @@ function day_button (props) {
     shadow.append(day_button, style)
     shadow.adoptedStyleSheets = [sheet]
     return el
+
+    function listen(message){
+        const {head, type, data} = message
+        const {by, to, mid} = head
+        PROTOCOL[type]()
+    }
+    function toggle_active(){
+        day_button.classList.toggle('active')
+    }
+    function add_highlight(){
+        day_button.classList.add('highlight')
+    }
+    function remove_highlight(){
+        day_button.classList.remove('highlight')
+    }
 }
 
 
@@ -2317,6 +2470,9 @@ function get_theme(){
             background-color: var(--bg_color);
         }
         .day_button.active{
+            background-color: var(--ac-1) !important;
+        }
+        .day_button.highlight{
             background-color: var(--ac-2)
         }
         svg, svg *{
@@ -2327,10 +2483,6 @@ function get_theme(){
 
 
 
-function toggle_class(e){
-    let selector = e.target.classList
-    ;( selector.contains('active') ) ? selector.remove('active') : selector.add('active')
-}
 },{}],12:[function(require,module,exports){
 
 module.exports = icon_button
@@ -2537,6 +2689,8 @@ function select_button (opts, protocol) {
         icon_arrow_up
     } = img_src
 
+    let active_option = ''
+
     const el = document.createElement('div')
     const shadow = el.attachShadow( { mode:`closed` } )
     shadow.innerHTML = `
@@ -2555,11 +2709,13 @@ function select_button (opts, protocol) {
         <style> ${get_theme()} </style>
     `
 
+    const select_button_wrapper = shadow.querySelector('.select_button_wrapper')
+
     // Adding Select Toggle function
     const select_toggle_btn = shadow.querySelector('.button_wrapper')
     let active_state = true;
     select_toggle_btn.onclick = (e) => {
-        shadow.querySelector('.select_button_wrapper').classList.toggle('active');
+        select_button_wrapper.classList.toggle('active');
         ;(active_state)?shadow.querySelector('.arrow_icon').innerHTML = icon_arrow_down: shadow.querySelector('.arrow_icon').innerHTML = icon_arrow_up
         active_state = !active_state
     }
@@ -2576,31 +2732,21 @@ function select_button (opts, protocol) {
     // Select all .option divs
     const options = shadow.querySelectorAll('.option')
     const selected_option = shadow.querySelector('.selected_option')
-
     // Attach click event listener to each .option div
     options.forEach((option) => {
         option.addEventListener('click', () => {
-            if (!option.classList.contains('active')) {
-                // Add 'active' class to the clicked option
-                option.classList.add('active')
-                // Remove 'active' class from other options
-                options.forEach((other_option) => {
-                    if (other_option !== option) {
-                        other_option.classList.remove('active')
-                    }
-                });
-            } else {
-                // Remove 'active' class from the clicked option
-                option.classList.remove('active')
+            if(active_option)
+                active_option.classList.remove('active')
+            if(active_option === option){
                 selected_option.innerHTML = 'NULL'
+                active_option = ''
             }
-
-            // Update the selected_option innerHTML
-            const active_options = shadow.querySelectorAll('.option.active')
-            if (active_options.length > 0) {
-                selected_option.innerHTML = active_options[0].innerHTML
+            else{
+                option.classList.add('active')
+                selected_option.innerHTML = option.innerHTML
+                active_option = option
             }
-            shadow.querySelector('.select_button_wrapper').classList.toggle('active')
+            select_button_wrapper.classList.remove('active')
             message['data'] = {filter: opts.name, value:selected_option.innerHTML}
             notify(message)
         })
@@ -2678,22 +2824,31 @@ function get_theme(){
         .button_wrapper{
             box-sizing: border-box;
             display: flex;
+            align-items: center;
             gap:5px;
-            padding: 10px 5px;
+            padding: 5px 5px;
             cursor: pointer;
-            height:40px;
+            height: 30px;
             background-color: var(--bg_color);
             border: 1px solid var(--primary_color);
         }
         .button_name{ 
+            display: flex;
+            vertical-align: middle;
             font-weight: 700;
+            line-height: 15px;
             letter-spacing: -1px;
         }
         .selected_option{ 
+            display: flex;
+            vertical-align: middle;
             font-weight: 300;
+            line-height: 15px;
             letter-spacing: -1px;
         }
         .arrow_icon{
+            display: flex;
+            align-items: center;
             margin-left: auto;
         }
 
@@ -3137,16 +3292,18 @@ function year_button (props, protocol) {
     const name = 'year_button'
     const notify = protocol({from: name}, listen)
 
-    const {data} = props
+    const {data, latest_date} = props
     const { img_src : {
         icon_arrow_up= `${prefix}/icon_arrow_up.svg`,
     }} = data
 
     const el = document.createElement('div')
     const shadow = el.attachShadow({mode:'closed'})
+
+    const date = new Date(latest_date)
     shadow.innerHTML = `
         <div class="year_button">
-            <div class="text_wrapper"> <b>${props.month.slice(0,3)}</b>/${props.year} </div>
+            <div class="text_wrapper">${date.getFullYear()}</div>
             ${icon_arrow_up}
         </div>
         <style> ${get_theme} </style>
@@ -3166,7 +3323,10 @@ function year_button (props, protocol) {
     function listen(message){
         const {head, type, data} = message
         const {by, to, id} = head
-        text_wrapper.innerHTML = `<b>${data.month ? data.month.slice(0,3) : props.month.slice(0,3)}</b>/${data.year ? data.year : props.year}`
+        if(data.month || data.year)
+            text_wrapper.innerHTML = `<b>${data.month.slice(0,3)}</b>${data.month && data.year && '/'}${data.year}`
+        else
+            text_wrapper.innerHTML = 'Select date'
     }
 }
 
@@ -3183,7 +3343,7 @@ function get_theme(){
             color:var(--primary_color);
             align-items: center;
             justify-content: center;
-            padding: 0 5px;
+            padding: 0 4px;
             height:30px;
             width: 100%;
         }
@@ -3191,10 +3351,11 @@ function get_theme(){
             text-align:center;
             font-size: 0.875em;
             line-height: .5em;
-            padding: 12px 0;
+            padding: 11px 0;
             height:30px;
             box-sizing:border-box;
-            width: 90px;
+            width: 100px;
+            letter-spacing: -1px;
         }
         .year_button.active svg{
             rotate: 90deg;
@@ -3205,6 +3366,157 @@ function get_theme(){
 
 
 },{}],21:[function(require,module,exports){
+(function (process,__dirname){(function (){
+module.exports = commingsoon
+
+
+const path = require('path')
+const cwd = process.cwd()
+const prefix = path.relative(cwd, __dirname)
+
+const window_bar = require('window_bar')
+const sm_text_button = require('buttons/sm_text_button')
+
+// CSS Boiler Plat
+const sheet = new CSSStyleSheet
+const theme = get_theme()
+sheet.replaceSync(theme)
+
+
+let id = 0
+
+
+function commingsoon (opts, protocol) {
+    const name = `commingsoon-${id++}`
+
+    const {data} = opts
+    // Assigning all the icons
+    const {img_src} = data
+    const {
+        banner_cover = `${prefix}/banner_cover.svg`,
+        tree_character = `${prefix}/tree_character.png`,
+        icon_pdf_reader
+    } = img_src
+
+    const el = document.createElement('div')
+    const shadow = el.attachShadow ( { mode : 'closed' } )
+
+    shadow.innerHTML = `
+        <div class="cover_wrapper">
+        <div class="cover_content">
+            <div class="cover_image">
+                <img src="${banner_cover}" />
+            </div>
+            <div class="content_wrapper">
+                <img src="${tree_character}" />
+                Coming Soon
+            </div>
+        </div>
+        </div>
+        <style> ${get_theme} </style>
+    `
+
+
+    const cover_window = window_bar({
+        name:'Coming_soon.pdf', 
+        src: icon_pdf_reader,
+        data: data
+    }, cover_protocol)
+    const cover_wrapper = shadow.querySelector('.cover_wrapper')
+    cover_wrapper.prepend(cover_window)
+
+
+    shadow.adoptedStyleSheets = [ sheet ]
+    return el
+
+    
+    // cover protocol
+    function cover_protocol(message, send){
+        return listen
+    }
+    // Listening to toggle event 
+    function listen (message) {
+        const {head, refs, type, data, meta} = message  
+        const PROTOCOL = {
+            'toggle_active_state': toggle_active_state
+        }
+        const action = PROTOCOL[type] || invalid      
+        action(message)
+    }
+    function invalid (message) { console.error('invalid type', message) }
+    async function toggle_active_state (message) {
+        const {head, refs, type, data, meta} = message
+        const {active_state} = data
+        ;( active_state === 'active')?cover_wrapper.style.display = 'none':''
+    }
+
+}
+
+
+
+
+function get_theme(){
+    return`
+        *{
+            box-sizing: border-box;
+        }
+
+        .app_cover{
+            display:none;
+        }
+
+        .cover_content{
+            position:relative;
+            height:max-content;
+            width:100%;
+            display:flex;
+            justify-content: center;
+            align-items: center;
+            padding: 150px 0px;
+            background-image: radial-gradient(var(--primary_color) 1px, var(--bg_color) 1px);
+            background-size: 10px 10px;
+            background-color:var(--bg_color);
+            border: 1px solid var(--primary_color);
+            margin-bottom: 30px;
+        }
+
+        /* This covers background-image will change to an image */
+        .cover_image{
+            position: absolute;
+            width:100%;
+            height:100%;
+            overflow:hidden;
+        }
+        .cover_image img{
+            position:absolute;
+            left:50%;
+            top:50%;
+            width: auto;
+            height: 100%;
+            transform:translate(-50%, -50%);
+        }
+
+
+        /* Cover image alignment */
+        .content_wrapper{
+            display: flex;
+            flex-direction: column;
+            align-items:center;
+            gap:20px;
+            position: relative;
+            z-index:1;
+            color:var(--primary_color);
+            text-align:center;
+        }
+        .content_wrapper img{
+            width: 300px;
+            height: auto;
+        }
+
+    `
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/comingsoon")
+},{"_process":2,"buttons/sm_text_button":17,"path":1,"window_bar":46}],22:[function(require,module,exports){
 module.exports = consortium_page
 
 const mission_statement = require('mission_statement')
@@ -3391,26 +3703,59 @@ function get_theme() {
         }
     `
 }
-},{"important_documents":24,"mission_statement":25,"our_member":29,"tools":44}],22:[function(require,module,exports){
+},{"important_documents":25,"mission_statement":26,"our_member":30,"tools":45}],23:[function(require,module,exports){
 module.exports = growth_page
 
+// CSS Boiler Plat
+const sheet = new CSSStyleSheet
+const theme = get_theme()
+sheet.replaceSync(theme)
+
+const comingsoon = require('comingsoon')
+const app_footer = require('app_footer')
+
 function growth_page (opts, protocol) {
+
+    const {data} = opts
+
     const el = document.createElement('div')
     const shadow = el.attachShadow({mode: 'closed'})
 
     // adding a `main-wrapper` 
     shadow.innerHTML = `
-        <div class="main-wrapper">growth</div>
-        <style>${get_theme()}</style>
+        <div class="main-wrapper"></div>
+        <style>${get_theme}</style>
     `
-    // shadow.adoptedStyleSheets = [sheet]
+
+    const components = [
+        comingsoon({data}),
+        app_footer({data}),
+    ]
+
+    const main = shadow.querySelector('.main-wrapper')
+    main.append(...components)
+
+    shadow.adoptedStyleSheets = [sheet]
     return el
 }
 
 function get_theme() {
-    return ``
+    return `
+        .main-wrapper{
+            margin: 0;
+            padding:30px 10px;
+            opacity: 1;
+            background-image: radial-gradient(var(--primary_color) 2px, var(--bg_color) 2px);
+            background-size: 16px 16px;
+        }
+        @media(min-width: 856px){
+            .main-wrapper{
+                padding-inline:20px;
+            }
+        }
+    `
 }
-},{}],23:[function(require,module,exports){
+},{"app_footer":6,"comingsoon":21}],24:[function(require,module,exports){
 module.exports = home_page
 
 const cover_app = require('app_cover')
@@ -3501,7 +3846,7 @@ function get_theme() {
         }
     `
 }
-},{"app_about_us":4,"app_cover":5,"app_footer":6,"app_projects_mini":8,"app_timeline_mini":10}],24:[function(require,module,exports){
+},{"app_about_us":4,"app_cover":5,"app_footer":6,"app_projects_mini":8,"app_timeline_mini":10}],25:[function(require,module,exports){
 module.exports = important_documents
 
 const window_bar = require('window_bar')
@@ -3615,7 +3960,7 @@ function get_theme(){
 
     `
 }
-},{"window_bar":45}],25:[function(require,module,exports){
+},{"window_bar":46}],26:[function(require,module,exports){
 module.exports = mission_statement
 
 const window_bar = require('window_bar')
@@ -3728,7 +4073,7 @@ function get_theme(){
         }
     `
 }
-},{"window_bar":45}],26:[function(require,module,exports){
+},{"window_bar":46}],27:[function(require,module,exports){
 module.exports = month_card
 
 const sheet = new CSSStyleSheet
@@ -3743,6 +4088,15 @@ function month_card (opts, protocol) {
     const name = `month_card-${id++}`
     const notify = protocol({from: name}, listen)
 
+    const PROTOCOL = {
+        day_toggle: [],
+        toggle_day_button,
+        toggle_month_button,
+        toggle_all_days,
+        toggle_day_highlight,
+        active_day: 0,
+    }
+
     const el = document.createElement('div')
     const shadow = el.attachShadow({mode: 'closed'})
 
@@ -3755,15 +4109,8 @@ function month_card (opts, protocol) {
     `
     const days_wrapper = shadow.querySelector('.days_wrapper')
     for(let i=1; i<=opts.days; i++){
-        const btn = day_button()
+        const btn = day_button(month_card_protocol)
         btn.id = i
-        btn.onclick = e => {
-            notify({
-                head: {by:name, to:'month_filter', mid: 0},
-                type: 'toggle_day_button',
-                data: e.target.id
-            })
-        }
         days_wrapper.append(btn)
     }
     
@@ -3771,7 +4118,7 @@ function month_card (opts, protocol) {
     month_name.onclick = e => {
         notify({
             head: {by:name, to:'month_filter', mid: 0},
-            type: 'toggle_active_state',
+            type: 'toggle_month_button',
             data: opts.name
         })
     }
@@ -3779,9 +4126,46 @@ function month_card (opts, protocol) {
     shadow.adoptedStyleSheets = [sheet]
     return el
 
+    function month_card_protocol(handshake, send){
+        PROTOCOL['day_toggle'].push(send)
+        return listen
+        function listen (message){
+            const {head, type, data} = message
+            const {by, to, mid} = head
+            PROTOCOL[type](data)
+        }
+    }
+    async function toggle_day_button(data){
+        notify({
+            head: {by:name, to:'month_filter', mid: 0},
+            type: 'toggle_day_button',
+            data: opts.name + ' ' + data
+        })
+    }
     function listen (message){
+        const {head, type, data} = message
+        const {by, to, mid} = head
+        PROTOCOL[type](data)
+    }
+    async function toggle_month_button (data) {
         month_name.classList.toggle('active')
-
+    }
+    async function toggle_all_days (data){
+        const day = new Date(data).getDate()
+        PROTOCOL.day_toggle[day-1]({
+            head: {by:name, to:'day_button', mid: 0},
+            type: 'toggle_active',
+            data: ''
+        })
+    }
+    async function toggle_day_highlight (data){
+        const {mode, date} = data
+        const day = new Date(date).getDate()
+        PROTOCOL.day_toggle[day-1]({
+            head: {by:name, to:'day_button', mid: 0},
+            type: mode,
+            data: ''
+        })
     }
 }
 
@@ -3813,7 +4197,7 @@ function get_theme() {
     }
     `
 }
-},{"buttons/day_button":11}],27:[function(require,module,exports){
+},{"buttons/day_button":11}],28:[function(require,module,exports){
 module.exports = month_filter
 
 const sheet = new CSSStyleSheet
@@ -3831,7 +4215,9 @@ function month_filter (opts, protocol) {
     const notify = protocol({from: name}, listen)
 
     const PROTOCOL = {}
-    let active_state = '';
+    let active_month = ''
+    let active_day = ''
+    let active_date_prev = [];
     const month_buttons = {}
 
     const el = document.createElement('div')
@@ -3881,7 +4267,7 @@ function month_filter (opts, protocol) {
             return [listen, setScrollLeft]
         }
         if(handshake.from.includes('month_card')){
-            PROTOCOL['toggle_active_state'] = toggle_active_state
+            PROTOCOL['toggle_month_button'] = toggle_month_button
             PROTOCOL['toggle_day_button'] = toggle_day_button
             PROTOCOL[handshake.from] = send
         }
@@ -3901,32 +4287,75 @@ function month_filter (opts, protocol) {
         async function setScrollLeft(value){
             month_filter_wrapper.scrollLeft = value
         }
-        async function toggle_active_state(by, data){
-            if(active_state)
-                PROTOCOL[active_state](null)
+        async function toggle_month_button(by, data){
+            if(active_month)
+                PROTOCOL[active_month]({
+                    head: {by: name, to: 'month_card', mid: 0},
+                    type: 'toggle_month_button',
+                    data: ''
+                })
                 
-            if(active_state === by){
-                active_state = ''
+            if(active_month === by){
+                active_month = ''
                 data = ''
             }
             else{
-                active_state = by
-                PROTOCOL[by](null)
+                active_month = by
+                PROTOCOL[by]({
+                    head: {by: name, to: 'month_card', mid: 0},
+                    type: 'toggle_month_button',
+                    data: ''
+                })
             }
 
             notify({
                 head: {by: name, to: 'app_timeline', mid: 0},
-                type: 'setFilter',
+                type: 'setScroll',
                 data: {filter: 'MONTH', value: data}
             })
         }
         async function toggle_day_button (by, data){
-            console.log(data)
+            toggle_month_button(active_month, '')
+            
+            if(active_day && active_day !== data)
+                PROTOCOL[`month_card-${new Date(active_day).getMonth()}`]({
+                    head: {by: name, to: 'month_card', mid: 0},
+                    type: 'toggle_all_days',
+                    data: active_day
+                })
+                
+            if(active_day === data){
+                active_day = ''
+                data = ''
+            }
+            else{
+                active_day = data
+            }
+
+            notify({
+                head: {by: name, to: 'app_timeline', mid: 0},
+                type: 'setScroll',
+                data: {filter: 'DATE', value: data}
+            })
         }
     }
 
     function listen(message){
+        const {head, type, data} = message
+        const {by, to, mid} = head
 
+        active_date_prev.forEach(date => PROTOCOL[`month_card-${new Date(date).getMonth()}`]({
+            head: {by: name, to: 'month_card', mid: 0},
+            type: 'toggle_day_highlight',
+            data: {mode: 'remove_highlight', date}
+        }))
+        active_date_prev = data
+        data.forEach(date => PROTOCOL[`month_card-${new Date(date).getMonth()}`]({
+            head: {by: name, to: 'month_card', mid: 0},
+            type: 'toggle_day_highlight',
+            data: {mode: 'add_highlight', date}
+        }))
+        
     }
 }
 
@@ -3946,7 +4375,7 @@ function get_theme() {
 
     `
 }
-},{"month_card":26,"scrollbar_hor":34}],28:[function(require,module,exports){
+},{"month_card":27,"scrollbar_hor":35}],29:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = navbar
 
@@ -4227,7 +4656,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/navbar")
-},{"_process":2,"buttons/icon_button":12,"buttons/logo_button":13,"buttons/text_button":19,"path":1}],29:[function(require,module,exports){
+},{"_process":2,"buttons/icon_button":12,"buttons/logo_button":13,"buttons/text_button":19,"path":1}],30:[function(require,module,exports){
 module.exports = our_member
 
 const window_bar = require('window_bar')
@@ -4386,7 +4815,7 @@ function get_theme(){
 
     `
 }
-},{"window_bar":45}],30:[function(require,module,exports){
+},{"window_bar":46}],31:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = project_card
 
@@ -4421,12 +4850,11 @@ function project_card (opts) {
     const shadow = el.attachShadow( { mode : 'closed' } )
     
     shadow.innerHTML = `
-        <div class="project_card">
+        <div class="project_card" data-status="${opts.active_state}">
             <div class="icon_wrapper">
                 <div class="project_title">
                     ${opts.project}
                 </div>
-                <div class="status"> ${opts.active_state} </div>
                 <div class="socials_wrapper"></div>
             </div>
             <div class="content_wrapper">
@@ -4533,7 +4961,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/project_card")
-},{"_process":2,"buttons/sm_icon_button":15,"path":1}],31:[function(require,module,exports){
+},{"_process":2,"buttons/sm_icon_button":15,"path":1}],32:[function(require,module,exports){
 module.exports = project_filter
 
 
@@ -4623,11 +5051,13 @@ function get_theme(){
         }
     `
 }
-},{"../buttons/select_button":14,"search_input":35}],32:[function(require,module,exports){
+},{"../buttons/select_button":14,"search_input":36}],33:[function(require,module,exports){
 module.exports = projects_page
 
 const app_projects = require('app_projects')
 const the_dat = require('the_dat')
+const app_footer = require('app_footer')
+
 
 function projects_page (opts, protocol) {
     const {data} = opts
@@ -4639,6 +5069,7 @@ function projects_page (opts, protocol) {
     const components = [
         the_dat({data}, projects_protocol),
         app_projects({data}),
+        app_footer({data})
     ]
 
     const el = document.createElement('div')
@@ -4701,7 +5132,7 @@ function get_theme() {
         }
     `
 }
-},{"app_projects":7,"the_dat":38}],33:[function(require,module,exports){
+},{"app_footer":6,"app_projects":7,"the_dat":39}],34:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = scrollbar
 
@@ -4827,12 +5258,11 @@ function scrollbar(opts, protocol){
 function get_theme() {
     return `
         .scrollbar_wrapper{
-            width: 32px;
+            width: 30px;
             height: 100%;
             display: flex;
             flex-direction: column;
             box-sizing: border-box;
-            border:1px solid var(--primary_color);
         }
         .bar_wrapper{
             display: flex;
@@ -4861,7 +5291,7 @@ function get_theme() {
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/scrollbar")
-},{"_process":2,"buttons/sm_icon_button":15,"path":1}],34:[function(require,module,exports){
+},{"_process":2,"buttons/sm_icon_button":15,"path":1}],35:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = scrollbar
 
@@ -4994,11 +5424,10 @@ function get_theme() {
             box-sizing: border-box;
         }
         .scrollbar_wrapper{
-            height: 32px;
+            height: 30px;
             width: 100%;
             display: flex;
             box-sizing: border-box;
-            border:1px solid var(--primary_color);
         }
         .bar_wrapper{
             display: flex;
@@ -5011,7 +5440,6 @@ function get_theme() {
             cursor: pointer;
             transition: opacity 0.25s linear;
             box-shadow:inset 0px 0px 0px 1px var(--bg_color);
-            
         }
         .bar:hover {
             cursor: pointer
@@ -5026,7 +5454,7 @@ function get_theme() {
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/scrollbar_hor")
-},{"_process":2,"buttons/sm_icon_button":15,"path":1}],35:[function(require,module,exports){
+},{"_process":2,"buttons/sm_icon_button":15,"path":1}],36:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = input_search
 
@@ -5066,11 +5494,10 @@ function input_search (opts, protocol){
         <style> ${get_theme} </style>
     `
     const input = shadow.querySelector('.input')
-    input.onchange = (e) => {
+    input.oninput = (e) => {
         message['data'] = {filter: 'SEARCH', value:e.target.value}
         notify(message)
     }
-
     // shadow.append(main, navbar(opts, protocol))
     shadow.adoptedStyleSheets = [sheet]
     return el
@@ -5121,7 +5548,7 @@ function get_theme(){
     
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/search_input")
-},{"_process":2,"path":1}],36:[function(require,module,exports){
+},{"_process":2,"path":1}],37:[function(require,module,exports){
 module.exports = tab_window
 
 // CSS Boiler Plat
@@ -5145,7 +5572,7 @@ function tab_window (opts, protocol) {
 function get_theme() {
     return ``
 }
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 module.exports = terminal
 
 const tab_window = require('tab_window')
@@ -5180,7 +5607,8 @@ function terminal (opts, protocol) {
     const {
         icon_terminal,
         icon_close_light,
-        icon_pdf_reader
+        icon_plus,
+        icon_full_screen
     } = img_src
 
     const el = document.createElement('div')
@@ -5214,7 +5642,7 @@ function terminal (opts, protocol) {
 
     const terminal_wrapper = shadow.querySelector('.terminal')
     
-    const add_btn = sm_icon_button_alt({src: icon_pdf_reader})
+    const add_btn = sm_icon_button_alt({src: icon_plus})
     add_btn.onclick = e => {
         tab_id++
         const tab = tab_window({data: opts.data, text: 'New Tab' + tab_id})
@@ -5233,7 +5661,7 @@ function terminal (opts, protocol) {
     buttons.append(add_btn)
 
     if(screen.width > 510){
-        const fullscreen_btn = sm_icon_button_alt({src: icon_pdf_reader})
+        const fullscreen_btn = sm_icon_button_alt({src: icon_full_screen})
         fullscreen_btn.onclick = e => terminal_wrapper.style.height === '100vh' ? 
                     terminal_wrapper.style.height = '300px' : 
                     terminal_wrapper.style.height = '100vh'
@@ -5318,7 +5746,7 @@ function get_theme(){
             max-width: 100%;
             position: fixed;
             top: 0;
-            z-index: 10;
+            z-index: 100;
             background-color: var(--bg_color);
         }
         .header{
@@ -5382,7 +5810,7 @@ function get_theme(){
         }
     `
 }
-},{"buttons/sm_icon_button_alt":16,"buttons/tab_button":18,"scrollbar_hor":34,"tab_window":36}],38:[function(require,module,exports){
+},{"buttons/sm_icon_button_alt":16,"buttons/tab_button":18,"scrollbar_hor":35,"tab_window":37}],39:[function(require,module,exports){
 module.exports = the_dat
 
 const window_bar = require('window_bar')
@@ -5413,7 +5841,9 @@ function the_dat (opts, protocol) {
     // Assigning all the icons
     const {img_src} = data
     const {
-        icon_pdf_reader
+        icon_the_dat,
+        icon_vr,
+        icon_full_screen
     } = img_src
 
     const el = document.createElement('div')
@@ -5431,8 +5861,8 @@ function the_dat (opts, protocol) {
 
     const window = window_bar({
         name:'the_dat', 
-        src: icon_pdf_reader,
-        icon_buttons: [{icon: icon_pdf_reader, action: 'toggle_VR'}, {icon:icon_pdf_reader, action: 'toggle_fullscreen'}],
+        src: icon_the_dat,
+        icon_buttons: [{icon: icon_vr, action: 'toggle_VR'}, {icon:icon_full_screen, action: 'toggle_fullscreen'}],
         data: data
     }, the_dat_protocol)
     const the_dat_wrapper = shadow.querySelector('.the_dat')
@@ -5516,7 +5946,7 @@ function get_theme(){
         }
     `
 }
-},{"window_bar":45}],39:[function(require,module,exports){
+},{"window_bar":46}],40:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const cwd = process.cwd()
@@ -5532,28 +5962,28 @@ const dark_theme = {
     ac_3 : '#88559D',
 
     img_src:{
-      icon_consortium: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1927)"><path d="M38 41.1776V50.0011H12V41.1776H20.6667V23.5306H14.8889V14.707H29.3333V41.1776H38Z" fill="#293648"/><path d="M29.3337 0H20.667V8.82353H29.3337V0Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1927"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
-      icon_blogger: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1919)"><path d="M47.0588 26.4706V23.5294H44.1176V20.5882H38.2353V17.6471H35.2941V5.88235H32.3529V2.94118H29.4118V0H5.88235V2.94118H2.94118V5.88235H0V44.1176H2.94118V47.0588H5.88235V50H44.1176V47.0588H47.0588V44.1176H50V26.4706H47.0588ZM5.88235 35.2941H8.82353V32.3529H38.2353V35.2941H41.1765V38.2353H38.2353V41.1765H8.82353V38.2353H5.88235V35.2941ZM5.88235 14.7059H8.82353V11.7647H26.4706V14.7059H29.4118V17.6471H26.4706V20.5882H8.82353V17.6471H5.88235V14.7059Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1919"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+      icon_consortium: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1927)"><path d="M38 41.1776V50.0011H12V41.1776H20.6667V23.5306H14.8889V14.707H29.3333V41.1776H38Z" fill="#293648"/><path d="M29.3337 0H20.667V8.82353H29.3337V0Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1927"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+      icon_blogger: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1919)"><path d="M47.0588 26.4706V23.5294H44.1176V20.5882H38.2353V17.6471H35.2941V5.88235H32.3529V2.94118H29.4118V0H5.88235V2.94118H2.94118V5.88235H0V44.1176H2.94118V47.0588H5.88235V50H44.1176V47.0588H47.0588V44.1176H50V26.4706H47.0588ZM5.88235 35.2941H8.82353V32.3529H38.2353V35.2941H41.1765V38.2353H38.2353V41.1765H8.82353V38.2353H5.88235V35.2941ZM5.88235 14.7059H8.82353V11.7647H26.4706V14.7059H29.4118V17.6471H26.4706V20.5882H8.82353V17.6471H5.88235V14.7059Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1919"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
       icon_discord: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M47.3684 25.7692V18.1538H44.7368V13.0769H39.4737V8H28.9474V13.0769H34.2105V15.6154H15.7895V13.0769H21.0526V8H10.5263V13.0769H5.26316V18.1538H2.63158V25.7692H0V35.9231H2.63158V38.4615H7.89474V41H15.7895V35.9231H34.2105V41H42.1053V38.4615H47.3684V35.9231H50V25.7692H47.3684ZM21.0526 30.8462H15.7895V20.6923H21.0526V30.8462ZM34.2105 30.8462H28.9474V20.6923H34.2105V30.8462Z" fill="#293648"/></svg>`,
-      icon_twitter: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 7.89474V10.5263H47.3684V13.1579H44.7368V21.0526H47.3684V28.9474H44.7368V36.8421H42.1053V42.1053H39.4737V44.7368H34.2105V47.3684H28.9474V50H15.7895V47.3684H7.89474V44.7368H5.26316V39.4737H7.89474V42.1053H13.1579V39.4737H10.5263V36.8421H7.89474V34.2105H5.26316V28.9474H2.63158V23.6842H5.26316V26.3158H7.89474V28.9474H13.1579V26.3158H10.5263V23.6842H7.89474V21.0526H5.26316V18.4211H2.63158V13.1579H0V7.89474H2.63158V10.5263H7.89474V13.1579H15.7895V15.7895H21.0526V13.1579H23.6842V7.89474H26.3158V2.63158H31.5789V0H42.1053V2.63158H44.7368V5.26316H47.3684V7.89474H50Z" fill="#293648"/></svg>`,
-      icon_github: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1915)"><path d="M50 15.7895V34.2105H47.3684V39.4737H44.7368V42.1053H42.1053V44.7368H39.4737V47.3684H34.2105V50H28.9474V34.2105H26.3158V31.5789H34.2105V28.9474H36.8421V26.3158H39.4737V18.4211H36.8421V10.5263H34.2105V13.1579H31.5789V15.7895H28.9474V13.1579H21.0526V15.7895H18.4211V13.1579H15.7895V10.5263H13.1579V18.4211H10.5263V26.3158H13.1579V28.9474H15.7895V31.5789H23.6842V34.2105H21.0526V36.8421H18.4211V39.4737H13.1579V36.8421H10.5263V34.2105H7.89474V39.4737H10.5263V42.1053H13.1579V44.7368H18.4211V42.1053H21.0526V50H15.7895V47.3684H10.5263V44.7368H7.89474V42.1053H5.26316V39.4737H2.63158V34.2105H0V15.7895H2.63158V10.5263H5.26316V7.89474H7.89474V5.26316H10.5263V2.63158H15.7895V0H34.2105V2.63158H39.4737V5.26316H42.1053V7.89474H44.7368V10.5263H47.3684V15.7895H50Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1915"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
-      icon_terminal: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M47.619 9.70588V7.35294H45.2381V5H4.7619V7.35294H2.38095V9.70588H0V40.2941H2.38095V42.6471H4.7619V45H45.2381V42.6471H47.619V40.2941H50V9.70588H47.619ZM19.0476 30.8824H16.6667V33.2353H14.2857V35.5882H9.52381V33.2353H11.9048V30.8824H14.2857V28.5294H16.6667V26.1765H19.0476V23.8235H16.6667V21.4706H14.2857V19.1176H11.9048V16.7647H9.52381V14.4118H14.2857V16.7647H16.6667V19.1176H19.0476V21.4706H21.4286V23.8235H23.8095V26.1765H21.4286V28.5294H19.0476V30.8824ZM40.4762 35.5882H21.4286V33.2353H40.4762V35.5882Z" fill="#293648"/></svg>`,
-      icon_theme: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1948)"><path d="M39.4634 26.3141V28.944H34.2037V26.3141H28.944V23.6843H26.3141V21.0544H23.6843V18.4246H21.0544V13.1649H18.4246V0.015625H10.535V2.64547H7.90517V5.27532H5.27532V7.90517H2.64547V13.1649H0.015625V34.2037H2.64547V39.4634H5.27532V42.0932H7.90517V44.7231H10.535V47.3529H15.7947V49.9828H34.2037V47.3529H39.4634V44.7231H42.0932V42.0932H44.7231V39.4634H47.3529V36.8335H49.9828V26.3141H39.4634ZM47.3529 34.2037H44.7231V36.8335H42.0932V39.4634H39.4634V42.0932H36.8335V44.7231H31.5738V47.3529H18.4246V44.7231H13.1649V42.0932H10.535V39.4634H7.90517V36.8335H5.27532V31.5738H2.64547V15.7947H5.27532V10.535H7.90517V7.90517H10.535V5.27532H13.1649V2.64547H15.7947V15.7947H18.4246V21.0544H21.0544V23.6843H23.6843V26.3141H26.3141V28.944H31.5738V31.5738H42.0932V28.944H47.3529V34.2037Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1948"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
-      icon_close_dark: `<svg width="20" height="20" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.25 12V9.75H7V7.5H4.75V5.25H2.5V3H0.25V0.75H2.5V3H4.75V5.25H7V7.5H9.25V9.75H11.5V12H9.25ZM7 5.25V3H9.25V0.75H11.5V3H9.25V5.25H7ZM2.5 9.75V7.5H4.75V9.75H2.5ZM0.25 12V9.75H2.5V12H0.25Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9 12.25V10H6.75V7.75H5V10H2.75V12.25H0V9.5H2.25V7.25H4.5V5.5H2.25V3.25H0V0.5H2.75V2.75H5V5H6.75V2.75H9V0.5H11.75V3.25H9.5V5.5H7.25V7.25H9.5V9.5H11.75V12.25H9ZM9.25 9.75V7.5H7V5.25H9.25V3H11.5V0.75H9.25V3H7V5.25H4.75V3H2.5V0.75H0.25V3H2.5V5.25H4.75V7.5H2.5V9.75H0.25V12H2.5V9.75H4.75V7.5H7V9.75H9.25V12H11.5V9.75H9.25Z" fill="#293648"/></svg>`,
-      icon_close_light: `<svg width="20" height="20" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.25 11.9023V9.65234H7V7.40234H4.75V5.15234H2.5V2.90234H0.25V0.652344H2.5V2.90234H4.75V5.15234H7V7.40234H9.25V9.65234H11.5V11.9023H9.25ZM7 5.15234V2.90234H9.25V0.652344H11.5V2.90234H9.25V5.15234H7ZM2.5 9.65234V7.40234H4.75V9.65234H2.5ZM0.25 11.9023V9.65234H2.5V11.9023H0.25Z" fill="white"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9 12.1523V9.90234H6.75V7.65234H5V9.90234H2.75V12.1523H0V9.40234H2.25V7.15234H4.5V5.40234H2.25V3.15234H0V0.402344H2.75V2.65234H5V4.90234H6.75V2.65234H9V0.402344H11.75V3.15234H9.5V5.40234H7.25V7.15234H9.5V9.40234H11.75V12.1523H9ZM9.25 9.65234V7.40234H7V5.15234H9.25V2.90234H11.5V0.652344H9.25V2.90234H7V5.15234H4.75V2.90234H2.5V0.652344H0.25V2.90234H2.5V5.15234H4.75V7.40234H2.5V9.65234H0.25V11.9023H2.5V9.65234H4.75V7.40234H7V9.65234H9.25V11.9023H11.5V9.65234H9.25Z" fill="white"/></svg>`,
-      icon_pdf_reader: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2040_2024)"><path fill-rule="evenodd" clip-rule="evenodd" d="M45 6.00332V8V50H5V0H37H39V2L41 2.00332L40.9998 4.00332H43V6.00332H45ZM37 2H39V4H40.9991L41 6.00332H43V8H37V2ZM8 3H33.9987V11.0032H42V47H8V3Z" fill="white"/><path d="M26.9981 12.0012H10.9981V14.0012H26.9981V12.0012Z" fill="white"/><path d="M32.9981 25.9951H10.9981V27.9951H32.9981V25.9951Z" fill="white"/><path d="M34.9981 15.9953H10.9981V17.9953H34.9981V15.9953Z" fill="white"/><path d="M32.9981 29.9989H10.9981V31.9989H32.9981V29.9989Z" fill="white"/></g><defs><clipPath id="clip0_2040_2024"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
-      icon_folder: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M28 15H0V41H50V9H28V15ZM31 12V18H3V38H47V12H31Z" fill="white"/></svg>`,
-      icon_arrow_down: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="#293648"/></svg>`,
-      icon_arrow_up: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.5789 9H18.4211V17H7.89473V27.6667H0V41H18.4211V33H31.5789V41H50V27.6667H42.1053V17H31.5789V9Z" fill="#293648"/></svg>`,
-      icon_arrow_down_light: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="white"/></svg>`,
-      icon_arrow_up_light: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.579 9L18.421 9V17H7.89475V27.6667H1.2659e-06L0 41H18.421V33H31.579V41H50V27.6667H42.1054V17H31.579V9Z" fill="white"/></svg>`,
-      icon_search : `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.7627 2.27344H25.5832V4.73044H12.7627V2.27344Z" fill="#293648"/><path d="M12.7627 32.9844H25.5832V35.4414H12.7627V32.9844Z" fill="#293648"/><path d="M6.93457 4.73047H12.7621V7.18747H6.93457V4.73047Z" fill="#293648"/><path d="M6.93457 30.5273H12.7621V32.9844H6.93457V30.5273Z" fill="#293648"/><path d="M4.60352 7.1875H6.93452V14.5585H4.60352V7.1875Z" fill="#293648"/><path d="M4.60352 23.1562H6.93452V30.5272H4.60352V23.1562Z" fill="#293648"/><path d="M2.27246 13.3281H4.60346V24.3846H2.27246V13.3281Z" fill="#293648"/><path d="M31.4102 7.1875H33.7413V14.5585H31.4102V7.1875Z" fill="#293648"/><path d="M33.7416 35.4433H31.4105V32.9863H25.583V30.5292H31.4105V24.3867H33.7416V30.5292H36.0726V32.9863H38.4035V35.4433H40.7346V37.9004H43.0655V40.3574H45.3966V42.8142H47.7276V47.7283H43.0655V45.2713H40.7346V42.8142H38.4035V40.3574H36.0726V37.9004H33.7416V35.4433Z" fill="#293648"/><path d="M33.7412 13.3281H36.0721V24.3846H33.7412V13.3281Z" fill="#293648"/><path d="M25.583 4.73047H31.4105V7.18747H25.583V4.73047Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12.1936 1.70312H26.1505V4.16012H31.978V6.61712H34.3091V12.7596H36.64V24.9524H34.3091V29.9586H36.64V32.4156H38.9709V34.8727H41.3021V37.3297H43.633V39.7868H45.9641V42.2436H48.295V48.294H42.4966V45.837H40.1657V43.3799H37.8346V40.9231H35.5036V38.4661H33.1727V36.009H30.8416V33.552H26.1505V36.009H12.1936V33.552H6.3661V31.0949H4.0351V24.9524H1.7041V12.7596H4.0351V6.61712H6.3661V4.16012H12.1936V1.70312ZM12.7618 4.72831H6.93428V7.18531H4.60328V13.3278H2.27228V24.3843H4.60328V30.5268H6.93428V32.9838H12.7618V35.4409H25.5823V32.9838H31.4098V35.4409H33.7409V37.8979H36.0718V40.3549H38.4027V42.8118H40.7339V45.2688H43.0648V47.7259H47.7268V42.8118H45.3959V40.3549H43.0648V37.8979H40.7339V35.4409H38.4027V32.9838H36.0718V30.5268H33.7409V24.3843H36.0718V13.3278H33.7409V7.18531H31.4098V4.72831H25.5823V2.27131H12.7618V4.72831ZM25.5823 4.72831H12.7618V7.18531H6.93428V14.5563H4.60328V23.1559H6.93428V30.5268H12.7618V32.9838H25.5823V30.5268H31.4098V24.3843H33.7409V14.5563H31.4098V7.18531H25.5823V4.72831ZM25.0141 5.29649H13.33V7.75349H7.50247V15.1245H5.17147V22.5876H7.50247V29.9586H13.33V32.4156H25.0141V29.9586H30.8416V23.8161H33.1727V15.1245H30.8416V7.75349H25.0141V5.29649Z" fill="#293648"/></svg>`,
+      icon_twitter: `<svg width="17" height="17" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 7.89474V10.5263H47.3684V13.1579H44.7368V21.0526H47.3684V28.9474H44.7368V36.8421H42.1053V42.1053H39.4737V44.7368H34.2105V47.3684H28.9474V50H15.7895V47.3684H7.89474V44.7368H5.26316V39.4737H7.89474V42.1053H13.1579V39.4737H10.5263V36.8421H7.89474V34.2105H5.26316V28.9474H2.63158V23.6842H5.26316V26.3158H7.89474V28.9474H13.1579V26.3158H10.5263V23.6842H7.89474V21.0526H5.26316V18.4211H2.63158V13.1579H0V7.89474H2.63158V10.5263H7.89474V13.1579H15.7895V15.7895H21.0526V13.1579H23.6842V7.89474H26.3158V2.63158H31.5789V0H42.1053V2.63158H44.7368V5.26316H47.3684V7.89474H50Z" fill="#293648"/></svg>`,
+      icon_github: `<svg width="18" height="18" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1915)"><path d="M50 15.7895V34.2105H47.3684V39.4737H44.7368V42.1053H42.1053V44.7368H39.4737V47.3684H34.2105V50H28.9474V34.2105H26.3158V31.5789H34.2105V28.9474H36.8421V26.3158H39.4737V18.4211H36.8421V10.5263H34.2105V13.1579H31.5789V15.7895H28.9474V13.1579H21.0526V15.7895H18.4211V13.1579H15.7895V10.5263H13.1579V18.4211H10.5263V26.3158H13.1579V28.9474H15.7895V31.5789H23.6842V34.2105H21.0526V36.8421H18.4211V39.4737H13.1579V36.8421H10.5263V34.2105H7.89474V39.4737H10.5263V42.1053H13.1579V44.7368H18.4211V42.1053H21.0526V50H15.7895V47.3684H10.5263V44.7368H7.89474V42.1053H5.26316V39.4737H2.63158V34.2105H0V15.7895H2.63158V10.5263H5.26316V7.89474H7.89474V5.26316H10.5263V2.63158H15.7895V0H34.2105V2.63158H39.4737V5.26316H42.1053V7.89474H44.7368V10.5263H47.3684V15.7895H50Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1915"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+      icon_terminal: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M47.619 9.70588V7.35294H45.2381V5H4.7619V7.35294H2.38095V9.70588H0V40.2941H2.38095V42.6471H4.7619V45H45.2381V42.6471H47.619V40.2941H50V9.70588H47.619ZM19.0476 30.8824H16.6667V33.2353H14.2857V35.5882H9.52381V33.2353H11.9048V30.8824H14.2857V28.5294H16.6667V26.1765H19.0476V23.8235H16.6667V21.4706H14.2857V19.1176H11.9048V16.7647H9.52381V14.4118H14.2857V16.7647H16.6667V19.1176H19.0476V21.4706H21.4286V23.8235H23.8095V26.1765H21.4286V28.5294H19.0476V30.8824ZM40.4762 35.5882H21.4286V33.2353H40.4762V35.5882Z" fill="#293648"/></svg>`,
+      icon_theme: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1948)"><path d="M39.4634 26.3141V28.944H34.2037V26.3141H28.944V23.6843H26.3141V21.0544H23.6843V18.4246H21.0544V13.1649H18.4246V0.015625H10.535V2.64547H7.90517V5.27532H5.27532V7.90517H2.64547V13.1649H0.015625V34.2037H2.64547V39.4634H5.27532V42.0932H7.90517V44.7231H10.535V47.3529H15.7947V49.9828H34.2037V47.3529H39.4634V44.7231H42.0932V42.0932H44.7231V39.4634H47.3529V36.8335H49.9828V26.3141H39.4634ZM47.3529 34.2037H44.7231V36.8335H42.0932V39.4634H39.4634V42.0932H36.8335V44.7231H31.5738V47.3529H18.4246V44.7231H13.1649V42.0932H10.535V39.4634H7.90517V36.8335H5.27532V31.5738H2.64547V15.7947H5.27532V10.535H7.90517V7.90517H10.535V5.27532H13.1649V2.64547H15.7947V15.7947H18.4246V21.0544H21.0544V23.6843H23.6843V26.3141H26.3141V28.944H31.5738V31.5738H42.0932V28.944H47.3529V34.2037Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1948"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+      icon_close_dark: `<svg width="15" height="15" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.25 12V9.75H7V7.5H4.75V5.25H2.5V3H0.25V0.75H2.5V3H4.75V5.25H7V7.5H9.25V9.75H11.5V12H9.25ZM7 5.25V3H9.25V0.75H11.5V3H9.25V5.25H7ZM2.5 9.75V7.5H4.75V9.75H2.5ZM0.25 12V9.75H2.5V12H0.25Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9 12.25V10H6.75V7.75H5V10H2.75V12.25H0V9.5H2.25V7.25H4.5V5.5H2.25V3.25H0V0.5H2.75V2.75H5V5H6.75V2.75H9V0.5H11.75V3.25H9.5V5.5H7.25V7.25H9.5V9.5H11.75V12.25H9ZM9.25 9.75V7.5H7V5.25H9.25V3H11.5V0.75H9.25V3H7V5.25H4.75V3H2.5V0.75H0.25V3H2.5V5.25H4.75V7.5H2.5V9.75H0.25V12H2.5V9.75H4.75V7.5H7V9.75H9.25V12H11.5V9.75H9.25Z" fill="#293648"/></svg>`,
+      icon_close_light: `<svg width="15" height="15" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.25 11.9023V9.65234H7V7.40234H4.75V5.15234H2.5V2.90234H0.25V0.652344H2.5V2.90234H4.75V5.15234H7V7.40234H9.25V9.65234H11.5V11.9023H9.25ZM7 5.15234V2.90234H9.25V0.652344H11.5V2.90234H9.25V5.15234H7ZM2.5 9.65234V7.40234H4.75V9.65234H2.5ZM0.25 11.9023V9.65234H2.5V11.9023H0.25Z" fill="white"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9 12.1523V9.90234H6.75V7.65234H5V9.90234H2.75V12.1523H0V9.40234H2.25V7.15234H4.5V5.40234H2.25V3.15234H0V0.402344H2.75V2.65234H5V4.90234H6.75V2.65234H9V0.402344H11.75V3.15234H9.5V5.40234H7.25V7.15234H9.5V9.40234H11.75V12.1523H9ZM9.25 9.65234V7.40234H7V5.15234H9.25V2.90234H11.5V0.652344H9.25V2.90234H7V5.15234H4.75V2.90234H2.5V0.652344H0.25V2.90234H2.5V5.15234H4.75V7.40234H2.5V9.65234H0.25V11.9023H2.5V9.65234H4.75V7.40234H7V9.65234H9.25V11.9023H11.5V9.65234H9.25Z" fill="white"/></svg>`,
+      icon_pdf_reader: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2040_2024)"><path fill-rule="evenodd" clip-rule="evenodd" d="M45 6.00332V8V50H5V0H37H39V2L41 2.00332L40.9998 4.00332H43V6.00332H45ZM37 2H39V4H40.9991L41 6.00332H43V8H37V2ZM8 3H33.9987V11.0032H42V47H8V3Z" fill="white"/><path d="M26.9981 12.0012H10.9981V14.0012H26.9981V12.0012Z" fill="white"/><path d="M32.9981 25.9951H10.9981V27.9951H32.9981V25.9951Z" fill="white"/><path d="M34.9981 15.9953H10.9981V17.9953H34.9981V15.9953Z" fill="white"/><path d="M32.9981 29.9989H10.9981V31.9989H32.9981V29.9989Z" fill="white"/></g><defs><clipPath id="clip0_2040_2024"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+      icon_folder: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M28 15H0V41H50V9H28V15ZM31 12V18H3V38H47V12H31Z" fill="white"/></svg>`,
+      icon_arrow_down: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="#293648"/></svg>`,
+      icon_arrow_up: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.5789 9H18.4211V17H7.89473V27.6667H0V41H18.4211V33H31.5789V41H50V27.6667H42.1053V17H31.5789V9Z" fill="#293648"/></svg>`,
+      icon_arrow_down_light: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="white"/></svg>`,
+      icon_arrow_up_light: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.579 9L18.421 9V17H7.89475V27.6667H1.2659e-06L0 41H18.421V33H31.579V41H50V27.6667H42.1054V17H31.579V9Z" fill="white"/></svg>`,
+      icon_search : `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.7627 2.27344H25.5832V4.73044H12.7627V2.27344Z" fill="#293648"/><path d="M12.7627 32.9844H25.5832V35.4414H12.7627V32.9844Z" fill="#293648"/><path d="M6.93457 4.73047H12.7621V7.18747H6.93457V4.73047Z" fill="#293648"/><path d="M6.93457 30.5273H12.7621V32.9844H6.93457V30.5273Z" fill="#293648"/><path d="M4.60352 7.1875H6.93452V14.5585H4.60352V7.1875Z" fill="#293648"/><path d="M4.60352 23.1562H6.93452V30.5272H4.60352V23.1562Z" fill="#293648"/><path d="M2.27246 13.3281H4.60346V24.3846H2.27246V13.3281Z" fill="#293648"/><path d="M31.4102 7.1875H33.7413V14.5585H31.4102V7.1875Z" fill="#293648"/><path d="M33.7416 35.4433H31.4105V32.9863H25.583V30.5292H31.4105V24.3867H33.7416V30.5292H36.0726V32.9863H38.4035V35.4433H40.7346V37.9004H43.0655V40.3574H45.3966V42.8142H47.7276V47.7283H43.0655V45.2713H40.7346V42.8142H38.4035V40.3574H36.0726V37.9004H33.7416V35.4433Z" fill="#293648"/><path d="M33.7412 13.3281H36.0721V24.3846H33.7412V13.3281Z" fill="#293648"/><path d="M25.583 4.73047H31.4105V7.18747H25.583V4.73047Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12.1936 1.70312H26.1505V4.16012H31.978V6.61712H34.3091V12.7596H36.64V24.9524H34.3091V29.9586H36.64V32.4156H38.9709V34.8727H41.3021V37.3297H43.633V39.7868H45.9641V42.2436H48.295V48.294H42.4966V45.837H40.1657V43.3799H37.8346V40.9231H35.5036V38.4661H33.1727V36.009H30.8416V33.552H26.1505V36.009H12.1936V33.552H6.3661V31.0949H4.0351V24.9524H1.7041V12.7596H4.0351V6.61712H6.3661V4.16012H12.1936V1.70312ZM12.7618 4.72831H6.93428V7.18531H4.60328V13.3278H2.27228V24.3843H4.60328V30.5268H6.93428V32.9838H12.7618V35.4409H25.5823V32.9838H31.4098V35.4409H33.7409V37.8979H36.0718V40.3549H38.4027V42.8118H40.7339V45.2688H43.0648V47.7259H47.7268V42.8118H45.3959V40.3549H43.0648V37.8979H40.7339V35.4409H38.4027V32.9838H36.0718V30.5268H33.7409V24.3843H36.0718V13.3278H33.7409V7.18531H31.4098V4.72831H25.5823V2.27131H12.7618V4.72831ZM25.5823 4.72831H12.7618V7.18531H6.93428V14.5563H4.60328V23.1559H6.93428V30.5268H12.7618V32.9838H25.5823V30.5268H31.4098V24.3843H33.7409V14.5563H31.4098V7.18531H25.5823V4.72831ZM25.0141 5.29649H13.33V7.75349H7.50247V15.1245H5.17147V22.5876H7.50247V29.9586H13.33V32.4156H25.0141V29.9586H30.8416V23.8161H33.1727V15.1245H30.8416V7.75349H25.0141V5.29649Z" fill="#293648"/></svg>`,
       banner_cover : `${prefix}/../assets/images/banner_cover.svg`,
       about_us_cover : `${prefix}/../assets/images/about_us_cover.png`,
       tree_character : `${prefix}/../assets/images/tree_character.png`,
-      icon_clock : `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2040_1964)"><path fill-rule="evenodd" clip-rule="evenodd" d="M33.3333 38.889H38.889V33.3333H44.4444V16.6667H38.889V11.1111H33.3333V5.55556H16.6667V11.1111H11.1111V16.6667H5.55556V33.3333H11.1111V38.889H16.6667V44.4444H33.3333V38.889ZM38.889 44.4444V50H11.1111V44.4444H5.55556V38.889H0V11.1111H5.55556V5.55556H11.1111V0H38.889V5.55556H44.4444V11.1111H50V38.889H44.4444V44.4444H38.889Z" fill="#293648"/><path d="M22.2226 22.2206H16.667V27.776H27.778V11.1094H22.2226V22.2206Z" fill="#293648"/></g><defs><clipPath id="clip0_2040_1964"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
-      icon_link : `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2040_1975)"><path d="M28 0L28 5L37 5V10H32L32 15L27 15V20H22V28L30 28L30 23H35L35 18H40V13H45L45 23H50V0H28Z" fill="#293648"/><path d="M0 5H22V11H6V44H39V28H45V50H0V5Z" fill="#293648"/></g><defs><clipPath id="clip0_2040_1975"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
-      icon_calendar : `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M47 14H3V45H47V14ZM0 6V48H50V6H46V2H40V6H10V2H4V6H0Z" fill="#293648"/><path d="M15 38V35H12V25H14.9901L15 22H22V25H25V35H22V38H15ZM15 35H22V25H14.9901L15 35Z" fill="#293648"/><path d="M28 38V35H32V25H28V22H35.0098V35H39V38H28Z" fill="#293648"/></svg>`,
+      icon_clock : `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2040_1964)"><path fill-rule="evenodd" clip-rule="evenodd" d="M33.3333 38.889H38.889V33.3333H44.4444V16.6667H38.889V11.1111H33.3333V5.55556H16.6667V11.1111H11.1111V16.6667H5.55556V33.3333H11.1111V38.889H16.6667V44.4444H33.3333V38.889ZM38.889 44.4444V50H11.1111V44.4444H5.55556V38.889H0V11.1111H5.55556V5.55556H11.1111V0H38.889V5.55556H44.4444V11.1111H50V38.889H44.4444V44.4444H38.889Z" fill="#293648"/><path d="M22.2226 22.2206H16.667V27.776H27.778V11.1094H22.2226V22.2206Z" fill="#293648"/></g><defs><clipPath id="clip0_2040_1964"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+      icon_link : `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2040_1975)"><path d="M28 0L28 5L37 5V10H32L32 15L27 15V20H22V28L30 28L30 23H35L35 18H40V13H45L45 23H50V0H28Z" fill="#293648"/><path d="M0 5H22V11H6V44H39V28H45V50H0V5Z" fill="#293648"/></g><defs><clipPath id="clip0_2040_1975"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+      icon_calendar : `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M47 14H3V45H47V14ZM0 6V48H50V6H46V2H40V6H10V2H4V6H0Z" fill="#293648"/><path d="M15 38V35H12V25H14.9901L15 22H22V25H25V35H22V38H15ZM15 35H22V25H14.9901L15 35Z" fill="#293648"/><path d="M28 38V35H32V25H28V22H35.0098V35H39V38H28Z" fill="#293648"/></svg>`,
       project_logo_1 : `${prefix}/../assets/images/project_logo_1.png`,
       img_robot_1 : `${prefix}/../assets/images/img_robot_1.png`,
       img_robot_2 : `${prefix}/../assets/images/img_robot_2.png`,
@@ -5563,7 +5993,7 @@ const dark_theme = {
 
 module.exports = dark_theme
 }).call(this)}).call(this,require('_process'),"/src/node_modules/theme/dark_theme")
-},{"_process":2,"path":1}],40:[function(require,module,exports){
+},{"_process":2,"path":1}],41:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const cwd = process.cwd()
@@ -5578,30 +6008,34 @@ const light_theme = {
   ac_3 : '#88559D',
 
   img_src:{
-    icon_consortium: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1927)"><path d="M38 41.1776V50.0011H12V41.1776H20.6667V23.5306H14.8889V14.707H29.3333V41.1776H38Z" fill="#293648"/><path d="M29.3337 0H20.667V8.82353H29.3337V0Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1927"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
-    icon_blogger: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1919)"><path d="M47.0588 26.4706V23.5294H44.1176V20.5882H38.2353V17.6471H35.2941V5.88235H32.3529V2.94118H29.4118V0H5.88235V2.94118H2.94118V5.88235H0V44.1176H2.94118V47.0588H5.88235V50H44.1176V47.0588H47.0588V44.1176H50V26.4706H47.0588ZM5.88235 35.2941H8.82353V32.3529H38.2353V35.2941H41.1765V38.2353H38.2353V41.1765H8.82353V38.2353H5.88235V35.2941ZM5.88235 14.7059H8.82353V11.7647H26.4706V14.7059H29.4118V17.6471H26.4706V20.5882H8.82353V17.6471H5.88235V14.7059Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1919"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_consortium: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1927)"><path d="M38 41.1776V50.0011H12V41.1776H20.6667V23.5306H14.8889V14.707H29.3333V41.1776H38Z" fill="#293648"/><path d="M29.3337 0H20.667V8.82353H29.3337V0Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1927"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_blogger: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1919)"><path d="M47.0588 26.4706V23.5294H44.1176V20.5882H38.2353V17.6471H35.2941V5.88235H32.3529V2.94118H29.4118V0H5.88235V2.94118H2.94118V5.88235H0V44.1176H2.94118V47.0588H5.88235V50H44.1176V47.0588H47.0588V44.1176H50V26.4706H47.0588ZM5.88235 35.2941H8.82353V32.3529H38.2353V35.2941H41.1765V38.2353H38.2353V41.1765H8.82353V38.2353H5.88235V35.2941ZM5.88235 14.7059H8.82353V11.7647H26.4706V14.7059H29.4118V17.6471H26.4706V20.5882H8.82353V17.6471H5.88235V14.7059Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1919"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
     icon_discord: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M47.3684 25.7692V18.1538H44.7368V13.0769H39.4737V8H28.9474V13.0769H34.2105V15.6154H15.7895V13.0769H21.0526V8H10.5263V13.0769H5.26316V18.1538H2.63158V25.7692H0V35.9231H2.63158V38.4615H7.89474V41H15.7895V35.9231H34.2105V41H42.1053V38.4615H47.3684V35.9231H50V25.7692H47.3684ZM21.0526 30.8462H15.7895V20.6923H21.0526V30.8462ZM34.2105 30.8462H28.9474V20.6923H34.2105V30.8462Z" fill="#293648"/></svg>`,
-    icon_twitter: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 7.89474V10.5263H47.3684V13.1579H44.7368V21.0526H47.3684V28.9474H44.7368V36.8421H42.1053V42.1053H39.4737V44.7368H34.2105V47.3684H28.9474V50H15.7895V47.3684H7.89474V44.7368H5.26316V39.4737H7.89474V42.1053H13.1579V39.4737H10.5263V36.8421H7.89474V34.2105H5.26316V28.9474H2.63158V23.6842H5.26316V26.3158H7.89474V28.9474H13.1579V26.3158H10.5263V23.6842H7.89474V21.0526H5.26316V18.4211H2.63158V13.1579H0V7.89474H2.63158V10.5263H7.89474V13.1579H15.7895V15.7895H21.0526V13.1579H23.6842V7.89474H26.3158V2.63158H31.5789V0H42.1053V2.63158H44.7368V5.26316H47.3684V7.89474H50Z" fill="#293648"/></svg>`,
-    icon_github: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1915)"><path d="M50 15.7895V34.2105H47.3684V39.4737H44.7368V42.1053H42.1053V44.7368H39.4737V47.3684H34.2105V50H28.9474V34.2105H26.3158V31.5789H34.2105V28.9474H36.8421V26.3158H39.4737V18.4211H36.8421V10.5263H34.2105V13.1579H31.5789V15.7895H28.9474V13.1579H21.0526V15.7895H18.4211V13.1579H15.7895V10.5263H13.1579V18.4211H10.5263V26.3158H13.1579V28.9474H15.7895V31.5789H23.6842V34.2105H21.0526V36.8421H18.4211V39.4737H13.1579V36.8421H10.5263V34.2105H7.89474V39.4737H10.5263V42.1053H13.1579V44.7368H18.4211V42.1053H21.0526V50H15.7895V47.3684H10.5263V44.7368H7.89474V42.1053H5.26316V39.4737H2.63158V34.2105H0V15.7895H2.63158V10.5263H5.26316V7.89474H7.89474V5.26316H10.5263V2.63158H15.7895V0H34.2105V2.63158H39.4737V5.26316H42.1053V7.89474H44.7368V10.5263H47.3684V15.7895H50Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1915"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
-    icon_terminal: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M47.619 9.70588V7.35294H45.2381V5H4.7619V7.35294H2.38095V9.70588H0V40.2941H2.38095V42.6471H4.7619V45H45.2381V42.6471H47.619V40.2941H50V9.70588H47.619ZM19.0476 30.8824H16.6667V33.2353H14.2857V35.5882H9.52381V33.2353H11.9048V30.8824H14.2857V28.5294H16.6667V26.1765H19.0476V23.8235H16.6667V21.4706H14.2857V19.1176H11.9048V16.7647H9.52381V14.4118H14.2857V16.7647H16.6667V19.1176H19.0476V21.4706H21.4286V23.8235H23.8095V26.1765H21.4286V28.5294H19.0476V30.8824ZM40.4762 35.5882H21.4286V33.2353H40.4762V35.5882Z" fill="#293648"/></svg>`,
-    icon_theme: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1948)"><path d="M39.4634 26.3141V28.944H34.2037V26.3141H28.944V23.6843H26.3141V21.0544H23.6843V18.4246H21.0544V13.1649H18.4246V0.015625H10.535V2.64547H7.90517V5.27532H5.27532V7.90517H2.64547V13.1649H0.015625V34.2037H2.64547V39.4634H5.27532V42.0932H7.90517V44.7231H10.535V47.3529H15.7947V49.9828H34.2037V47.3529H39.4634V44.7231H42.0932V42.0932H44.7231V39.4634H47.3529V36.8335H49.9828V26.3141H39.4634ZM47.3529 34.2037H44.7231V36.8335H42.0932V39.4634H39.4634V42.0932H36.8335V44.7231H31.5738V47.3529H18.4246V44.7231H13.1649V42.0932H10.535V39.4634H7.90517V36.8335H5.27532V31.5738H2.64547V15.7947H5.27532V10.535H7.90517V7.90517H10.535V5.27532H13.1649V2.64547H15.7947V15.7947H18.4246V21.0544H21.0544V23.6843H23.6843V26.3141H26.3141V28.944H31.5738V31.5738H42.0932V28.944H47.3529V34.2037Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1948"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
-    icon_close_dark: `<svg width="20" height="20" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.25 12V9.75H7V7.5H4.75V5.25H2.5V3H0.25V0.75H2.5V3H4.75V5.25H7V7.5H9.25V9.75H11.5V12H9.25ZM7 5.25V3H9.25V0.75H11.5V3H9.25V5.25H7ZM2.5 9.75V7.5H4.75V9.75H2.5ZM0.25 12V9.75H2.5V12H0.25Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9 12.25V10H6.75V7.75H5V10H2.75V12.25H0V9.5H2.25V7.25H4.5V5.5H2.25V3.25H0V0.5H2.75V2.75H5V5H6.75V2.75H9V0.5H11.75V3.25H9.5V5.5H7.25V7.25H9.5V9.5H11.75V12.25H9ZM9.25 9.75V7.5H7V5.25H9.25V3H11.5V0.75H9.25V3H7V5.25H4.75V3H2.5V0.75H0.25V3H2.5V5.25H4.75V7.5H2.5V9.75H0.25V12H2.5V9.75H4.75V7.5H7V9.75H9.25V12H11.5V9.75H9.25Z" fill="#293648"/></svg>`,
-    icon_close_light: `<svg width="20" height="20" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.25 11.9023V9.65234H7V7.40234H4.75V5.15234H2.5V2.90234H0.25V0.652344H2.5V2.90234H4.75V5.15234H7V7.40234H9.25V9.65234H11.5V11.9023H9.25ZM7 5.15234V2.90234H9.25V0.652344H11.5V2.90234H9.25V5.15234H7ZM2.5 9.65234V7.40234H4.75V9.65234H2.5ZM0.25 11.9023V9.65234H2.5V11.9023H0.25Z" fill="white"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9 12.1523V9.90234H6.75V7.65234H5V9.90234H2.75V12.1523H0V9.40234H2.25V7.15234H4.5V5.40234H2.25V3.15234H0V0.402344H2.75V2.65234H5V4.90234H6.75V2.65234H9V0.402344H11.75V3.15234H9.5V5.40234H7.25V7.15234H9.5V9.40234H11.75V12.1523H9ZM9.25 9.65234V7.40234H7V5.15234H9.25V2.90234H11.5V0.652344H9.25V2.90234H7V5.15234H4.75V2.90234H2.5V0.652344H0.25V2.90234H2.5V5.15234H4.75V7.40234H2.5V9.65234H0.25V11.9023H2.5V9.65234H4.75V7.40234H7V9.65234H9.25V11.9023H11.5V9.65234H9.25Z" fill="white"/></svg>`,
+    icon_twitter: `<svg width="17" height="17" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 7.89474V10.5263H47.3684V13.1579H44.7368V21.0526H47.3684V28.9474H44.7368V36.8421H42.1053V42.1053H39.4737V44.7368H34.2105V47.3684H28.9474V50H15.7895V47.3684H7.89474V44.7368H5.26316V39.4737H7.89474V42.1053H13.1579V39.4737H10.5263V36.8421H7.89474V34.2105H5.26316V28.9474H2.63158V23.6842H5.26316V26.3158H7.89474V28.9474H13.1579V26.3158H10.5263V23.6842H7.89474V21.0526H5.26316V18.4211H2.63158V13.1579H0V7.89474H2.63158V10.5263H7.89474V13.1579H15.7895V15.7895H21.0526V13.1579H23.6842V7.89474H26.3158V2.63158H31.5789V0H42.1053V2.63158H44.7368V5.26316H47.3684V7.89474H50Z" fill="#293648"/></svg>`,
+    icon_github: `<svg width="18" height="18" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1915)"><path d="M50 15.7895V34.2105H47.3684V39.4737H44.7368V42.1053H42.1053V44.7368H39.4737V47.3684H34.2105V50H28.9474V34.2105H26.3158V31.5789H34.2105V28.9474H36.8421V26.3158H39.4737V18.4211H36.8421V10.5263H34.2105V13.1579H31.5789V15.7895H28.9474V13.1579H21.0526V15.7895H18.4211V13.1579H15.7895V10.5263H13.1579V18.4211H10.5263V26.3158H13.1579V28.9474H15.7895V31.5789H23.6842V34.2105H21.0526V36.8421H18.4211V39.4737H13.1579V36.8421H10.5263V34.2105H7.89474V39.4737H10.5263V42.1053H13.1579V44.7368H18.4211V42.1053H21.0526V50H15.7895V47.3684H10.5263V44.7368H7.89474V42.1053H5.26316V39.4737H2.63158V34.2105H0V15.7895H2.63158V10.5263H5.26316V7.89474H7.89474V5.26316H10.5263V2.63158H15.7895V0H34.2105V2.63158H39.4737V5.26316H42.1053V7.89474H44.7368V10.5263H47.3684V15.7895H50Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1915"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_terminal: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M47.619 9.70588V7.35294H45.2381V5H4.7619V7.35294H2.38095V9.70588H0V40.2941H2.38095V42.6471H4.7619V45H45.2381V42.6471H47.619V40.2941H50V9.70588H47.619ZM19.0476 30.8824H16.6667V33.2353H14.2857V35.5882H9.52381V33.2353H11.9048V30.8824H14.2857V28.5294H16.6667V26.1765H19.0476V23.8235H16.6667V21.4706H14.2857V19.1176H11.9048V16.7647H9.52381V14.4118H14.2857V16.7647H16.6667V19.1176H19.0476V21.4706H21.4286V23.8235H23.8095V26.1765H21.4286V28.5294H19.0476V30.8824ZM40.4762 35.5882H21.4286V33.2353H40.4762V35.5882Z" fill="#293648"/></svg>`,
+    icon_theme: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1948)"><path d="M39.4634 26.3141V28.944H34.2037V26.3141H28.944V23.6843H26.3141V21.0544H23.6843V18.4246H21.0544V13.1649H18.4246V0.015625H10.535V2.64547H7.90517V5.27532H5.27532V7.90517H2.64547V13.1649H0.015625V34.2037H2.64547V39.4634H5.27532V42.0932H7.90517V44.7231H10.535V47.3529H15.7947V49.9828H34.2037V47.3529H39.4634V44.7231H42.0932V42.0932H44.7231V39.4634H47.3529V36.8335H49.9828V26.3141H39.4634ZM47.3529 34.2037H44.7231V36.8335H42.0932V39.4634H39.4634V42.0932H36.8335V44.7231H31.5738V47.3529H18.4246V44.7231H13.1649V42.0932H10.535V39.4634H7.90517V36.8335H5.27532V31.5738H2.64547V15.7947H5.27532V10.535H7.90517V7.90517H10.535V5.27532H13.1649V2.64547H15.7947V15.7947H18.4246V21.0544H21.0544V23.6843H23.6843V26.3141H26.3141V28.944H31.5738V31.5738H42.0932V28.944H47.3529V34.2037Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1948"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_close_dark: `<svg width="15" height="15" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.25 12V9.75H7V7.5H4.75V5.25H2.5V3H0.25V0.75H2.5V3H4.75V5.25H7V7.5H9.25V9.75H11.5V12H9.25ZM7 5.25V3H9.25V0.75H11.5V3H9.25V5.25H7ZM2.5 9.75V7.5H4.75V9.75H2.5ZM0.25 12V9.75H2.5V12H0.25Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9 12.25V10H6.75V7.75H5V10H2.75V12.25H0V9.5H2.25V7.25H4.5V5.5H2.25V3.25H0V0.5H2.75V2.75H5V5H6.75V2.75H9V0.5H11.75V3.25H9.5V5.5H7.25V7.25H9.5V9.5H11.75V12.25H9ZM9.25 9.75V7.5H7V5.25H9.25V3H11.5V0.75H9.25V3H7V5.25H4.75V3H2.5V0.75H0.25V3H2.5V5.25H4.75V7.5H2.5V9.75H0.25V12H2.5V9.75H4.75V7.5H7V9.75H9.25V12H11.5V9.75H9.25Z" fill="#293648"/></svg>`,
+    icon_close_light: `<svg width="15" height="15" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.25 11.9023V9.65234H7V7.40234H4.75V5.15234H2.5V2.90234H0.25V0.652344H2.5V2.90234H4.75V5.15234H7V7.40234H9.25V9.65234H11.5V11.9023H9.25ZM7 5.15234V2.90234H9.25V0.652344H11.5V2.90234H9.25V5.15234H7ZM2.5 9.65234V7.40234H4.75V9.65234H2.5ZM0.25 11.9023V9.65234H2.5V11.9023H0.25Z" fill="white"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9 12.1523V9.90234H6.75V7.65234H5V9.90234H2.75V12.1523H0V9.40234H2.25V7.15234H4.5V5.40234H2.25V3.15234H0V0.402344H2.75V2.65234H5V4.90234H6.75V2.65234H9V0.402344H11.75V3.15234H9.5V5.40234H7.25V7.15234H9.5V9.40234H11.75V12.1523H9ZM9.25 9.65234V7.40234H7V5.15234H9.25V2.90234H11.5V0.652344H9.25V2.90234H7V5.15234H4.75V2.90234H2.5V0.652344H0.25V2.90234H2.5V5.15234H4.75V7.40234H2.5V9.65234H0.25V11.9023H2.5V9.65234H4.75V7.40234H7V9.65234H9.25V11.9023H11.5V9.65234H9.25Z" fill="white"/></svg>`,
     icon_pdf_reader: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2040_2024)"><path fill-rule="evenodd" clip-rule="evenodd" d="M45 6.00332V8V50H5V0H37H39V2L41 2.00332L40.9998 4.00332H43V6.00332H45ZM37 2H39V4H40.9991L41 6.00332H43V8H37V2ZM8 3H33.9987V11.0032H42V47H8V3Z" fill="white"/><path d="M26.9981 12.0012H10.9981V14.0012H26.9981V12.0012Z" fill="white"/><path d="M32.9981 25.9951H10.9981V27.9951H32.9981V25.9951Z" fill="white"/><path d="M34.9981 15.9953H10.9981V17.9953H34.9981V15.9953Z" fill="white"/><path d="M32.9981 29.9989H10.9981V31.9989H32.9981V29.9989Z" fill="white"/></g><defs><clipPath id="clip0_2040_2024"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
     icon_folder: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M28 15H0V41H50V9H28V15ZM31 12V18H3V38H47V12H31Z" fill="white"/></svg>`,
-    icon_arrow_down: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="#293648"/></svg>`,
-    icon_arrow_up: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.5789 9H18.4211V17H7.89473V27.6667H0V41H18.4211V33H31.5789V41H50V27.6667H42.1053V17H31.5789V9Z" fill="#293648"/></svg>`,
-    icon_arrow_down_light: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="white"/></svg>`,
-    icon_arrow_up_light: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.579 9L18.421 9V17H7.89475V27.6667H1.2659e-06L0 41H18.421V33H31.579V41H50V27.6667H42.1054V17H31.579V9Z" fill="white"/></svg>`,
-    icon_arrow_right: `<svg transform="rotate(90 0 0)" width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.5789 9H18.4211V17H7.89473V27.6667H0V41H18.4211V33H31.5789V41H50V27.6667H42.1053V17H31.5789V9Z" fill="#293648"/></svg>`,
-    icon_arrow_left: `<svg transform="rotate(90 0 0)" width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="#293648"/></svg>`,
-    icon_search : `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.7627 2.27344H25.5832V4.73044H12.7627V2.27344Z" fill="#293648"/><path d="M12.7627 32.9844H25.5832V35.4414H12.7627V32.9844Z" fill="#293648"/><path d="M6.93457 4.73047H12.7621V7.18747H6.93457V4.73047Z" fill="#293648"/><path d="M6.93457 30.5273H12.7621V32.9844H6.93457V30.5273Z" fill="#293648"/><path d="M4.60352 7.1875H6.93452V14.5585H4.60352V7.1875Z" fill="#293648"/><path d="M4.60352 23.1562H6.93452V30.5272H4.60352V23.1562Z" fill="#293648"/><path d="M2.27246 13.3281H4.60346V24.3846H2.27246V13.3281Z" fill="#293648"/><path d="M31.4102 7.1875H33.7413V14.5585H31.4102V7.1875Z" fill="#293648"/><path d="M33.7416 35.4433H31.4105V32.9863H25.583V30.5292H31.4105V24.3867H33.7416V30.5292H36.0726V32.9863H38.4035V35.4433H40.7346V37.9004H43.0655V40.3574H45.3966V42.8142H47.7276V47.7283H43.0655V45.2713H40.7346V42.8142H38.4035V40.3574H36.0726V37.9004H33.7416V35.4433Z" fill="#293648"/><path d="M33.7412 13.3281H36.0721V24.3846H33.7412V13.3281Z" fill="#293648"/><path d="M25.583 4.73047H31.4105V7.18747H25.583V4.73047Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12.1936 1.70312H26.1505V4.16012H31.978V6.61712H34.3091V12.7596H36.64V24.9524H34.3091V29.9586H36.64V32.4156H38.9709V34.8727H41.3021V37.3297H43.633V39.7868H45.9641V42.2436H48.295V48.294H42.4966V45.837H40.1657V43.3799H37.8346V40.9231H35.5036V38.4661H33.1727V36.009H30.8416V33.552H26.1505V36.009H12.1936V33.552H6.3661V31.0949H4.0351V24.9524H1.7041V12.7596H4.0351V6.61712H6.3661V4.16012H12.1936V1.70312ZM12.7618 4.72831H6.93428V7.18531H4.60328V13.3278H2.27228V24.3843H4.60328V30.5268H6.93428V32.9838H12.7618V35.4409H25.5823V32.9838H31.4098V35.4409H33.7409V37.8979H36.0718V40.3549H38.4027V42.8118H40.7339V45.2688H43.0648V47.7259H47.7268V42.8118H45.3959V40.3549H43.0648V37.8979H40.7339V35.4409H38.4027V32.9838H36.0718V30.5268H33.7409V24.3843H36.0718V13.3278H33.7409V7.18531H31.4098V4.72831H25.5823V2.27131H12.7618V4.72831ZM25.5823 4.72831H12.7618V7.18531H6.93428V14.5563H4.60328V23.1559H6.93428V30.5268H12.7618V32.9838H25.5823V30.5268H31.4098V24.3843H33.7409V14.5563H31.4098V7.18531H25.5823V4.72831ZM25.0141 5.29649H13.33V7.75349H7.50247V15.1245H5.17147V22.5876H7.50247V29.9586H13.33V32.4156H25.0141V29.9586H30.8416V23.8161H33.1727V15.1245H30.8416V7.75349H25.0141V5.29649Z" fill="#293648"/></svg>`,
+    icon_arrow_down: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="#293648"/></svg>`,
+    icon_arrow_up: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.5789 9H18.4211V17H7.89473V27.6667H0V41H18.4211V33H31.5789V41H50V27.6667H42.1053V17H31.5789V9Z" fill="#293648"/></svg>`,
+    icon_arrow_down_light: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="white"/></svg>`,
+    icon_arrow_up_light: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.579 9L18.421 9V17H7.89475V27.6667H1.2659e-06L0 41H18.421V33H31.579V41H50V27.6667H42.1054V17H31.579V9Z" fill="white"/></svg>`,
+    icon_arrow_right: `<svg transform="rotate(90 0 0)" width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.5789 9H18.4211V17H7.89473V27.6667H0V41H18.4211V33H31.5789V41H50V27.6667H42.1053V17H31.5789V9Z" fill="#293648"/></svg>`,
+    icon_arrow_left: `<svg transform="rotate(90 0 0)" width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="#293648"/></svg>`,
+    icon_search : `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.7627 2.27344H25.5832V4.73044H12.7627V2.27344Z" fill="#293648"/><path d="M12.7627 32.9844H25.5832V35.4414H12.7627V32.9844Z" fill="#293648"/><path d="M6.93457 4.73047H12.7621V7.18747H6.93457V4.73047Z" fill="#293648"/><path d="M6.93457 30.5273H12.7621V32.9844H6.93457V30.5273Z" fill="#293648"/><path d="M4.60352 7.1875H6.93452V14.5585H4.60352V7.1875Z" fill="#293648"/><path d="M4.60352 23.1562H6.93452V30.5272H4.60352V23.1562Z" fill="#293648"/><path d="M2.27246 13.3281H4.60346V24.3846H2.27246V13.3281Z" fill="#293648"/><path d="M31.4102 7.1875H33.7413V14.5585H31.4102V7.1875Z" fill="#293648"/><path d="M33.7416 35.4433H31.4105V32.9863H25.583V30.5292H31.4105V24.3867H33.7416V30.5292H36.0726V32.9863H38.4035V35.4433H40.7346V37.9004H43.0655V40.3574H45.3966V42.8142H47.7276V47.7283H43.0655V45.2713H40.7346V42.8142H38.4035V40.3574H36.0726V37.9004H33.7416V35.4433Z" fill="#293648"/><path d="M33.7412 13.3281H36.0721V24.3846H33.7412V13.3281Z" fill="#293648"/><path d="M25.583 4.73047H31.4105V7.18747H25.583V4.73047Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12.1936 1.70312H26.1505V4.16012H31.978V6.61712H34.3091V12.7596H36.64V24.9524H34.3091V29.9586H36.64V32.4156H38.9709V34.8727H41.3021V37.3297H43.633V39.7868H45.9641V42.2436H48.295V48.294H42.4966V45.837H40.1657V43.3799H37.8346V40.9231H35.5036V38.4661H33.1727V36.009H30.8416V33.552H26.1505V36.009H12.1936V33.552H6.3661V31.0949H4.0351V24.9524H1.7041V12.7596H4.0351V6.61712H6.3661V4.16012H12.1936V1.70312ZM12.7618 4.72831H6.93428V7.18531H4.60328V13.3278H2.27228V24.3843H4.60328V30.5268H6.93428V32.9838H12.7618V35.4409H25.5823V32.9838H31.4098V35.4409H33.7409V37.8979H36.0718V40.3549H38.4027V42.8118H40.7339V45.2688H43.0648V47.7259H47.7268V42.8118H45.3959V40.3549H43.0648V37.8979H40.7339V35.4409H38.4027V32.9838H36.0718V30.5268H33.7409V24.3843H36.0718V13.3278H33.7409V7.18531H31.4098V4.72831H25.5823V2.27131H12.7618V4.72831ZM25.5823 4.72831H12.7618V7.18531H6.93428V14.5563H4.60328V23.1559H6.93428V30.5268H12.7618V32.9838H25.5823V30.5268H31.4098V24.3843H33.7409V14.5563H31.4098V7.18531H25.5823V4.72831ZM25.0141 5.29649H13.33V7.75349H7.50247V15.1245H5.17147V22.5876H7.50247V29.9586H13.33V32.4156H25.0141V29.9586H30.8416V23.8161H33.1727V15.1245H30.8416V7.75349H25.0141V5.29649Z" fill="#293648"/></svg>`,
+    icon_the_dat : `<svg width="15" height="15" viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M210 280H190V300H210V280Z" fill="#fff"/><path d="M190 160H150V180H190V160Z" fill="#fff"/><path d="M390 20V80H370V100H310V80H290V20H310V0H370V20H390Z" fill="#fff"/><path d="M210 140H190V160H210V140Z" fill="#fff"/><path d="M190 260H150V280H190V260Z" fill="#fff"/><path d="M250 100H230V120H250V100Z" fill="#fff"/><path d="M270 320H250V340H270V320Z" fill="#fff"/><path d="M290 320H270V340H290V320Z" fill="#fff"/><path d="M290 80H250V100H290V80Z" fill="#fff"/><path d="M290 400V340H310V320H370V340H390V400H370V420H310V400H290Z" fill="#fff"/><path d="M130 180H150V260H130V280H50V260H30V180H50V160H130V180Z" fill="#fff"/><path d="M250 300H210V320H250V300Z" fill="#fff"/><path d="M230 120H210V140H230V120Z" fill="#fff"/></svg>`,
+    icon_vr: `<svg width="15" height="15" viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><rect x="40" y="108" width="339" height="204" fill="url(#pattern0)"/><path d="M371.952 133.154V116.077H354.905V99H65.0952V116.077H48.0476V133.154H31V303.923H48.0476V321H150.333V303.923H167.381V286.846H184.429V269.769H201.476V252.692H218.524V269.769H235.571V286.846H252.619V303.923H269.667V321H371.952V303.923H389V133.154H371.952ZM82.1429 252.692V150.231H150.333V252.692H82.1429ZM337.857 252.692H269.667V150.231H337.857V252.692Z" fill="white"/><defs><pattern id="pattern0" patternContentUnits="objectBoundingBox" width="1" height="1"><use xlink:href="#image0_2206_52" transform="matrix(0.0454545 0 0 0.0714286 -0.181818 -0.571429)"/></pattern><image id="image0_2206_52" width="30" height="30" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAAXNSR0IArs4c6QAAAIRJREFUSEvtlksOwCAIBfUi3P9cXKSNCzaWT0iepWlw6W9gFOMcRW0WcUeDXzPfqutVE9GFiIKZ1eNUO1FQCVyDP8BoqAX/JnhXFNnw5u9jbsYN/r9qxAMCLye5eJF+KDh72xc8VU6aauvtjTIPwQtmbWJBJcDMuv4IICvI3atVt+pjBm54bHAflRebbgAAAABJRU5ErkJggg=="/></defs></svg>`,
+    icon_full_screen: `<svg width="15" height="15" viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M40 170.465V40H170.465V82.5H82.5V170.465H40ZM380 170.465V40H249.535V82.5H337.5V170.465H380ZM380 249.535H337.5V337.5H249.535V380H380V249.535ZM170.465 380V337.5H82.5V249.535H40V380H170.465Z" fill="white"/></svg>`,
+    icon_plus: `<svg width="15" height="15" viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M176 380V244H40V176H176V40H244V176H380V244H244V380H176Z" fill="#EEECE9"/></svg>`,
     banner_cover : `${prefix}/../assets/images/banner_cover.svg`,
     about_us_cover : `${prefix}/../assets/images/about_us_cover.png`,
     tree_character : `${prefix}/../assets/images/tree_character.png`,
-    icon_clock : `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2040_1964)"><path fill-rule="evenodd" clip-rule="evenodd" d="M33.3333 38.889H38.889V33.3333H44.4444V16.6667H38.889V11.1111H33.3333V5.55556H16.6667V11.1111H11.1111V16.6667H5.55556V33.3333H11.1111V38.889H16.6667V44.4444H33.3333V38.889ZM38.889 44.4444V50H11.1111V44.4444H5.55556V38.889H0V11.1111H5.55556V5.55556H11.1111V0H38.889V5.55556H44.4444V11.1111H50V38.889H44.4444V44.4444H38.889Z" fill="#293648"/><path d="M22.2226 22.2206H16.667V27.776H27.778V11.1094H22.2226V22.2206Z" fill="#293648"/></g><defs><clipPath id="clip0_2040_1964"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
-    icon_link : `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2040_1975)"><path d="M28 0L28 5L37 5V10H32L32 15L27 15V20H22V28L30 28L30 23H35L35 18H40V13H45L45 23H50V0H28Z" fill="#293648"/><path d="M0 5H22V11H6V44H39V28H45V50H0V5Z" fill="#293648"/></g><defs><clipPath id="clip0_2040_1975"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
-    icon_calendar : `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M47 14H3V45H47V14ZM0 6V48H50V6H46V2H40V6H10V2H4V6H0Z" fill="#293648"/><path d="M15 38V35H12V25H14.9901L15 22H22V25H25V35H22V38H15ZM15 35H22V25H14.9901L15 35Z" fill="#293648"/><path d="M28 38V35H32V25H28V22H35.0098V35H39V38H28Z" fill="#293648"/></svg>`,
+    icon_clock : `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2040_1964)"><path fill-rule="evenodd" clip-rule="evenodd" d="M33.3333 38.889H38.889V33.3333H44.4444V16.6667H38.889V11.1111H33.3333V5.55556H16.6667V11.1111H11.1111V16.6667H5.55556V33.3333H11.1111V38.889H16.6667V44.4444H33.3333V38.889ZM38.889 44.4444V50H11.1111V44.4444H5.55556V38.889H0V11.1111H5.55556V5.55556H11.1111V0H38.889V5.55556H44.4444V11.1111H50V38.889H44.4444V44.4444H38.889Z" fill="#293648"/><path d="M22.2226 22.2206H16.667V27.776H27.778V11.1094H22.2226V22.2206Z" fill="#293648"/></g><defs><clipPath id="clip0_2040_1964"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_link : `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2040_1975)"><path d="M28 0L28 5L37 5V10H32L32 15L27 15V20H22V28L30 28L30 23H35L35 18H40V13H45L45 23H50V0H28Z" fill="#293648"/><path d="M0 5H22V11H6V44H39V28H45V50H0V5Z" fill="#293648"/></g><defs><clipPath id="clip0_2040_1975"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_calendar : `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M47 14H3V45H47V14ZM0 6V48H50V6H46V2H40V6H10V2H4V6H0Z" fill="#293648"/><path d="M15 38V35H12V25H14.9901L15 22H22V25H25V35H22V38H15ZM15 35H22V25H14.9901L15 35Z" fill="#293648"/><path d="M28 38V35H32V25H28V22H35.0098V35H39V38H28Z" fill="#293648"/></svg>`,
     project_logo_1 : `${prefix}/../assets/images/project_logo_1.png`,
     img_robot_1 : `${prefix}/../assets/images/img_robot_1.png`,
     img_robot_2 : `${prefix}/../assets/images/img_robot_2.png`,
@@ -5612,7 +6046,7 @@ const light_theme = {
 
 module.exports = light_theme
 }).call(this)}).call(this,require('_process'),"/src/node_modules/theme/light_theme")
-},{"_process":2,"path":1}],41:[function(require,module,exports){
+},{"_process":2,"path":1}],42:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = timeline_card
 
@@ -5629,9 +6063,11 @@ sheet.replaceSync(theme)
 
 
 
-
+let id = 0;
 
 function timeline_card (opts) {
+
+    const name = `timeline_card-${id++}`
 
     const {data} = opts
     // Assigning all the icons
@@ -5644,6 +6080,7 @@ function timeline_card (opts) {
 
 
     const el = document.createElement('div')
+    el.id = name;
     el.style.lineHeight = '0px'
     const shadow = el.attachShadow( { mode : 'closed' } )
     
@@ -5753,7 +6190,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/timeline_card")
-},{"_process":2,"path":1}],42:[function(require,module,exports){
+},{"_process":2,"path":1}],43:[function(require,module,exports){
 module.exports = timeline_filter
 
 
@@ -5797,7 +6234,7 @@ function timeline_filter(opts, protocol){
     const status_button = select_button({data: opts.data, name: 'STATUS', choices: ['ACTIVE', 'UNACTIVE', 'PAUSED']}, timeline_filter_protocol)
     const tag_button = select_button({data: opts.data, name: 'TAGS', choices: opts.tags}, timeline_filter_protocol)
     const month_button = sm_icon_button({src: icon_arrow_up, activate: true})
-    const year_btn = year_button({month: opts.month, year: opts.year , data}, timeline_filter_protocol)
+    const year_btn = year_button({data, latest_date: opts.latest_date}, timeline_filter_protocol)
 
     month_button.onclick = e => notify({
         head: {by:name, to:'app_timeline', mid:0},
@@ -5872,10 +6309,11 @@ function get_theme(){
         }
     `
 }
-},{"../buttons/select_button":14,"buttons/sm_icon_button":15,"buttons/year_button":20,"search_input":35}],43:[function(require,module,exports){
+},{"../buttons/select_button":14,"buttons/sm_icon_button":15,"buttons/year_button":20,"search_input":36}],44:[function(require,module,exports){
 module.exports = timeline_page
 
 const app_timeline = require('app_timeline')
+const app_footer = require('app_footer')
 
 function timeline_page (opts, protocol) {
     const {data} = opts
@@ -5886,6 +6324,7 @@ function timeline_page (opts, protocol) {
 
     const components = [
         app_timeline({data}),
+        app_footer({data}),
     ]
 
     const el = document.createElement('div')
@@ -5948,7 +6387,7 @@ function get_theme() {
         }
     `
 }
-},{"app_timeline":9}],44:[function(require,module,exports){
+},{"app_footer":6,"app_timeline":9}],45:[function(require,module,exports){
 module.exports = tools
 
 const window_bar = require('window_bar')
@@ -6077,7 +6516,7 @@ function get_theme(){
 
     `
 }
-},{"window_bar":45}],45:[function(require,module,exports){
+},{"window_bar":46}],46:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = window_bar
 
@@ -6304,7 +6743,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/window_bar")
-},{"_process":2,"buttons/sm_icon_button_alt":16,"buttons/sm_text_button":17,"path":1}],46:[function(require,module,exports){
+},{"_process":2,"buttons/sm_icon_button_alt":16,"buttons/sm_text_button":17,"path":1}],47:[function(require,module,exports){
 module.exports = year_filter
 
 const sheet = new CSSStyleSheet
@@ -6315,6 +6754,7 @@ let id = 0;
 
 function year_filter (opts, protocol) {
 
+    const {latest_date} = opts
     const name = 'year_filter-'+id++;
     const notify = protocol({from: name}, listen)
 
@@ -6338,6 +6778,9 @@ function year_filter (opts, protocol) {
         year_wrapper.append(year_button)
     }
 
+    const year = new Date(latest_date).getFullYear()
+    on_active_state(year)
+    
     shadow.adoptedStyleSheets = [sheet]
     return el
 
@@ -6352,12 +6795,21 @@ function year_filter (opts, protocol) {
         }
         notify({
             head: {by:name, to:'app_timeline', mid:0},
-            type: 'setFilter',
-            data: {filter: 'YEAR', value: active_state}
+            type: 'setScroll',
+            data: {value: active_state, filter: 'YEAR'}
         })
     }
-    function listen(message){
+    function on_active_state(year_button){
+        if(active_state)
+            year_buttons[active_state].classList.remove('active')
 
+        year_buttons[year_button].classList.add('active')
+        active_state = year_button
+    }
+    function listen(message){
+        const {head, type, data} = message
+        const {by, to, mid} = head
+        on_active_state(data)
     }
 }
 
@@ -6370,20 +6822,21 @@ function get_theme() {
             repeating-conic-gradient(at 66% 66%,var(--_g)),
             repeating-conic-gradient(at 33% 33%,var(--_g)),
             var(--primary_color);  /* second color */ 
-        background-size: var(--s) var(--s);  
+        background-size: var(--s) var(--s);
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
-        width: 87px;
+        width: 94px;
         height: 100%;
         border: 1px solid var(--primary_color);
+        box-sizing:border-box;
     }
     .year_button{
         display: block;
         text-align: center;
         background-color: var(--bg_color);
         border: 1px solid var(--primary_color);
-        padding: 5px 10px;
+        padding: 4px 10px;
         cursor: pointer;
     }
     .year_button.active{
