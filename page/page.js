@@ -35,12 +35,9 @@ const page_list = {
     'DEFAULT': consortium_page({data: current_theme})
 }
 
-const theme_list = {
-    'DARK': dark_theme,
-    'LIGHT': light_theme
-}
-
-document.body.append( navbar({data: current_theme}, page_protocol), current_page)
+const page_filler = document.createElement('div')
+page_filler.classList.add('page_filler')
+document.body.append(page_filler, navbar({data: current_theme}, page_protocol), current_page)
 handle_page_change('DEFAULT')
 
 // Adding font link
@@ -119,6 +116,15 @@ function get_theme(opts) {
         }
         svg{
             fill: var(--bg_color);
+        }
+        .page_filler{
+            background-image: radial-gradient(var(--primary_color) 2px, var(--bg_color) 2px);
+            background-size: 16px 16px;
+            width: 100vw;
+            height: 100vh;
+            z-index: -100;
+            position: fixed;
+            top: 41px;
         }
     `
 }
