@@ -1,6 +1,8 @@
 const desktop = require('..')
-
-{ // CSS & HTML Defaults
+/******************************************************************************
+  CSS & HTML Defaults
+******************************************************************************/
+{
   const html = document.documentElement
   html.setAttribute('lang', 'en')
 
@@ -16,10 +18,15 @@ const desktop = require('..')
 
   const sheet = new CSSStyleSheet()
   sheet.replaceSync(`html, body { padding:0px; margin: 0px; }`)
-//   document.adoptedStyleSheets = [sheet]
+  // document.adoptedStyleSheets = [sheet]
   document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet]
 }
 
+
+const light_theme = require('theme/lite-theme')
+const dark_theme = require('theme/dark-theme')
+
+console.log({light_theme, dark_theme})
 const el = desktop()
 
 document.body.append(el)

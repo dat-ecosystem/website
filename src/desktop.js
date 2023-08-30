@@ -6,8 +6,8 @@ const consortium_page = require('consortium_page')
 const terminal = require('terminal')
 const navbar = require('navbar')
 
-const light_theme = require('theme/light_theme')
-const dark_theme = require('theme/dark_theme')
+const light_theme = require('theme/lite-theme')
+const dark_theme = require('theme/dark-theme')
 
 // Default Theme
 let current_theme = light_theme
