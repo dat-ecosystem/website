@@ -44,8 +44,7 @@ async function desktop (opts = {}, protocol) {
     'toggle_terminal': toggle_terminal
   }
   const navbar_opts = { page: opts.page, data: current_theme }
-  // nav.attachShadow({ mode: 'closed' }).append(navbar(navbar_opts, navbar_protocol))
-  nav.attachShadow({ mode: 'closed' }).append(navbar(navbar_opts, page_protocol))
+  nav.attachShadow({ mode: 'closed' }).append(navbar(navbar_opts, navbar_protocol))
   // ----------------------------------------
   // CONTENT
   // ----------------------------------------
@@ -90,7 +89,7 @@ async function desktop (opts = {}, protocol) {
     if (terminal_sh.contains(terminal_el)) return terminal_el.remove()
     terminal_sh.append(terminal_el)
   }
-  function page_protocol (handshake, send, mid = 0) {
+  function navbar_protocol (handshake, send, mid = 0) {
     notify = send
 
     if (send) return listen
