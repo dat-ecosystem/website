@@ -1,18 +1,18 @@
-const home_page = require('../src/node_modules/home_page')
-const growth_page = require('../src/node_modules/growth_page')
-const timeline_page = require('../src/node_modules/timeline_page')
-const projects_page = require('../src/node_modules/projects_page')
-const consortium_page = require('../src/node_modules/consortium_page')
+const home_page = require('home_page')
+const growth_page = require('growth_page')
+const timeline_page = require('timeline_page')
+const projects_page = require('projects_page')
+const consortium_page = require('consortium_page')
+const terminal = require('terminal')
+const navbar = require('navbar')
 
-const terminal = require('../src/node_modules/terminal')
-
-const navbar = require('../src/node_modules/navbar')
-const light_theme = require('../src/node_modules/theme/light_theme')
-const dark_theme = require('../src/node_modules/theme/dark_theme')
+const light_theme = require('theme/light_theme')
+const dark_theme = require('theme/dark_theme')
 
 // Default Theme
 let current_theme = light_theme
 const sheet = new CSSStyleSheet()
+sheet.replaceSync(get_theme(current_theme))
 
 //Default Page
 let current_page = consortium_page({data: current_theme})
@@ -40,10 +40,6 @@ document.body.append(page_filler, navbar({data: current_theme}, page_protocol), 
 handle_page_change('DEFAULT')
 
 // Adding font link
-document.head.innerHTML = ` 
-  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" ></link> 
-  <style>${get_theme(current_theme)}</style>
-`
 document.adoptedStyleSheets = [sheet]
 
 
@@ -108,10 +104,6 @@ function get_theme (opts) {
       --primary_color: ${opts.primary_color};
       font-family: Silkscreen;
       color: var(--primary_color);
-    }
-    html, body{
-      padding:0px;
-      margin: 0px;
     }
     svg{
       fill: var(--bg_color);
