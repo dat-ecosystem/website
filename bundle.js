@@ -718,137 +718,189 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],3:[function(require,module,exports){
-const home_page = require('../src/node_modules/home_page')
-const growth_page = require('../src/node_modules/growth_page')
-const timeline_page = require('../src/node_modules/timeline_page')
-const projects_page = require('../src/node_modules/projects_page')
-const consortium_page = require('../src/node_modules/consortium_page')
+module.exports = require('../../../src/node_modules/theme/dark-theme')
+},{"../../../src/node_modules/theme/dark-theme":43}],4:[function(require,module,exports){
+module.exports = require('../../../src/node_modules/theme/lite-theme')
+},{"../../../src/node_modules/theme/lite-theme":44}],5:[function(require,module,exports){
+config().then(boot)
+/******************************************************************************
+  CSS & HTML Defaults
+******************************************************************************/
+async function config () {
+  const searchparams = `family=Silkscreen:wght@400;700&display=swap`
+  const google_font_url = `https://fonts.googleapis.com/css2?${searchparams}`
+  const html = document.documentElement
+  const meta = document.createElement('meta')
+  const link = document.createElement('link')
+  const sheet = new CSSStyleSheet()
+  html.setAttribute('lang', 'en')
+  meta.setAttribute('name', 'viewport')
+  meta.setAttribute('content', 'width=device-width,initial-scale=1.0')
+  link.setAttribute('rel', 'stylesheet')
+  link.setAttribute('type', 'text/css')
+  link.setAttribute('href', google_font_url)
+  sheet.replaceSync(`html, body { padding:0px; margin: 0px; }`)
+  document.adoptedStyleSheets = [sheet]
+  document.head.append(meta, link)
+  await document.fonts.ready
+}
+/******************************************************************************
+  INITIALIZE PAGE
+******************************************************************************/
+async function boot () {
+  const desktop = require('..')
+  const light_theme = require('theme/lite-theme')
+  const dark_theme = require('theme/dark-theme')
 
-const terminal = require('../src/node_modules/terminal')
+  const shadow = document.body.attachShadow({ mode: 'closed' })
+  
+  console.log({light_theme, dark_theme})
 
-const navbar = require('../src/node_modules/navbar')
-const light_theme = require('../src/node_modules/theme/light_theme')
-const dark_theme = require('../src/node_modules/theme/dark_theme')
+  const el = await desktop()
+  shadow.append(el)
+}
+},{"..":6,"theme/dark-theme":3,"theme/lite-theme":4}],6:[function(require,module,exports){
+const home_page = require('home_page')
+const growth_page = require('growth_page')
+const timeline_page = require('timeline_page')
+const projects_page = require('projects_page')
+const consortium_page = require('consortium_page')
+const terminal = require('terminal')
+const navbar = require('navbar')
 
-// Default Theme
-let current_theme = light_theme
 const sheet = new CSSStyleSheet()
 
-//Default Page
-let current_page = consortium_page({data: current_theme})
-let notify
-const PROTOCOL = {
-    'active_page': 'HOME',
+const light_theme = require('theme/lite-theme')
+const dark_theme = require('theme/dark-theme')
+let current_theme = light_theme
+sheet.replaceSync(get_theme(current_theme))
+/******************************************************************************
+  DESKTOP COMPONENT
+******************************************************************************/
+module.exports = desktop
+
+async function desktop (opts = {}, protocol) {
+  // ----------------------------------------
+  // SETUP
+  // ----------------------------------------
+  let notify // remove
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const sh = el.attachShadow({ mode: 'closed' })
+  sh.innerHTML = `
+    <div class="navbar"></div>
+    <div class="content"></div>
+    <div class="shell"></div>
+  `
+  sh.adoptedStyleSheets = [sheet]
+  const [nav, content, terminal_wrapper] = sh.children
+  // ----------------------------------------
+  // NAVBAR
+  // ----------------------------------------
+  const PROTOCOL = {
+    'active_page': 'HOME', // @TODO: remove
     'handle_page_change': handle_page_change,
     'handle_theme_change': handle_theme_change,
     'toggle_terminal': toggle_terminal
-}
-
-const terminal_wrapper = terminal({data: current_theme})
-
-
-const page_list = {
-    'HOME': home_page({data: current_theme}),
-    'PROJECTS': projects_page({data: current_theme}),
-    'GROWTH PROGRAM': growth_page({data: current_theme}),
-    'TIMELINE': timeline_page({data: current_theme}),
-    'DEFAULT': consortium_page({data: current_theme})
-}
-
-const page_filler = document.createElement('div')
-page_filler.classList.add('page_filler')
-document.body.append(page_filler, navbar({data: current_theme}, page_protocol), current_page)
-handle_page_change('DEFAULT')
-
-// Adding font link
-document.head.innerHTML = ` 
-    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" ></link> 
-    <style>${get_theme(current_theme)}</style>
-`
-document.adoptedStyleSheets = [sheet]
-
-
-function handle_page_change(active_page){
-    PROTOCOL.active_page = active_page;
-    document.body.removeChild(current_page)
-    current_page = page_list[active_page]
-    document.body.append(current_page)
+  }
+  const navbar_opts = { page: opts.page, data: current_theme }
+  nav.attachShadow({ mode: 'closed' }).append(navbar(navbar_opts, navbar_protocol))
+  // ----------------------------------------
+  // CONTENT
+  // ----------------------------------------
+  const page_list = {
+    // @TODO: maybe only store "factories" and create instance on demand?
+    'HOME': home_page({ data: current_theme }),
+    'PROJECTS': projects_page({ data: current_theme }),
+    'GROWTH PROGRAM': growth_page({ data: current_theme }),
+    'TIMELINE': timeline_page({ data: current_theme }),
+    'DEFAULT': consortium_page({ data: current_theme }),
+  } // @INFO: the initial visible content is set when receiving the first navbar message
+  const content_sh = content.attachShadow({ mode: 'closed' })
+  // ----------------------------------------
+  // TERMINAL
+  // ----------------------------------------
+  const terminal_sh = terminal_wrapper.attachShadow({ mode: 'closed' })
+  const terminal_el = terminal({ data: current_theme })
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+  let current_page = consortium_page({data: current_theme}) // Default Page
+  handle_page_change('DEFAULT')
+  // ----------------------------------------
+  return el
+  // ----------------------------------------
+  function handle_page_change (active_page) {
+    //   PROTOCOL.active_page = active_page;
+    content_sh.replaceChildren(page_list[active_page])
+    //   current_page = page_list[active_page]
     const message = {
-        head: ['root', 'navbar', 'navbar'],
-        type: 'theme',
-        data: active_page,
+      head: ['root', 'navbar', 'navbar'],
+      type: 'theme',
+      data: active_page,
     }
     notify(message)
-}
-
-function handle_theme_change(){
+  }
+  function handle_theme_change () {
     ;current_theme = current_theme === light_theme ? dark_theme : light_theme
-    sheet.replaceSync( get_theme(current_theme) )
-}
-
-function toggle_terminal(){
-    ;document.body.contains(terminal_wrapper) ? 
-    document.body.removeChild(terminal_wrapper) :
-    document.body.append(terminal_wrapper)
-}
-
-function page_protocol (handshake, send, mid = 0) {
+    sheet.replaceSync(get_theme(current_theme))
+  }
+  function toggle_terminal () {
+    if (terminal_sh.contains(terminal_el)) return terminal_el.remove()
+    terminal_sh.append(terminal_el)
+  }
+  function navbar_protocol (handshake, send, mid = 0) {
     notify = send
 
     if (send) return listen
     
     function listen (message) {        
-        const { head, type, data } = message
-        const {by, to, id} = head
-        // if (to !== id) return console.error('address unknown', message)
-        const action = PROTOCOL[type] || invalid
-        action(data)
+      const { head, type, data } = message
+      const {by, to, id} = head
+      // if (to !== id) return console.error('address unknown', message)
+      const action = PROTOCOL[type] || invalid
+      action(data)
     }
     function invalid (message) { console.error('invalid type', message) }
     // async function change_theme () {
-    //     // const [to] = head
-    //     ;current_theme = current_theme === light_theme ? dark_theme : light_theme
-    //     sheet.replaceSync( get_theme(current_theme) )
-    //     return send({
-    //         // head: [id, to, mid++],
-    //         // refs: { cause: head },
-    //         // type: 'theme',
-    //         from: 'page updated',
-    //         data: current_theme
-    //     })
+    //   // const [to] = head
+    //   ;current_theme = current_theme === light_theme ? dark_theme : light_theme
+    //   sheet.replaceSync( get_theme(current_theme) )
+    //   return send({
+    //       // head: [id, to, mid++],
+    //       // refs: { cause: head },
+    //       // type: 'theme',
+    //       from: 'page updated',
+    //       data: current_theme
+    //   })
     // }
+  }
 }
 
-function get_theme(opts) {
-    return`
-        :root{ 
-            --bg_color: ${opts.bg_color};
-            --ac-1: ${opts.ac_1};
-            --ac-2: ${opts.ac_2};
-            --ac-3: ${opts.ac_3};
-            --primary_color: ${opts.primary_color};
-            font-family: Silkscreen;
-            color: var(--primary_color);
-        }
-        html, body{
-            padding:0px;
-            margin: 0px;
-        }
-        svg{
-            fill: var(--bg_color);
-        }
-        .page_filler{
-            background-image: radial-gradient(var(--primary_color) 2px, var(--bg_color) 2px);
-            background-size: 16px 16px;
-            width: 100vw;
-            height: 100vh;
-            z-index: -100;
-            position: fixed;
-            top: 41px;
-        }
-    `
+function get_theme (opts) {
+  return`
+    :host { 
+      --bg_color: ${opts.bg_color};
+      --ac-1: ${opts.ac_1};
+      --ac-2: ${opts.ac_2};
+      --ac-3: ${opts.ac_3};
+      --primary_color: ${opts.primary_color};
+      font-family: Silkscreen;
+      color: var(--primary_color);
+      background-image: radial-gradient(var(--primary_color) 2px, var(--bg_color) 2px);
+      background-size: 16px 16px;
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+    }
+    svg {
+      fill: var(--bg_color);
+    }
+  `
 }
-},{"../src/node_modules/consortium_page":22,"../src/node_modules/growth_page":23,"../src/node_modules/home_page":24,"../src/node_modules/navbar":29,"../src/node_modules/projects_page":33,"../src/node_modules/terminal":38,"../src/node_modules/theme/dark_theme":40,"../src/node_modules/theme/light_theme":41,"../src/node_modules/timeline_page":44}],4:[function(require,module,exports){
+},{"consortium_page":25,"growth_page":26,"home_page":27,"navbar":32,"projects_page":36,"terminal":41,"theme/dark-theme":43,"theme/lite-theme":44,"timeline_page":47}],7:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = app_about_us
 
@@ -1026,7 +1078,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_about_us")
-},{"_process":2,"buttons/sm_text_button":17,"path":1,"window_bar":46}],5:[function(require,module,exports){
+},{"_process":2,"buttons/sm_text_button":20,"path":1,"window_bar":49}],8:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = cover_app
 
@@ -1178,7 +1230,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_cover")
-},{"_process":2,"buttons/sm_text_button":17,"path":1,"window_bar":46}],6:[function(require,module,exports){
+},{"_process":2,"buttons/sm_text_button":20,"path":1,"window_bar":49}],9:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = app_footer
 
@@ -1348,7 +1400,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_footer")
-},{"_process":2,"buttons/sm_text_button":17,"path":1,"window_bar":46}],7:[function(require,module,exports){
+},{"_process":2,"buttons/sm_text_button":20,"path":1,"window_bar":49}],10:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = app_projects
 
@@ -1629,7 +1681,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_projects")
-},{"_process":2,"path":1,"project_card":31,"project_filter":32,"scrollbar":34,"window_bar":46}],8:[function(require,module,exports){
+},{"_process":2,"path":1,"project_card":34,"project_filter":35,"scrollbar":37,"window_bar":49}],11:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = app_projects_mini
 
@@ -1804,7 +1856,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_projects_mini")
-},{"_process":2,"buttons/sm_icon_button":15,"buttons/sm_text_button":17,"path":1,"project_card":31,"window_bar":46}],9:[function(require,module,exports){
+},{"_process":2,"buttons/sm_icon_button":18,"buttons/sm_text_button":20,"path":1,"project_card":34,"window_bar":49}],12:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = app_timeline_mini
 
@@ -2209,7 +2261,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_timeline")
-},{"_process":2,"month_filter":28,"path":1,"scrollbar":34,"timeline_card":42,"timeline_filter":43,"window_bar":46,"year_filter":47}],10:[function(require,module,exports){
+},{"_process":2,"month_filter":31,"path":1,"scrollbar":37,"timeline_card":45,"timeline_filter":46,"window_bar":49,"year_filter":50}],13:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = app_timeline_mini
 
@@ -2389,7 +2441,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_timeline_mini")
-},{"_process":2,"buttons/sm_text_button":17,"path":1,"scrollbar":34,"timeline_card":42,"window_bar":46}],11:[function(require,module,exports){
+},{"_process":2,"buttons/sm_text_button":20,"path":1,"scrollbar":37,"timeline_card":45,"window_bar":49}],14:[function(require,module,exports){
 
 module.exports = day_button
 
@@ -2483,7 +2535,7 @@ function get_theme(){
 
 
 
-},{}],12:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 
 module.exports = icon_button
 
@@ -2592,7 +2644,7 @@ function get_theme(){
         }
     `
 }
-},{}],13:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = logo_button
 
@@ -2660,7 +2712,7 @@ function toggle_class(e){
     ;( selector.contains('active') ) ? selector.remove('active') : selector.add('active')
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/buttons")
-},{"_process":2,"path":1}],14:[function(require,module,exports){
+},{"_process":2,"path":1}],17:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = select_button
 
@@ -2855,7 +2907,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/buttons")
-},{"_process":2,"path":1}],15:[function(require,module,exports){
+},{"_process":2,"path":1}],18:[function(require,module,exports){
 
 module.exports = sm_icon_button
 
@@ -2934,7 +2986,7 @@ function toggle_class(e){
     let selector = e.target.classList
     ;( selector.contains('active') ) ? selector.remove('active') : selector.add('active')
 }
-},{}],16:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 
 module.exports = sm_icon_button_alt
 
@@ -3035,7 +3087,7 @@ function toggle_class(e){
     let selector = e.target.classList
     ;( selector.contains('active') ) ? selector.remove('active') : selector.add('active')
 }
-},{}],17:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 module.exports = sm_text_button
 
 
@@ -3096,7 +3148,7 @@ function toggle_class(e){
     let selector = e.target.classList
     ;( selector.contains('active') ) ? selector.remove('active') : selector.add('active')
 }
-},{}],18:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 module.exports = tab_button
 
 
@@ -3206,7 +3258,7 @@ function get_theme(){
 
 
 
-},{}],19:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 module.exports = text_button
 
 
@@ -3276,7 +3328,7 @@ function get_theme(){
         }
     `
 }
-},{}],20:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 module.exports = year_button
 
 
@@ -3365,7 +3417,7 @@ function get_theme(){
 
 
 
-},{}],21:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = commingsoon
 
@@ -3516,7 +3568,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/comingsoon")
-},{"_process":2,"buttons/sm_text_button":17,"path":1,"window_bar":46}],22:[function(require,module,exports){
+},{"_process":2,"buttons/sm_text_button":20,"path":1,"window_bar":49}],25:[function(require,module,exports){
 module.exports = consortium_page
 
 const mission_statement = require('mission_statement')
@@ -3703,7 +3755,7 @@ function get_theme() {
         }
     `
 }
-},{"important_documents":25,"mission_statement":26,"our_member":30,"tools":45}],23:[function(require,module,exports){
+},{"important_documents":28,"mission_statement":29,"our_member":33,"tools":48}],26:[function(require,module,exports){
 module.exports = growth_page
 
 // CSS Boiler Plat
@@ -3755,7 +3807,7 @@ function get_theme() {
         }
     `
 }
-},{"app_footer":6,"comingsoon":21}],24:[function(require,module,exports){
+},{"app_footer":9,"comingsoon":24}],27:[function(require,module,exports){
 module.exports = home_page
 
 const cover_app = require('app_cover')
@@ -3846,7 +3898,7 @@ function get_theme() {
         }
     `
 }
-},{"app_about_us":4,"app_cover":5,"app_footer":6,"app_projects_mini":8,"app_timeline_mini":10}],25:[function(require,module,exports){
+},{"app_about_us":7,"app_cover":8,"app_footer":9,"app_projects_mini":11,"app_timeline_mini":13}],28:[function(require,module,exports){
 module.exports = important_documents
 
 const window_bar = require('window_bar')
@@ -3960,7 +4012,7 @@ function get_theme(){
 
     `
 }
-},{"window_bar":46}],26:[function(require,module,exports){
+},{"window_bar":49}],29:[function(require,module,exports){
 module.exports = mission_statement
 
 const window_bar = require('window_bar')
@@ -4073,7 +4125,7 @@ function get_theme(){
         }
     `
 }
-},{"window_bar":46}],27:[function(require,module,exports){
+},{"window_bar":49}],30:[function(require,module,exports){
 module.exports = month_card
 
 const sheet = new CSSStyleSheet
@@ -4197,7 +4249,7 @@ function get_theme() {
     }
     `
 }
-},{"buttons/day_button":11}],28:[function(require,module,exports){
+},{"buttons/day_button":14}],31:[function(require,module,exports){
 module.exports = month_filter
 
 const sheet = new CSSStyleSheet
@@ -4375,7 +4427,7 @@ function get_theme() {
 
     `
 }
-},{"month_card":27,"scrollbar_hor":35}],29:[function(require,module,exports){
+},{"month_card":30,"scrollbar_hor":38}],32:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = navbar
 
@@ -4656,7 +4708,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/navbar")
-},{"_process":2,"buttons/icon_button":12,"buttons/logo_button":13,"buttons/text_button":19,"path":1}],30:[function(require,module,exports){
+},{"_process":2,"buttons/icon_button":15,"buttons/logo_button":16,"buttons/text_button":22,"path":1}],33:[function(require,module,exports){
 module.exports = our_member
 
 const window_bar = require('window_bar')
@@ -4815,7 +4867,7 @@ function get_theme(){
 
     `
 }
-},{"window_bar":46}],31:[function(require,module,exports){
+},{"window_bar":49}],34:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = project_card
 
@@ -4961,7 +5013,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/project_card")
-},{"_process":2,"buttons/sm_icon_button":15,"path":1}],32:[function(require,module,exports){
+},{"_process":2,"buttons/sm_icon_button":18,"path":1}],35:[function(require,module,exports){
 module.exports = project_filter
 
 
@@ -5051,7 +5103,7 @@ function get_theme(){
         }
     `
 }
-},{"../buttons/select_button":14,"search_input":36}],33:[function(require,module,exports){
+},{"../buttons/select_button":17,"search_input":39}],36:[function(require,module,exports){
 module.exports = projects_page
 
 const app_projects = require('app_projects')
@@ -5132,7 +5184,7 @@ function get_theme() {
         }
     `
 }
-},{"app_footer":6,"app_projects":7,"the_dat":39}],34:[function(require,module,exports){
+},{"app_footer":9,"app_projects":10,"the_dat":42}],37:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = scrollbar
 
@@ -5291,7 +5343,7 @@ function get_theme() {
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/scrollbar")
-},{"_process":2,"buttons/sm_icon_button":15,"path":1}],35:[function(require,module,exports){
+},{"_process":2,"buttons/sm_icon_button":18,"path":1}],38:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = scrollbar
 
@@ -5454,7 +5506,7 @@ function get_theme() {
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/scrollbar_hor")
-},{"_process":2,"buttons/sm_icon_button":15,"path":1}],36:[function(require,module,exports){
+},{"_process":2,"buttons/sm_icon_button":18,"path":1}],39:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = input_search
 
@@ -5548,7 +5600,7 @@ function get_theme(){
     
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/search_input")
-},{"_process":2,"path":1}],37:[function(require,module,exports){
+},{"_process":2,"path":1}],40:[function(require,module,exports){
 module.exports = tab_window
 
 // CSS Boiler Plat
@@ -5572,7 +5624,7 @@ function tab_window (opts, protocol) {
 function get_theme() {
     return ``
 }
-},{}],38:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 module.exports = terminal
 
 const tab_window = require('tab_window')
@@ -5810,7 +5862,7 @@ function get_theme(){
         }
     `
 }
-},{"buttons/sm_icon_button_alt":16,"buttons/tab_button":18,"scrollbar_hor":35,"tab_window":37}],39:[function(require,module,exports){
+},{"buttons/sm_icon_button_alt":19,"buttons/tab_button":21,"scrollbar_hor":38,"tab_window":40}],42:[function(require,module,exports){
 module.exports = the_dat
 
 const window_bar = require('window_bar')
@@ -5946,7 +5998,7 @@ function get_theme(){
         }
     `
 }
-},{"window_bar":46}],40:[function(require,module,exports){
+},{"window_bar":49}],43:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const cwd = process.cwd()
@@ -5992,8 +6044,8 @@ const dark_theme = {
 }
 
 module.exports = dark_theme
-}).call(this)}).call(this,require('_process'),"/src/node_modules/theme/dark_theme")
-},{"_process":2,"path":1}],41:[function(require,module,exports){
+}).call(this)}).call(this,require('_process'),"/src/node_modules/theme/dark-theme")
+},{"_process":2,"path":1}],44:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const cwd = process.cwd()
@@ -6045,8 +6097,8 @@ const light_theme = {
 }
 
 module.exports = light_theme
-}).call(this)}).call(this,require('_process'),"/src/node_modules/theme/light_theme")
-},{"_process":2,"path":1}],42:[function(require,module,exports){
+}).call(this)}).call(this,require('_process'),"/src/node_modules/theme/lite-theme")
+},{"_process":2,"path":1}],45:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = timeline_card
 
@@ -6190,7 +6242,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/timeline_card")
-},{"_process":2,"path":1}],43:[function(require,module,exports){
+},{"_process":2,"path":1}],46:[function(require,module,exports){
 module.exports = timeline_filter
 
 
@@ -6309,7 +6361,7 @@ function get_theme(){
         }
     `
 }
-},{"../buttons/select_button":14,"buttons/sm_icon_button":15,"buttons/year_button":20,"search_input":36}],44:[function(require,module,exports){
+},{"../buttons/select_button":17,"buttons/sm_icon_button":18,"buttons/year_button":23,"search_input":39}],47:[function(require,module,exports){
 module.exports = timeline_page
 
 const app_timeline = require('app_timeline')
@@ -6387,7 +6439,7 @@ function get_theme() {
         }
     `
 }
-},{"app_footer":6,"app_timeline":9}],45:[function(require,module,exports){
+},{"app_footer":9,"app_timeline":12}],48:[function(require,module,exports){
 module.exports = tools
 
 const window_bar = require('window_bar')
@@ -6516,7 +6568,7 @@ function get_theme(){
 
     `
 }
-},{"window_bar":46}],46:[function(require,module,exports){
+},{"window_bar":49}],49:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = window_bar
 
@@ -6743,7 +6795,7 @@ function get_theme(){
     `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/window_bar")
-},{"_process":2,"buttons/sm_icon_button_alt":16,"buttons/sm_text_button":17,"path":1}],47:[function(require,module,exports){
+},{"_process":2,"buttons/sm_icon_button_alt":19,"buttons/sm_text_button":20,"path":1}],50:[function(require,module,exports){
 module.exports = year_filter
 
 const sheet = new CSSStyleSheet
@@ -6845,4 +6897,4 @@ function get_theme() {
     }
     `
 }
-},{}]},{},[3]);
+},{}]},{},[5]);
