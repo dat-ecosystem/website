@@ -6,19 +6,18 @@ const consortium_page = require('consortium_page')
 const terminal = require('terminal')
 const navbar = require('navbar')
 
-// DEFAULT THEMES
+const sheet = new CSSStyleSheet()
+
 const light_theme = require('theme/lite-theme')
 const dark_theme = require('theme/dark-theme')
-
-const sheet = new CSSStyleSheet()
 let current_theme = light_theme
 sheet.replaceSync(get_theme(current_theme))
-
-module.exports = desktop
 /******************************************************************************
   DESKTOP COMPONENT
 ******************************************************************************/
-function desktop (opts = {}, protocol) {
+module.exports = desktop
+
+async function desktop (opts = {}, protocol) {
   // ----------------------------------------
   // SETUP
   // ----------------------------------------
@@ -67,11 +66,8 @@ function desktop (opts = {}, protocol) {
   // ----------------------------------------
   // INIT
   // ----------------------------------------
-  //Default Page
-  let current_page = consortium_page({data: current_theme})
+  let current_page = consortium_page({data: current_theme}) // Default Page
   handle_page_change('DEFAULT')
-  // Adding font link
-  sh.adoptedStyleSheets = [sheet]
   // ----------------------------------------
   return el
   // ----------------------------------------
