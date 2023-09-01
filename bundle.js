@@ -945,7 +945,7 @@ function app_about_us (opts) {
         <div class="about_us_desc">
             Dat ecosystem garden supports open source projects that strengthen P2P foundations, with a focus on builder tools, infrastructure, research, and community resources.
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
 
     // Added background banner cover
@@ -1126,7 +1126,7 @@ function cover_app (opts, protocol) {
             </div>
         </div>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
 
 
@@ -1268,33 +1268,22 @@ function app_footer (opts) {
     shadow.innerHTML = `
         <div class="main_wrapper">
             <div class="footer_wrapper">
-                <div class="robot_img_2"></div>
+                <div class="robot_img_2"><img src="${img_robot_2}"></div>
                 <div class="footer_info_wrapper">
                     <div class="title"> INTERESTED IN JOINING DAT ECOSYSTEM CHAT NETWORKING? </div>
                     <div class="desc"> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vitae porta aliquet sit amet ornare sagittis, ultricies sed. Viverra sit felis ullamcorper pharetra mattis amet, vel. </div>
+                    <apply_button></apply_button>    
                 </div>
             </div>
-            <div class="pattern_img"></div>
+            <div class="pattern_img"><img src="${pattern_img_1}"></div>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
-    
-    // Adding Robot Image
-    const robot_image_wrapper = shadow.querySelector('.robot_img_2')
-    const robot_image = document.createElement('img')
-    robot_image.src = img_robot_2
-    robot_image_wrapper.append(robot_image)
 
-    // Adding Button
-    const footer_info_wrapper = shadow.querySelector('.footer_info_wrapper')
+    // the following is the pattern we usually use, but what you do is more or less the same
+    // so you can also keep your three liner :-)
     const join_programe = sm_text_button({text:'JOIN OUR GROWTH PROGRAME'})
-    footer_info_wrapper.append(join_programe)
-
-    // Adding Pattern Image
-    const pattern_image_wrapper = shadow.querySelector('.pattern_img')
-    const pattern_image = document.createElement('img')
-    pattern_image.src = pattern_img_1
-    pattern_image_wrapper.append(pattern_image)
+    shadow.querySelector('apply_button').replaceWith(join_programe)
 
 
     // Adding Footer Window
@@ -1446,7 +1435,7 @@ function app_projects(opts, protocol){
                 <div class="project_wrapper"></div>
             </div>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
 
     // Adding applcation window bar
@@ -1534,10 +1523,7 @@ function app_projects(opts, protocol){
     const tags = new Set()
     cardsData.forEach(card_data => card_data.tags.forEach(tag => tags.add(tag))) 
 
-    const project_cards = cardsData.map((card_data) => project_card(card_data))
-    project_cards.forEach((card) => {
-        project_wrapper.append(card)
-    })
+    project_wrapper.append(...cardsData.map(project_card))
 
     
     const main_wrapper = shadow.querySelector('.main_wrapper')
@@ -1566,11 +1552,11 @@ function app_projects(opts, protocol){
             return listen
         }
         else if(handshake.from.includes('window_bar')){
-            PROTOCOL['toggle_active_state'] = toggle_active_state;
-            return listen;
+            PROTOCOL['toggle_active_state'] = toggle_active_state
+            return listen
         }
         function listen (message){
-            const {head, type, data} = message
+            const {head,  refs, type, data, meta} = message
             const {by, to, mid} = head
             // if( to !== name) return console.error('address unknown', message)
             if(by.includes('scrollbar'))
@@ -1602,10 +1588,7 @@ function app_projects(opts, protocol){
         if(PROTOCOL.TAGS && PROTOCOL.TAGS !== 'NULL')
             cardfilter = cardfilter.filter((card_data) => {return card_data.tags.includes(PROTOCOL.TAGS) && card_data })
 
-        const project_cards = cardfilter.map((card_data) => project_card(card_data))
-            project_cards.forEach((card) => {
-                project_wrapper.append(card)
-        })
+        project_wrapper.append(...cardfilter.map(project_card))
         PROTOCOL['handleScroll']()
     }
     async function toggle_active_state (message) {
@@ -1725,7 +1708,7 @@ function app_projects_mini (opts) {
             <div class="project_wrapper">
             </div>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
 
     // Adding Applicatin window Bar
@@ -1769,10 +1752,7 @@ function app_projects_mini (opts) {
             tags: ['Hypercore', 'Hypercore', 'Hypercore'],
         },
     ]
-    const project_cards = cardsData.map((card_data) => project_card(card_data))
-    project_cards.forEach((card) => {
-        project_wrapper.append(card)
-    })
+    project_wrapper.append(...cardsData.map(project_card))
 
     shadow.adoptedStyleSheets = [ sheet ]
     shadow.prepend(cover_window)
@@ -1908,7 +1888,7 @@ function app_timeline_mini (opts, protocol) {
                 </div>
             </div>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
 
     // Adding Applicatin window Bar
@@ -1964,25 +1944,21 @@ function app_timeline_mini (opts, protocol) {
     
     const card_groups = []
     let year_cache, card_group
-    const timeline_cards = cards_data.map((card_data) => timeline_card(card_data))
-
-    timeline_cards.forEach((card) => {
-        const slice = cards_data[card.id.slice(-1)].date.slice(-4)
-        if(year_cache !== slice){
-            card_group = document.createElement('div')
-            card_group.classList.add('card_group')
-            card_groups.push(card_group)
-            year_cache = slice
-        }
-        card_group.append(card)
-    })
+    const timeline_cards = cards_data.map((card_data) => {
+            const card = timeline_card(card_data)
+            const slice = cards_data[card.id.slice(-1)].date.slice(-4)
+            if(year_cache !== slice){
+                card_group = document.createElement('div')
+                card_group.classList.add('card_group')
+                card_groups.push(card_group)
+                year_cache = slice
+            }
+            card_group.append(card)
+            return card
+        })
 
     const timeline_wrapper = shadow.querySelector('.timeline_wrapper')
-    card_groups.forEach((card_group) => {
-        timeline_wrapper.append(card_group)
-    })
-
-    
+    timeline_wrapper.append(...card_groups)
 
     
 
@@ -2060,7 +2036,7 @@ function app_timeline_mini (opts, protocol) {
         }
         return listen
         function listen (message){
-            const {head, type, data} = message
+            const {head,  refs, type, data, meta} = message
             const {by, to, mid} = head
             // if( to !== name) return console.error('address unknown', message)
             if(by.includes('scrollbar'))
@@ -2303,7 +2279,7 @@ function app_timeline_mini (opts, protocol) {
             <div class="timeline_wrapper">
             </div>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
 
     // Adding Applicatin window Bar
@@ -2330,10 +2306,7 @@ function app_timeline_mini (opts, protocol) {
         },{ title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data: data,
         },
     ]
-    const timeline_cards = cards_data.map((card_data) => timeline_card(card_data))
-    timeline_cards.forEach((card) => {
-        timeline_wrapper.append(card)
-    })
+    timeline_wrapper.append(...cards_data.map(timeline_card))
 
     const main_wrapper = shadow.querySelector('.main_wrapper')
     
@@ -2357,7 +2330,7 @@ function app_timeline_mini (opts, protocol) {
             return listen;
         }
         function listen (message){
-            const {head, type, data} = message
+            const {head,  refs, type, data, meta} = message
             const {by, to, id} = head
             // if( to !== name) return console.error('address unknown', message)
             if(by.includes('scrollbar')){
@@ -2490,7 +2463,7 @@ function day_button (protocol) {
     return el
 
     function listen(message){
-        const {head, type, data} = message
+        const {head,  refs, type, data, meta} = message
         const {by, to, mid} = head
         PROTOCOL[type]()
     }
@@ -2535,7 +2508,7 @@ function get_theme(){
 
 
 
-},{}],15:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 
 module.exports = icon_button
 
@@ -2573,7 +2546,7 @@ function icon_button (opts, protocol) {
             type: 'handle_page_change',
         }
         function listen(message){
-            const {head, type, data} = message
+            const {head,  refs, type, data, meta} = message
             const [by, to, id] = head
             ;(data === 'DEFAULT') ? icon_button.classList.add('active') : icon_button.classList.remove('active')
         }
@@ -2765,21 +2738,21 @@ function select_button (opts, protocol) {
 
     // Adding Select Toggle function
     const select_toggle_btn = shadow.querySelector('.button_wrapper')
-    let active_state = true;
+    let active_state = true
     select_toggle_btn.onclick = (e) => {
         select_button_wrapper.classList.toggle('active');
         ;(active_state)?shadow.querySelector('.arrow_icon').innerHTML = icon_arrow_down: shadow.querySelector('.arrow_icon').innerHTML = icon_arrow_up
         active_state = !active_state
     }
     // select_toggle_btn.addEventListener('click', function() {
-    //     shadow.querySelector('.select_button_wrapper').classList.toggle('active');
-    // });
+    //     shadow.querySelector('.select_button_wrapper').classList.toggle('active')
+    // })
 
 
     // Use event delegation
     // document.addEventListener('click', (e) => {
-    //     console.log(e.target.className);
-    // });
+    //     console.log(e.target.className)
+    // })
 
     // Select all .option divs
     const options = shadow.querySelectorAll('.option')
@@ -2810,7 +2783,7 @@ function select_button (opts, protocol) {
     return el
 
     function listen(message){
-        // const {head, type, data} = message
+        // const {head,  refs, type, data, meta} = message
         // const [by, to, id] = head
         // if( to !== id) return console.error('address unknown', message)
     }
@@ -3177,7 +3150,7 @@ function tab_button (props, protocol) {
             <div class="text_wrapper"> ${props.name} </div>
             <div class="close_button"> ${icon_close_dark} </div>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
     const tab_button = shadow.querySelector('.tab_button')
 
@@ -3258,7 +3231,7 @@ function get_theme(){
 
 
 
-},{}],22:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 module.exports = text_button
 
 
@@ -3281,7 +3254,7 @@ function text_button (props, protocol) {
         type: 'handle_page_change',
     }
     function listen(message){
-        const {head, type, data} = message
+        const {head,  refs, type, data, meta} = message
         const [by, to, id] = head
         text_button.classList.toggle('active', data === text);
     }
@@ -3358,7 +3331,7 @@ function year_button (props, protocol) {
             <div class="text_wrapper">${date.getFullYear()}</div>
             ${icon_arrow_up}
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
     const year_button = shadow.querySelector('.year_button')
     year_button.onclick = (e) => toggle_class(e)
@@ -3373,7 +3346,7 @@ function year_button (props, protocol) {
         year_button.classList.toggle('active')
     }
     function listen(message){
-        const {head, type, data} = message
+        const {head,  refs, type, data, meta} = message
         const {by, to, id} = head
         if(data.month || data.year)
             text_wrapper.innerHTML = `<b>${data.month.slice(0,3)}</b>${data.month && data.year && '/'}${data.year}`
@@ -3414,10 +3387,7 @@ function get_theme(){
         }
     `
 }
-
-
-
-},{}],24:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 (function (process,__dirname){(function (){
 module.exports = commingsoon
 
@@ -3465,7 +3435,7 @@ function commingsoon (opts, protocol) {
             </div>
         </div>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
 
 
@@ -3776,7 +3746,7 @@ function growth_page (opts, protocol) {
     // adding a `main-wrapper` 
     shadow.innerHTML = `
         <div class="main-wrapper"></div>
-        <style>${get_theme}</style>
+        <style>${get_theme()}</style>
     `
 
     const components = [
@@ -3940,7 +3910,7 @@ function important_documents (opts, protocol) {
                 </ol>  
             </div>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
 
 
@@ -4053,7 +4023,7 @@ function mission_statement (opts, protocol) {
                 <p>We aim to connect and support the dat community, promoting user rights and decentralized democracy, dat ecosystem provides resources to advance your hyprecore project.</p>    
             </div>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
 
 
@@ -4157,7 +4127,7 @@ function month_card (opts, protocol) {
             <span class="month_name"><b>${opts.name}</b></span>
             <div class="days_wrapper"></div>
         </div>
-        <style>${get_theme}</style>
+        <style>${get_theme()}</style>
     `
     const days_wrapper = shadow.querySelector('.days_wrapper')
     for(let i=1; i<=opts.days; i++){
@@ -4182,7 +4152,7 @@ function month_card (opts, protocol) {
         PROTOCOL['day_toggle'].push(send)
         return listen
         function listen (message){
-            const {head, type, data} = message
+            const {head,  refs, type, data, meta} = message
             const {by, to, mid} = head
             PROTOCOL[type](data)
         }
@@ -4195,7 +4165,7 @@ function month_card (opts, protocol) {
         })
     }
     function listen (message){
-        const {head, type, data} = message
+        const {head,  refs, type, data, meta} = message
         const {by, to, mid} = head
         PROTOCOL[type](data)
     }
@@ -4279,7 +4249,7 @@ function month_filter (opts, protocol) {
         <div class="scrollbar_wrapper">
             <div class="month_filter_wrapper"></div>
         </div>
-        <style>${get_theme}</style>
+        <style>${get_theme()}</style>
     `
 
     const month_data = [
@@ -4325,7 +4295,7 @@ function month_filter (opts, protocol) {
         }
         return listen
         function listen (message){
-            const {head, type, data} = message
+            const {head,  refs, type, data, meta} = message
             const {by, to, mid} = head
             // if( to !== name) return console.error('address unknown', message)
             if(by.includes('scrollbar'))
@@ -4393,7 +4363,7 @@ function month_filter (opts, protocol) {
     }
 
     function listen(message){
-        const {head, type, data} = message
+        const {head,  refs, type, data, meta} = message
         const {by, to, mid} = head
 
         active_date_prev.forEach(date => PROTOCOL[`month_card-${new Date(date).getMonth()}`]({
@@ -4459,7 +4429,7 @@ function navbar(opts, protocol){
 
     const notify = protocol({from: name}, listen)
     function listen(message){
-        const {head, type, data} = message
+        const {head,  refs, type, data, meta} = message
         // const [by, to, id] = head
         handle_active_change(data)
     }
@@ -4587,7 +4557,7 @@ function navbar(opts, protocol){
 
         if (send) return [listen, name];
         function listen(message){
-            const {head, type, data} = message
+            const {head,  refs, type, data, meta} = message
             const {by, to, id} = head
             // if( to !== id) return console.error('address unknown', message)
 
@@ -4785,7 +4755,7 @@ function our_member (opts, protocol) {
                 </table>  
             </div>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
 
 
@@ -4901,38 +4871,21 @@ function project_card (opts) {
     el.style.lineHeight = '0px'
     const shadow = el.attachShadow( { mode : 'closed' } )
     
+    const { socials, project_logo, desc, tags, project } = opts
     shadow.innerHTML = `
-        <div class="project_card" data-status="${opts.active_state}">
-            <div class="icon_wrapper">
-                <div class="project_title">
-                    ${opts.project}
-                </div>
-                <div class="socials_wrapper"></div>
-            </div>
-            <div class="content_wrapper">
-                <div class="desc"> ${opts.desc}</div>
-            </div>
-            <div class="tags_wrapper">
-                ${opts.tags.map((tag) => `<div class="tag">${tag}</div>`).join('')}
-            </div>
+    <div class="project_card">
+        <div class="icon_wrapper">
+        <div class="project_title">${project}<img src="${project_logo}"></div>
+        <div class="socials_wrapper"><socials></socials></div>
         </div>
-        <style>${get_theme}</style>
+        <div class="content_wrapper"><div class="desc"> ${desc}</div></div>
+        <div class="tags_wrapper">
+        ${tags.map(tag => `<div class="tag">${tag}</div>`).join('')}
+        </div>
+    </div>
+    <style>${get_theme()}</style>
     `
-
-    // Adding Project Logo
-    const project_title = shadow.querySelector('.project_title');
-    
-    const project_logo = document.createElement('img')
-    project_logo.src = opts.project_logo
-    project_title.prepend(project_logo)
-    
-    // Adding Socials
-    const socials_wrapper = shadow.querySelector('.socials_wrapper');
-    const social_link = opts.socials.map((social) => sm_icon_button({src:social}));
-    social_link.forEach((social) => {
-        socials_wrapper.append(social)
-    })
-
+    shadow.querySelector('socials').replaceWith(...socials.map(x => sm_icon_button({ src: x })))
 
     shadow.adoptedStyleSheets = [sheet]
     return el
@@ -5041,7 +4994,7 @@ function project_filter(opts, protocol){
         <div class="filter_wrapper">
             <div class="project_filter"></div>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
 
     const search_project = search_input(opts, project_filter_protocol)
@@ -5058,7 +5011,7 @@ function project_filter(opts, protocol){
     function project_filter_protocol(handshake, send, mid = 0){
         if(send) return listen
         function listen(message){
-            const {head, type, data} = message
+            const {head,  refs, type, data, meta} = message
             const {by, to, id} = head
             // if( to !== id) return console.error('address unknown', message)
             message = {
@@ -5214,7 +5167,7 @@ function scrollbar(opts, protocol){
     
     const [notify, setScrollTop] = protocol({from: name}, [handle_scroll, listen])
     function listen(message){
-        const {head, type, data} = message
+        const {head,  refs, type, data, meta} = message
         const {by, to, id} = head
         const { sh, ch, st } = data
         content_clientHeight = ch;
@@ -5237,7 +5190,7 @@ function scrollbar(opts, protocol){
                 <div class="bar"> </div>
             </div>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
     const bar = shadow.querySelector('.bar')
     let lastPageY;
@@ -5373,7 +5326,7 @@ function scrollbar(opts, protocol){
     
     const [notify, setScrollLeft] = protocol({from: name}, [handle_scroll, listen])
     function listen(message){
-        const {head, type, data} = message
+        const {head,  refs, type, data, meta} = message
         const {by, to, id} = head
         const { sh, ch, st } = data
         content_clientWidth = ch;
@@ -5396,7 +5349,7 @@ function scrollbar(opts, protocol){
                 <div class="bar"> </div>
             </div>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
     const bar = shadow.querySelector('.bar')
     let lastPageX;
@@ -5543,7 +5496,7 @@ function input_search (opts, protocol){
                 ${icon_search}
             </input>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
     const input = shadow.querySelector('.input')
     input.oninput = (e) => {
@@ -5555,7 +5508,7 @@ function input_search (opts, protocol){
     return el
 
     function listen(message){
-        // const {head, type, data} = message
+        // const {head,  refs, type, data, meta} = message
         // const [by, to, id] = head
         // if( to !== id) return console.error('address unknown', message)
 
@@ -5677,7 +5630,7 @@ function terminal (opts, protocol) {
                 <div class="buttons"></div>
             </div>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
 
     const tab = tab_window({data: opts.data, text: 'Home'})
@@ -5907,7 +5860,7 @@ function the_dat (opts, protocol) {
                 <iframe style="background-color: black"></iframe>
             </div>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
 
 
@@ -6136,25 +6089,26 @@ function timeline_card (opts) {
     el.style.lineHeight = '0px'
     const shadow = el.attachShadow( { mode : 'closed' } )
     
+    const { date, time, link, title, desc, tags} = opts
     shadow.innerHTML = `
         <div class="timeline_card">
             <div class="content_wrapper">
 
                 <div class="icon_wrapper">
-                    <div> ${icon_calendar} ${opts.date} </div>
-                    <div> ${icon_clock} ${opts.time} </div>
-                    <div> <a href="${opts.link}">${icon_link}</a> </div>
+                    <div> ${icon_calendar} ${date} </div>
+                    <div> ${icon_clock} ${time} </div>
+                    <div> <a href="${link}">${icon_link}</a> </div>
                 </div>
 
-                <div class="title"> ${opts.title} </div>
-                <div class="desc"> ${opts.desc}</div>
+                <div class="title"> ${title} </div>
+                <div class="desc"> ${desc}</div>
 
             </div>
             <div class="tags_wrapper">
-                ${opts.tags.map((tag) => `<div class="tag">${tag}</div>`).join('')}
+                ${tags.map((tag) => `<div class="tag">${tag}</div>`).join('')}
             </div>
         </div>
-        <style>${get_theme}</style>
+        <style>${get_theme()}</style>
     `
 
 
@@ -6279,7 +6233,7 @@ function timeline_filter(opts, protocol){
                 <div class="date_wrapper"></div>
             </div>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
 
     const search_project = search_input(opts, timeline_filter_protocol)
@@ -6314,7 +6268,7 @@ function timeline_filter(opts, protocol){
             PROTOCOL['get_date'] = send
         return listen
         function listen(message){
-            const {head, type, data} = message
+            const {head,  refs, type, data, meta} = message
             const {by, to, id} = head
             // if( to !== id) return console.error('address unknown', message)
             message = {
@@ -6486,7 +6440,7 @@ function tools (opts, protocol) {
                 </div>
             </div>
         </div>
-        <style> ${get_theme} </style>
+        <style> ${get_theme()} </style>
     `
 
 
@@ -6616,7 +6570,7 @@ function window_bar (opts, protocol) {
                 <div class="actions_wrapper"></div>
             </div>
         </div>
-        <style>${get_theme}</style>
+        <style>${get_theme()}</style>
     `
 
     // adding application icon
@@ -6815,7 +6769,7 @@ function year_filter (opts, protocol) {
 
     shadow.innerHTML = `
         <div class="year_wrapper"></div>
-        <style>${get_theme}</style>
+        <style>${get_theme()}</style>
     `
     let active_state = '';
     const year_buttons = {}
@@ -6859,7 +6813,7 @@ function year_filter (opts, protocol) {
         active_state = year_button
     }
     function listen(message){
-        const {head, type, data} = message
+        const {head,  refs, type, data, meta} = message
         const {by, to, mid} = head
         on_active_state(data)
     }
