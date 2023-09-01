@@ -74,19 +74,18 @@ async function desktop (opts = default_opts, protocol) {
   }
   const navbar_opts = { page: opts.page, data: current_theme }
   nav.attachShadow({ mode: 'closed' }).append(navbar(navbar_opts, navbar_protocol))
-  function navbar_protocol (handshake, send) {
-    send.id = handshake.from
-
-    state.hub[send.id] = { mid: 0, send, on: PROTOCOL, wait: {} }
+  function navbar_protocol (send) {
+    // const on = { 'ask-opts': on_ask_opts }
+    state.hub[send.id] = { mid: 0, send, on: PROTOCOL }
     state.aka.navbar = send.id
     return Object.assign(listen, { id })
+    function invalid (message) { console.error('invalid type', message) }
     function listen (message) {
       console.log(`[${id}]`, message)
-      const { send, on } = state.hub[state.aka.navbar]
+      const { on } = state.hub[state.aka.navbar]
       const action = on[message.type] || invalid
       action(message)
     }
-    function invalid (message) { console.error('invalid type', message) }
   }
   // ----------------------------------------
   // CONTENT
