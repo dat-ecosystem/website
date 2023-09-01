@@ -2,7 +2,7 @@
   "name": "dat-ecosystem-website",
   "version": "0.0.1",
   "description": "The Dat ecosystem garden: Nurturing open-source projects that strengthen P2P foundations. Focused on builder tools, infrastructure, research, and community resources. Join us in shaping the future of decentralized collaboration and innovation.",
-  "main": "src/index.js",
+  "main": "src/desktop.js",
   "scripts": {
     "start": "budo page/page.js:bundle.js --open --live",
     "build": "browserify page/page.js > bundle.js",
