@@ -15,12 +15,19 @@ sheet.replaceSync(get_theme(current_theme))
 /******************************************************************************
   DESKTOP COMPONENT
 ******************************************************************************/
+var count = 0
+const ID = __filename
+const STATE = { ids: {}, hub: {} } // all state of component module
+// ----------------------------------------
+const default_opts = { page: 'HOME' }
 
 module.exports = desktop
 
-async function desktop (opts = {}, protocol) {
-  const id = __filename
-  const state = { wait: {}, hub: {}, aka: {} } // all state of component instance
+async function desktop (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // INSTANCE STATE & ID
+  const id = `${ID}:${count++}` // assigns their own name
+  const state = STATE.ids[id] = { wait: {}, hub: {}, aka: {} } // all state of component instance
   // ----------------------------------------
   // ----------------------------------------
   // ----------------------------------------
@@ -101,7 +108,7 @@ async function desktop (opts = {}, protocol) {
   // ----------------------------------------
   // INIT
   // ----------------------------------------
-  let current_page = consortium_page({data: current_theme}) // Default Page
+  let current_page = consortium_page({ data: current_theme }) // Default Page
   PROTOCOL.handle_page_change({ data: 'DEFAULT' })
   // ----------------------------------------
   return el
