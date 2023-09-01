@@ -3,6 +3,8 @@ config().then(boot)
   CSS & HTML Defaults
 ******************************************************************************/
 async function config () {
+  // @TODO: there are font files in `src/node_modules/theme/assets/fonts/...`
+  // => those could be used instead
   const searchparams = `family=Silkscreen:wght@400;700&display=swap`
   const google_font_url = `https://fonts.googleapis.com/css2?${searchparams}`
   const html = document.documentElement
@@ -33,5 +35,6 @@ async function boot () {
   console.log({light_theme, dark_theme})
 
   const el = await desktop()
+
   shadow.append(el)
 }

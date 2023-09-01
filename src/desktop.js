@@ -15,13 +15,14 @@ sheet.replaceSync(get_theme(current_theme))
 /******************************************************************************
   DESKTOP COMPONENT
 ******************************************************************************/
+
 module.exports = desktop
 
 async function desktop (opts = {}, protocol) {
+  const id = __filename
+  const state = { wait: {}, hub: {}, aka: {} } // all state of component instance
   // ----------------------------------------
-  // SETUP
   // ----------------------------------------
-  let notify // remove
   // ----------------------------------------
   // TEMPLATE
   // ----------------------------------------
@@ -39,12 +40,47 @@ async function desktop (opts = {}, protocol) {
   // ----------------------------------------
   const PROTOCOL = {
     'active_page': 'HOME', // @TODO: remove
-    'handle_page_change': handle_page_change,
-    'handle_theme_change': handle_theme_change,
-    'toggle_terminal': toggle_terminal
+    'handle_page_change': function handle_page_change (msg) {
+      console.log({msg})
+      const { data: active_page } = msg
+      // const [to] = head
+      // const
+      //   PROTOCOL.active_page = active_page;
+      content_sh.replaceChildren(page_list[active_page])
+      //   current_page = page_list[active_page]
+      const message = {
+        head: ['root', 'navbar', 'navbar'],
+        type: 'theme',
+        data: active_page,
+      }
+      const { send } = state.hub[state.aka.navbar]
+      send(message)
+    },
+    'handle_theme_change': function handle_theme_change () {
+      ;current_theme = current_theme === light_theme ? dark_theme : light_theme
+      sheet.replaceSync(get_theme(current_theme))
+    },
+    'toggle_terminal': function toggle_terminal () {
+      if (terminal_sh.contains(terminal_el)) return terminal_el.remove()
+      terminal_sh.append(terminal_el)
+    }
   }
   const navbar_opts = { page: opts.page, data: current_theme }
   nav.attachShadow({ mode: 'closed' }).append(navbar(navbar_opts, navbar_protocol))
+  function navbar_protocol (handshake, send) {
+    send.id = handshake.from
+
+    state.hub[send.id] = { mid: 0, send, on: PROTOCOL, wait: {} }
+    state.aka.navbar = send.id
+    return Object.assign(listen, { id })
+    function listen (message) {
+      console.log(`[${id}]`, message)
+      const { send, on } = state.hub[state.aka.navbar]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+    function invalid (message) { console.error('invalid type', message) }
+  }
   // ----------------------------------------
   // CONTENT
   // ----------------------------------------
@@ -66,55 +102,9 @@ async function desktop (opts = {}, protocol) {
   // INIT
   // ----------------------------------------
   let current_page = consortium_page({data: current_theme}) // Default Page
-  handle_page_change('DEFAULT')
+  PROTOCOL.handle_page_change({ data: 'DEFAULT' })
   // ----------------------------------------
   return el
-  // ----------------------------------------
-  function handle_page_change (active_page) {
-    //   PROTOCOL.active_page = active_page;
-    content_sh.replaceChildren(page_list[active_page])
-    //   current_page = page_list[active_page]
-    const message = {
-      head: ['root', 'navbar', 'navbar'],
-      type: 'theme',
-      data: active_page,
-    }
-    notify(message)
-  }
-  function handle_theme_change () {
-    ;current_theme = current_theme === light_theme ? dark_theme : light_theme
-    sheet.replaceSync(get_theme(current_theme))
-  }
-  function toggle_terminal () {
-    if (terminal_sh.contains(terminal_el)) return terminal_el.remove()
-    terminal_sh.append(terminal_el)
-  }
-  function navbar_protocol (handshake, send, mid = 0) {
-    notify = send
-
-    if (send) return listen
-    
-    function listen (message) {        
-      const { head, type, data } = message
-      const {by, to, id} = head
-      // if (to !== id) return console.error('address unknown', message)
-      const action = PROTOCOL[type] || invalid
-      action(data)
-    }
-    function invalid (message) { console.error('invalid type', message) }
-    // async function change_theme () {
-    //   // const [to] = head
-    //   ;current_theme = current_theme === light_theme ? dark_theme : light_theme
-    //   sheet.replaceSync( get_theme(current_theme) )
-    //   return send({
-    //       // head: [id, to, mid++],
-    //       // refs: { cause: head },
-    //       // type: 'theme',
-    //       from: 'page updated',
-    //       data: current_theme
-    //   })
-    // }
-  }
 }
 
 function get_theme (opts) {
