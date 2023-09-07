@@ -42,26 +42,36 @@ async function desktop (opts = default_opts, protocol) {
   `
   sh.adoptedStyleSheets = [sheet]
   const [nav, content, terminal_wrapper] = sh.children
+  const navbar_sh = nav.attachShadow({ mode: 'closed' })
+  const content_sh = content.attachShadow({ mode: 'closed' })
+  const terminal_sh = terminal_wrapper.attachShadow({ mode: 'closed' })
+  // ----------------------------------------
+  // TERMINAL
+  // ----------------------------------------
+  const terminal_el = terminal({ data: current_theme })
+  // ----------------------------------------
+  // CONTENT
+  // ----------------------------------------
+  const page_404 = Object.assign(document.createElement('div'), {
+    innerHTML: `<h1 style="color:black;">404 - not found</h1>`
+  })
+  const page_list = { // LRU cache?
+    // @TODO: maybe only store "factories" and create instance on demand?
+    'HOME': home_page({ data: current_theme }),
+    'PROJECTS': projects_page({ data: current_theme }),
+    'GROWTH PROGRAM': growth_page({ data: current_theme }),
+    'TIMELINE': timeline_page({ data: current_theme }),
+    'CONSORTIUM': consortium_page({ data: current_theme }),
+  } // @INFO: the initial visible content is set when receiving the first navbar message
   // ----------------------------------------
   // NAVBAR
   // ----------------------------------------
   const PROTOCOL = {
     'active_page': 'HOME', // @TODO: remove
     'handle_page_change': function handle_page_change (msg) {
-      console.log({msg})
       const { data: active_page } = msg
-      // const [to] = head
-      // const
-      //   PROTOCOL.active_page = active_page;
-      content_sh.replaceChildren(page_list[active_page])
-      //   current_page = page_list[active_page]
-      const message = {
-        head: ['root', 'navbar', 'navbar'],
-        type: 'theme',
-        data: active_page,
-      }
-      const { send } = state.hub[state.aka.navbar]
-      send(message)
+      const page = page_list[active_page] || page_404
+      content_sh.replaceChildren(page)
     },
     'handle_theme_change': function handle_theme_change () {
       ;current_theme = current_theme === light_theme ? dark_theme : light_theme
@@ -72,8 +82,11 @@ async function desktop (opts = default_opts, protocol) {
       terminal_sh.append(terminal_el)
     }
   }
-  const navbar_opts = { page: opts.page, data: current_theme }
-  nav.attachShadow({ mode: 'closed' }).append(navbar(navbar_opts, navbar_protocol))
+  const navbar_opts = { page: opts.page, data: current_theme } // @TODO: SET DEFAULTS -> but change to LOAD DEFAULTS
+  navbar_sh.append(navbar(navbar_opts, navbar_protocol))
+
+  return el
+
   function navbar_protocol (send) {
     // const on = { 'ask-opts': on_ask_opts }
     state.hub[send.id] = { mid: 0, send, on: PROTOCOL }
@@ -87,30 +100,6 @@ async function desktop (opts = default_opts, protocol) {
       action(message)
     }
   }
-  // ----------------------------------------
-  // CONTENT
-  // ----------------------------------------
-  const page_list = {
-    // @TODO: maybe only store "factories" and create instance on demand?
-    'HOME': home_page({ data: current_theme }),
-    'PROJECTS': projects_page({ data: current_theme }),
-    'GROWTH PROGRAM': growth_page({ data: current_theme }),
-    'TIMELINE': timeline_page({ data: current_theme }),
-    'DEFAULT': consortium_page({ data: current_theme }),
-  } // @INFO: the initial visible content is set when receiving the first navbar message
-  const content_sh = content.attachShadow({ mode: 'closed' })
-  // ----------------------------------------
-  // TERMINAL
-  // ----------------------------------------
-  const terminal_sh = terminal_wrapper.attachShadow({ mode: 'closed' })
-  const terminal_el = terminal({ data: current_theme })
-  // ----------------------------------------
-  // INIT
-  // ----------------------------------------
-  let current_page = consortium_page({ data: current_theme }) // Default Page
-  PROTOCOL.handle_page_change({ data: 'DEFAULT' })
-  // ----------------------------------------
-  return el
 }
 
 function get_theme (opts) {
