@@ -33,8 +33,8 @@ async function boot () {
   const shadow = document.body.attachShadow({ mode: 'closed' })
   
   console.log({light_theme, dark_theme})
-
-  const el = await desktop()
+  const opts = { page: 'CONSORTIUM' }
+  const el = await desktop(opts)
 
   shadow.append(el)
 }

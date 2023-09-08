@@ -27,9 +27,7 @@ async function desktop (opts = default_opts, protocol) {
   // ----------------------------------------
   // INSTANCE STATE & ID
   const id = `${ID}:${count++}` // assigns their own name
-  const state = STATE.ids[id] = { wait: {}, hub: {}, aka: {} } // all state of component instance
-  // ----------------------------------------
-  // ----------------------------------------
+  const state = STATE.ids[id] = { id, wait: {}, hub: {}, aka: {} } // all state of component instance
   // ----------------------------------------
   // TEMPLATE
   // ----------------------------------------
@@ -89,6 +87,7 @@ async function desktop (opts = default_opts, protocol) {
 
   function navbar_protocol (send) {
     // const on = { 'ask-opts': on_ask_opts }
+    PROTOCOL.social = onsocial
     state.hub[send.id] = { mid: 0, send, on: PROTOCOL }
     state.aka.navbar = send.id
     return Object.assign(listen, { id })
@@ -98,6 +97,9 @@ async function desktop (opts = default_opts, protocol) {
       const { on } = state.hub[state.aka.navbar]
       const action = on[message.type] || invalid
       action(message)
+    }
+    function onsocial (message) {
+      console.log('@TODO: open ', message.data)
     }
   }
 }
