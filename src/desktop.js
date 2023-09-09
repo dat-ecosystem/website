@@ -33,13 +33,14 @@ async function desktop (opts = default_opts, protocol) {
   // ----------------------------------------
   const el = document.createElement('div')
   const sh = el.attachShadow({ mode: 'closed' })
-  sh.innerHTML = `
+  sh.innerHTML = `<div class="desktop">
     <div class="navbar"></div>
     <div class="content"></div>
     <div class="shell"></div>
-  `
+  </div>`
   sh.adoptedStyleSheets = [sheet]
-  const [nav, content, terminal_wrapper] = sh.children
+  const [desktop] = sh.children
+  const [nav, content, terminal_wrapper] = desktop.children
   const navbar_sh = nav.attachShadow({ mode: 'closed' })
   const content_sh = content.attachShadow({ mode: 'closed' })
   const terminal_sh = terminal_wrapper.attachShadow({ mode: 'closed' })
@@ -106,22 +107,31 @@ async function desktop (opts = default_opts, protocol) {
 
 function get_theme (opts) {
   return`
-    :host { 
+    * { box-sizing: border-box; }
+    :host {
       --bg_color: ${opts.bg_color};
       --ac-1: ${opts.ac_1};
       --ac-2: ${opts.ac_2};
       --ac-3: ${opts.ac_3};
       --primary_color: ${opts.primary_color};
+      display: flex;
+      flex-direction: column;
       font-family: Silkscreen;
       color: var(--primary_color);
       background-image: radial-gradient(var(--primary_color) 2px, var(--bg_color) 2px);
       background-size: 16px 16px;
-      width: 100vw;
       height: 100vh;
-      position: fixed;
     }
     svg {
       fill: var(--bg_color);
+    }
+    .desktop {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .shell {
+      flex-grow: 1;
     }
   `
 }
