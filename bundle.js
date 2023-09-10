@@ -2397,7 +2397,7 @@ function icon_button (opts, protocol) {
   }
   function onclick (e) {
     const [by, to, mid] = [id, send.id, 0]
-    let message = { head: [by, to, mid], type: 'click' }
+    const message = { head: [by, to, mid], type: 'click' }
     send(message)
   }
 }
@@ -5328,6 +5328,7 @@ function get_theme () {
       container-type: inline-size;
       flex-grow: 1;
       height: 100%;
+      min-height: 300px;
       .terminal {
         display: flex;
         flex-direction: column;
