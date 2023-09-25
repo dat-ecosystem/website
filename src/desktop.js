@@ -17,7 +17,7 @@ sheet.replaceSync(get_theme(current_theme))
 ******************************************************************************/
 var count = 0
 const ID = __filename
-const STATE = { ids: {}, hub: {} } // all state of component module
+const STATE = { ids: {}, net: {} } // all state of component module
 // ----------------------------------------
 const default_opts = { page: 'HOME' }
 
@@ -26,8 +26,11 @@ module.exports = desktop
 async function desktop (opts = default_opts, protocol) {
   // ----------------------------------------
   // INSTANCE STATE & ID
+  // ----------------------------------------
   const id = `${ID}:${count++}` // assigns their own name
-  const state = STATE.ids[id] = { id, wait: {}, hub: {}, aka: {} } // all state of component instance
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const pool = {}
   // ----------------------------------------
   // TEMPLATE
   // ----------------------------------------
@@ -39,72 +42,73 @@ async function desktop (opts = default_opts, protocol) {
     <div class="shell"></div>
   </div>`
   sh.adoptedStyleSheets = [sheet]
-  const [desktop] = sh.children
-  const [nav, content, terminal_wrapper] = desktop.children
-  const navbar_sh = nav.attachShadow({ mode: 'closed' })
-  const content_sh = content.attachShadow({ mode: 'closed' })
-  const terminal_sh = terminal_wrapper.attachShadow({ mode: 'closed' })
+  const shopts = { mode: 'closed' }
+  const navbar_sh = sh.querySelector('.navbar').attachShadow(shopts)
+  const content_sh = sh.querySelector('.content').attachShadow(shopts)
+  const terminal_sh = sh.querySelector('.shell').attachShadow(shopts)
   // ----------------------------------------
-  // TERMINAL
+  // RESOURCES
   // ----------------------------------------
-  const terminal_el = terminal({ data: current_theme })
-  // ----------------------------------------
-  // CONTENT
-  // ----------------------------------------
-  const page_404 = Object.assign(document.createElement('div'), {
-    innerHTML: `<h1 style="color:black;">404 - not found</h1>`
+  const cache = resources(pool)
+  const navigation = cache({
+    'HOME': () => home_page({ data: current_theme }),
+    'PROJECTS': () => projects_page({ data: current_theme }),
+    'GROWTH PROGRAM': () => growth_page({ data: current_theme }),
+    'TIMELINE': () => timeline_page({ data: current_theme }),
+    'CONSORTIUM': () => consortium_page({ data: current_theme }),
   })
-  const page_list = { // LRU cache?
-    // @TODO: maybe only store "factories" and create instance on demand?
-    'HOME': home_page({ data: current_theme }),
-    'PROJECTS': projects_page({ data: current_theme }),
-    'GROWTH PROGRAM': growth_page({ data: current_theme }),
-    'TIMELINE': timeline_page({ data: current_theme }),
-    'CONSORTIUM': consortium_page({ data: current_theme }),
-  } // @INFO: the initial visible content is set when receiving the first navbar message
+  const widgets = cache({
+    'terminal': () => terminal({ data: current_theme })
+  })
   // ----------------------------------------
   // NAVBAR
   // ----------------------------------------
-  const PROTOCOL = {
-    'active_page': 'HOME', // @TODO: remove
-    'handle_page_change': function handle_page_change (msg) {
-      const { data: active_page } = msg
-      const page = page_list[active_page] || page_404
-      content_sh.replaceChildren(page)
-    },
-    'handle_theme_change': function handle_theme_change () {
-      ;current_theme = current_theme === light_theme ? dark_theme : light_theme
-      sheet.replaceSync(get_theme(current_theme))
-    },
-    'toggle_terminal': function toggle_terminal () {
-      if (terminal_sh.contains(terminal_el)) return terminal_el.remove()
-      terminal_sh.append(terminal_el)
-    }
-  }
   const navbar_opts = { page: opts.page, data: current_theme } // @TODO: SET DEFAULTS -> but change to LOAD DEFAULTS
   navbar_sh.append(navbar(navbar_opts, navbar_protocol))
+  // ----------------------------------------
 
   return el
 
   function navbar_protocol (send) {
     // const on = { 'ask-opts': on_ask_opts }
-    PROTOCOL.social = onsocial
-    state.hub[send.id] = { mid: 0, send, on: PROTOCOL }
+    const on = {
+      'social': onsocial,
+      'handle_page_change': on_navigate,
+      'handle_theme_change': on_theme,
+      'toggle_terminal': on_toggle,
+    }
+    // --------------------------
+    state.net[send.id] = { mid: 0, send, on }
     state.aka.navbar = send.id
     return Object.assign(listen, { id })
     function invalid (message) { console.error('invalid type', message) }
     function listen (message) {
       console.log(`[${id}]`, message)
-      const { on } = state.hub[state.aka.navbar]
+      const { on } = state.net[state.aka.navbar]
       const action = on[message.type] || invalid
       action(message)
     }
+    // --------------------------
     function onsocial (message) {
       console.log('@TODO: open ', message.data)
     }
+    function on_navigate (msg) {
+      const { data: active_page } = msg
+      const page = navigation(active_page)
+      content_sh.replaceChildren(page)
+    }
+    function on_theme () {
+      ;current_theme = current_theme === light_theme ? dark_theme : light_theme
+      sheet.replaceSync(get_theme(current_theme))
+    }
+    function on_toggle () {
+      const has_terminal = status.terminal
+      status.terminal = !has_terminal
+      if (has_terminal) return terminal_sh.replaceChildren()
+      terminal_sh.append(widgets('terminal'))
+    }
   }
 }
-
 function get_theme (opts) {
   return`
     * { box-sizing: border-box; }
@@ -130,8 +134,24 @@ function get_theme (opts) {
       flex-direction: column;
       height: 100%;
     }
+    .content {
+      overflow-x: scroll;
+    }
     .shell {
       flex-grow: 1;
     }
   `
+}
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
 }

@@ -719,31 +719,70 @@ process.umask = function() { return 0; };
 
 },{}],3:[function(require,module,exports){
 module.exports = require('../../../src/node_modules/theme/dark-theme')
-},{"../../../src/node_modules/theme/dark-theme":43}],4:[function(require,module,exports){
+},{"../../../src/node_modules/theme/dark-theme":42}],4:[function(require,module,exports){
 module.exports = require('../../../src/node_modules/theme/lite-theme')
-},{"../../../src/node_modules/theme/lite-theme":44}],5:[function(require,module,exports){
+},{"../../../src/node_modules/theme/lite-theme":43}],5:[function(require,module,exports){
+(function (__dirname){(function (){
 config().then(boot)
 /******************************************************************************
   CSS & HTML Defaults
 ******************************************************************************/
 async function config () {
-  // @TODO: there are font files in `src/node_modules/theme/assets/fonts/...`
-  // => those could be used instead
-  const searchparams = `family=Silkscreen:wght@400;700&display=swap`
-  const google_font_url = `https://fonts.googleapis.com/css2?${searchparams}`
   const html = document.documentElement
   const meta = document.createElement('meta')
-  const link = document.createElement('link')
-  const sheet = new CSSStyleSheet()
+  const favicon = document.createElement('link')
   html.setAttribute('lang', 'en')
+  favicon.setAttribute('rel', 'icon')
+  favicon.setAttribute('type', 'image/png')
+  favicon.setAttribute('href', 'data:image/png;base64,iVBORw0KGgo=')
   meta.setAttribute('name', 'viewport')
   meta.setAttribute('content', 'width=device-width,initial-scale=1.0')
-  link.setAttribute('rel', 'stylesheet')
-  link.setAttribute('type', 'text/css')
-  link.setAttribute('href', google_font_url)
+  const fonts = new CSSStyleSheet()
+  const path = path => new URL(`../src/node_modules/${path}`, `file://${__dirname}`).href.slice(8)
+  const font1_url = path('theme/assets/fonts/Silkscreen-Regular.ttf')
+  const font2_url = path('theme/assets/fonts/Silkscreen-Bold.ttf')
+  fonts.replaceSync(`
+  /* latin-ext */
+  @font-face {
+    font-family: 'Silkscreen';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(h${font1_url}) format('truetype');
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+  /* latin */
+  @font-face {
+    font-family: 'Silkscreen';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(${font1_url}) format('truetype');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  /* latin-ext */
+  @font-face {
+    font-family: 'Silkscreen';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url(${font2_url}) format('truetype');
+    unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  }
+  /* latin */
+  @font-face {
+    font-family: 'Silkscreen';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url(${font2_url}) format('truetype');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+  }
+  `)
+  const sheet = new CSSStyleSheet()
   sheet.replaceSync(`html, body { padding:0px; margin: 0px; }`)
-  document.adoptedStyleSheets = [sheet]
-  document.head.append(meta, link)
+  document.adoptedStyleSheets = [fonts, sheet]
+  document.head.append(meta, favicon)
   await document.fonts.ready
 }
 /******************************************************************************
@@ -756,12 +795,12 @@ async function boot () {
 
   const shadow = document.body.attachShadow({ mode: 'closed' })
   
-  console.log({light_theme, dark_theme})
-  const opts = { page: 'CONSORTIUM' }
+  const opts = { page: 'CONSORTIUM', theme: 'dark_theme', themes: { light_theme, dark_theme } }
   const el = await desktop(opts)
 
   shadow.append(el)
 }
+}).call(this)}).call(this,"/page")
 },{"..":6,"theme/dark-theme":3,"theme/lite-theme":4}],6:[function(require,module,exports){
 (function (__filename){(function (){
 const home_page = require('home_page')
@@ -783,7 +822,7 @@ sheet.replaceSync(get_theme(current_theme))
 ******************************************************************************/
 var count = 0
 const ID = __filename
-const STATE = { ids: {}, hub: {} } // all state of component module
+const STATE = { ids: {}, net: {} } // all state of component module
 // ----------------------------------------
 const default_opts = { page: 'HOME' }
 
@@ -792,8 +831,11 @@ module.exports = desktop
 async function desktop (opts = default_opts, protocol) {
   // ----------------------------------------
   // INSTANCE STATE & ID
+  // ----------------------------------------
   const id = `${ID}:${count++}` // assigns their own name
-  const state = STATE.ids[id] = { id, wait: {}, hub: {}, aka: {} } // all state of component instance
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const pool = {}
   // ----------------------------------------
   // TEMPLATE
   // ----------------------------------------
@@ -805,72 +847,73 @@ async function desktop (opts = default_opts, protocol) {
     <div class="shell"></div>
   </div>`
   sh.adoptedStyleSheets = [sheet]
-  const [desktop] = sh.children
-  const [nav, content, terminal_wrapper] = desktop.children
-  const navbar_sh = nav.attachShadow({ mode: 'closed' })
-  const content_sh = content.attachShadow({ mode: 'closed' })
-  const terminal_sh = terminal_wrapper.attachShadow({ mode: 'closed' })
+  const shopts = { mode: 'closed' }
+  const navbar_sh = sh.querySelector('.navbar').attachShadow(shopts)
+  const content_sh = sh.querySelector('.content').attachShadow(shopts)
+  const terminal_sh = sh.querySelector('.shell').attachShadow(shopts)
   // ----------------------------------------
-  // TERMINAL
+  // RESOURCES
   // ----------------------------------------
-  const terminal_el = terminal({ data: current_theme })
-  // ----------------------------------------
-  // CONTENT
-  // ----------------------------------------
-  const page_404 = Object.assign(document.createElement('div'), {
-    innerHTML: `<h1 style="color:black;">404 - not found</h1>`
+  const cache = resources(pool)
+  const navigation = cache({
+    'HOME': () => home_page({ data: current_theme }),
+    'PROJECTS': () => projects_page({ data: current_theme }),
+    'GROWTH PROGRAM': () => growth_page({ data: current_theme }),
+    'TIMELINE': () => timeline_page({ data: current_theme }),
+    'CONSORTIUM': () => consortium_page({ data: current_theme }),
   })
-  const page_list = { // LRU cache?
-    // @TODO: maybe only store "factories" and create instance on demand?
-    'HOME': home_page({ data: current_theme }),
-    'PROJECTS': projects_page({ data: current_theme }),
-    'GROWTH PROGRAM': growth_page({ data: current_theme }),
-    'TIMELINE': timeline_page({ data: current_theme }),
-    'CONSORTIUM': consortium_page({ data: current_theme }),
-  } // @INFO: the initial visible content is set when receiving the first navbar message
+  const widgets = cache({
+    'terminal': () => terminal({ data: current_theme })
+  })
   // ----------------------------------------
   // NAVBAR
   // ----------------------------------------
-  const PROTOCOL = {
-    'active_page': 'HOME', // @TODO: remove
-    'handle_page_change': function handle_page_change (msg) {
-      const { data: active_page } = msg
-      const page = page_list[active_page] || page_404
-      content_sh.replaceChildren(page)
-    },
-    'handle_theme_change': function handle_theme_change () {
-      ;current_theme = current_theme === light_theme ? dark_theme : light_theme
-      sheet.replaceSync(get_theme(current_theme))
-    },
-    'toggle_terminal': function toggle_terminal () {
-      if (terminal_sh.contains(terminal_el)) return terminal_el.remove()
-      terminal_sh.append(terminal_el)
-    }
-  }
   const navbar_opts = { page: opts.page, data: current_theme } // @TODO: SET DEFAULTS -> but change to LOAD DEFAULTS
   navbar_sh.append(navbar(navbar_opts, navbar_protocol))
+  // ----------------------------------------
 
   return el
 
   function navbar_protocol (send) {
     // const on = { 'ask-opts': on_ask_opts }
-    PROTOCOL.social = onsocial
-    state.hub[send.id] = { mid: 0, send, on: PROTOCOL }
+    const on = {
+      'social': onsocial,
+      'handle_page_change': on_navigate,
+      'handle_theme_change': on_theme,
+      'toggle_terminal': on_toggle,
+    }
+    // --------------------------
+    state.net[send.id] = { mid: 0, send, on }
     state.aka.navbar = send.id
     return Object.assign(listen, { id })
     function invalid (message) { console.error('invalid type', message) }
     function listen (message) {
       console.log(`[${id}]`, message)
-      const { on } = state.hub[state.aka.navbar]
+      const { on } = state.net[state.aka.navbar]
       const action = on[message.type] || invalid
       action(message)
     }
+    // --------------------------
     function onsocial (message) {
       console.log('@TODO: open ', message.data)
     }
+    function on_navigate (msg) {
+      const { data: active_page } = msg
+      const page = navigation(active_page)
+      content_sh.replaceChildren(page)
+    }
+    function on_theme () {
+      ;current_theme = current_theme === light_theme ? dark_theme : light_theme
+      sheet.replaceSync(get_theme(current_theme))
+    }
+    function on_toggle () {
+      const has_terminal = status.terminal
+      status.terminal = !has_terminal
+      if (has_terminal) return terminal_sh.replaceChildren()
+      terminal_sh.append(widgets('terminal'))
+    }
   }
 }
-
 function get_theme (opts) {
   return`
     * { box-sizing: border-box; }
@@ -896,13 +939,29 @@ function get_theme (opts) {
       flex-direction: column;
       height: 100%;
     }
+    .content {
+      overflow-x: scroll;
+    }
     .shell {
       flex-grow: 1;
     }
   `
 }
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
 }).call(this)}).call(this,"/src/desktop.js")
-},{"consortium_page":25,"growth_page":26,"home_page":27,"navbar":32,"projects_page":36,"terminal":41,"theme/dark-theme":43,"theme/lite-theme":44,"timeline_page":47}],7:[function(require,module,exports){
+},{"consortium_page":25,"growth_page":26,"home_page":27,"navbar":32,"projects_page":36,"terminal":40,"theme/dark-theme":42,"theme/lite-theme":43,"timeline_page":46}],7:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const window_bar = require('window_bar')
@@ -1051,7 +1110,7 @@ function get_theme () {
   `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_about_us")
-},{"_process":2,"buttons/sm_text_button":20,"path":1,"window_bar":49}],8:[function(require,module,exports){
+},{"_process":2,"buttons/sm_text_button":20,"path":1,"window_bar":48}],8:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const window_bar = require('window_bar')
@@ -1177,7 +1236,7 @@ function get_theme () {
   `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_cover")
-},{"_process":2,"buttons/sm_text_button":20,"path":1,"window_bar":49}],9:[function(require,module,exports){
+},{"_process":2,"buttons/sm_text_button":20,"path":1,"window_bar":48}],9:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const window_bar = require('window_bar')
@@ -1316,7 +1375,7 @@ function get_theme () {
   `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_footer")
-},{"_process":2,"buttons/sm_text_button":20,"path":1,"window_bar":49}],10:[function(require,module,exports){
+},{"_process":2,"buttons/sm_text_button":20,"path":1,"window_bar":48}],10:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const project_card = require('project_card')
@@ -1438,6 +1497,8 @@ function app_projects (opts, protocol) {
   cardsData.forEach(card_data => card_data.tags.forEach(tag => tags.add(tag))) 
   project_wrapper.append(...cardsData.map(project_card))
   const main_wrapper = shadow.querySelector('.main_wrapper')
+  opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_up
+  opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_down
   main_wrapper.append(scrollbar({data}, app_projects_protocol))
   const filter_wrapper = shadow.querySelector('.filter_wrapper')
   filter_wrapper.append(project_filter({data, tags: Array.from(tags)}, app_projects_protocol))
@@ -1448,13 +1509,18 @@ function app_projects (opts, protocol) {
 
   //protocol
   function app_projects_protocol (handshake, send) {
+    if (!send) {
+      send = handshake
+      handshake = { from: send.id }
+    }
     if (handshake.from.includes('scrollbar')) {
-      const ro = new ResizeObserver(entries => send[0]())
+
+      const ro = new ResizeObserver(entries => send({ type: 'handle_scroll' }))
       ro.observe(main_wrapper)
-      project_wrapper.onscroll = send[0]
-      PROTOCOL['handleScroll'] = send[0]
-      PROTOCOL['getScrollInfo'] = send[1]
-      return [listen, setScrollTop]
+      project_wrapper.onscroll = event => send({ type: 'handle_scroll' })
+      PROTOCOL.scrollbar = send
+
+      return listen
     }
     else if (handshake.from.includes('project_filter')) {
       return listen
@@ -1468,12 +1534,14 @@ function app_projects (opts, protocol) {
       const { by, to, mid } = head
       // if( to !== name) return console.error('address unknown', message)
       if (by.includes('scrollbar')) {
+        if (message.type === 'set_scroll_start') return setScrollTop(message.data)
+        message.type = 'update_size'
         message.data = {
           sh: project_wrapper.scrollHeight,
           ch: project_wrapper.clientHeight,
           st: project_wrapper.scrollTop
         }
-        PROTOCOL.getScrollInfo(message)
+        PROTOCOL.scrollbar(message)
       }
       else if (by.includes('project_filter')) {
         PROTOCOL[type](data)
@@ -1506,7 +1574,7 @@ function app_projects (opts, protocol) {
       })
     }
     project_wrapper.append(...cardfilter.map(project_card))
-    PROTOCOL['handleScroll']()
+    PROTOCOL.scrollbar({ type: 'handle_scroll' })
   }
   async function toggle_active_state (message) {
     const { head, refs, type, data, meta } = message
@@ -1574,13 +1642,11 @@ function get_theme () {
   `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_projects")
-},{"_process":2,"path":1,"project_card":34,"project_filter":35,"scrollbar":37,"window_bar":49}],11:[function(require,module,exports){
+},{"_process":2,"path":1,"project_card":34,"project_filter":35,"scrollbar":37,"window_bar":48}],11:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const window_bar = require('window_bar')
 const project_card = require('project_card')
-const sm_text_button = require('buttons/sm_text_button')
-const sm_icon_button = require('buttons/sm_icon_button')
 
 const cwd = process.cwd()
 const prefix = path.relative(cwd, __dirname)
@@ -1719,7 +1785,7 @@ function get_theme () {
   `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_projects_mini")
-},{"_process":2,"buttons/sm_icon_button":18,"buttons/sm_text_button":20,"path":1,"project_card":34,"window_bar":49}],12:[function(require,module,exports){
+},{"_process":2,"path":1,"project_card":34,"window_bar":48}],12:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const window_bar = require('window_bar')
@@ -1756,18 +1822,22 @@ function app_timeline_mini (opts, protocol) {
   } } = data
   const el = document.createElement('div')
   const shadow = el.attachShadow ({ mode : 'closed' })
-  shadow.innerHTML = `
-    <div class="main_wrapper">
-      <div class="filter_wrapper">
-        <div class="month_wrapper">
-          <div class="scrollbar_wrapper">
-            <div class="timeline_wrapper"></div>
-          </div>
+  shadow.innerHTML = `<div class="main_wrapper">
+    <div class="filter_wrapper">
+      <div class="month_wrapper">
+        <div class="scrollbar_wrapper">
+          <div class="timeline_wrapper"></div>
         </div>
       </div>
     </div>
-    <style> ${get_theme()} </style>
-  `
+  </div>`
+  shadow.adoptedStyleSheets = [sheet]
+  const main_wrapper = shadow.querySelector('.main_wrapper')
+  const timeline_wrapper = shadow.querySelector('.timeline_wrapper')
+  const filter_wrapper = shadow.querySelector('.filter_wrapper')
+  const month_wrapper = shadow.querySelector('.month_wrapper')
+  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
+
   // Adding Applicatin window Bar
   const cover_window = window_bar({
     name:'TIMELINE', 
@@ -1825,24 +1895,21 @@ function app_timeline_mini (opts, protocol) {
     card_group.append(card)
     return card
   })
-  const timeline_wrapper = shadow.querySelector('.timeline_wrapper')
   timeline_wrapper.append(...card_groups)
-  const main_wrapper = shadow.querySelector('.main_wrapper')
   main_wrapper.append(timeline_filter({
     data, tags: Array.from(tags),
     latest_date: cards_data[0].date_raw
   }, app_timeline_protocol))
-  const filter_wrapper = shadow.querySelector('.filter_wrapper')
   const year_filter_wrapper = year_filter({
     data, latest_date: cards_data[0].date_raw
   }, app_timeline_protocol)
-  const month_wrapper = shadow.querySelector('.month_wrapper')
   const month_filter_wrapper = month_filter({ data }, app_timeline_protocol)
-  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
+  opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_up
+  opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_down
   scrollbar_wrapper.append(scrollbar({ data }, app_timeline_protocol))
   updateCalendar()
   timeline_wrapper.onscroll = () => {
-    PROTOCOL['handleScroll']()
+    PROTOCOL.scrollbar({ type: 'handle_scroll' })
     const parent_top = timeline_wrapper.getBoundingClientRect().top
     timeline_cards.some(card => {
       const child_top = card.getBoundingClientRect().top
@@ -1865,18 +1932,23 @@ function app_timeline_mini (opts, protocol) {
     })
   }
   shadow.prepend(cover_window)
-  shadow.adoptedStyleSheets = [sheet]
   
   return el
     
   //Setting protocols
   function app_timeline_protocol (handshake, send) {
+    if (!send) {
+      send = handshake
+      handshake = { from: send.id }
+    }
     if (handshake.from.includes('scrollbar')) {
-      const ro = new ResizeObserver(entries => send[0]())
+
+
+      const ro = new ResizeObserver(entries => send({ type: 'handle_scroll' }))
       ro.observe(scrollbar_wrapper)
-      PROTOCOL['handleScroll'] = send[0]
-      PROTOCOL['getScrollInfo'] = send[1]
-      return [listen, setScrollTop]
+      PROTOCOL.scrollbar = send
+
+      return listen
     }
     else if (handshake.from.includes('window_bar')) {
       PROTOCOL['toggle_active_state'] = toggle_active_state
@@ -1903,8 +1975,10 @@ function app_timeline_mini (opts, protocol) {
       const { by, to, mid } = head
       // if( to !== name) return console.error('address unknown', message)
       if (by.includes('scrollbar')) {
+          if (message.type === 'set_scroll_start') return setScrollTop(message.data)
+          message.type = 'update_size'
           message.data = {sh: timeline_wrapper.scrollHeight, ch: timeline_wrapper.clientHeight, st: timeline_wrapper.scrollTop}
-          PROTOCOL.getScrollInfo(message)
+          PROTOCOL.scrollbar(message)
       }
       else if (by.includes('timeline_filter') || by.includes('month_filter')) {
         PROTOCOL[type](data)
@@ -1974,7 +2048,7 @@ function app_timeline_mini (opts, protocol) {
       card_groups.forEach((card_group) => {
         timeline_wrapper.append(card_group)
       })
-      PROTOCOL['handleScroll']()
+      PROTOCOL.scrollbar({ type: 'handle_scroll' })
       PROTOCOL.setScroll({
         filter: 'YEAR',
         value: String(new Date(cardfilter[0].date_raw).getFullYear())
@@ -2100,7 +2174,7 @@ function get_theme () {
   `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_timeline")
-},{"_process":2,"month_filter":31,"path":1,"scrollbar":37,"timeline_card":45,"timeline_filter":46,"window_bar":49,"year_filter":50}],13:[function(require,module,exports){
+},{"_process":2,"month_filter":31,"path":1,"scrollbar":37,"timeline_card":44,"timeline_filter":45,"window_bar":48,"year_filter":49}],13:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const window_bar = require('window_bar')
@@ -2168,6 +2242,8 @@ function app_timeline_mini (opts, protocol) {
   }]
   timeline_wrapper.append(...cards_data.map(timeline_card))
   const main_wrapper = shadow.querySelector('.main_wrapper')
+  opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_up
+  opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_down
   main_wrapper.append(scrollbar({data: data}, timeline_mini_protocol))
   shadow.prepend(cover_window)
   shadow.adoptedStyleSheets = [ sheet ]
@@ -2175,12 +2251,20 @@ function app_timeline_mini (opts, protocol) {
   return el
 
   function timeline_mini_protocol (handshake, send) {
+    if (!send) {
+      send = handshake
+      handshake = { from: send.id }
+    }
     if (handshake.from.includes('scrollbar')) {
-      timeline_wrapper.onscroll = send[0]
-      const ro = new ResizeObserver(entries => send[0]())
+
+
+      timeline_wrapper.onscroll = event => send({ type: 'handle_scroll' })
+      const ro = new ResizeObserver(entries => send({ type: 'handle_scroll' }))
       ro.observe(main_wrapper)
-      PROTOCOL['getScrollInfo'] = send[1]
-      return [listen, setScrollTop]
+      PROTOCOL.scrollbar = send
+
+
+      return listen
     }
     else if (handshake.from.includes('window_bar')) {
       PROTOCOL['toggle_active_state'] = toggle_active_state;
@@ -2191,8 +2275,13 @@ function app_timeline_mini (opts, protocol) {
       const { by, to, id } = head
       // if( to !== name) return console.error('address unknown', message)
       if (by.includes('scrollbar')) {
+        if (message.type === 'set_scroll_start') return setScrollTop(message.data)
+
+        message.type = 'update_size'
         message.data = {sh: timeline_wrapper.scrollHeight, ch: timeline_wrapper.clientHeight, st: timeline_wrapper.scrollTop}
-        PROTOCOL.getScrollInfo(message)
+        PROTOCOL.scrollbar(message)
+
+
       }
       else if (by.includes('window_bar')) {
         PROTOCOL[type](message)
@@ -2257,7 +2346,7 @@ function get_theme () {
   `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app_timeline_mini")
-},{"_process":2,"buttons/sm_text_button":20,"path":1,"scrollbar":37,"timeline_card":45,"window_bar":49}],14:[function(require,module,exports){
+},{"_process":2,"buttons/sm_text_button":20,"path":1,"scrollbar":37,"timeline_card":44,"window_bar":48}],14:[function(require,module,exports){
 // CSS Boiler Plat
 const sheet = new CSSStyleSheet
 const theme = get_theme()
@@ -2341,7 +2430,7 @@ sheet.replaceSync(get_theme())
 ******************************************************************************/
 var count = 0
 const ID = __filename
-const STATE = { ids: {}, hub: {} } // all state of component module
+const STATE = { ids: {}, net: {} } // all state of component module
 // ----------------------------------------
 
 module.exports = icon_button
@@ -2349,16 +2438,19 @@ module.exports = icon_button
 function icon_button (opts, protocol) {
   // ----------------------------------------
   // INSTANCE STATE & ID
+  // ----------------------------------------
   const id = `${ID}:${count++}` // assigns their own name
   const status = { active: true }
-  const state = STATE.ids[id] = { status, wait: {}, hub: {}, aka: {} } // all state of component instance
+  const state = STATE.ids[id] = { status, wait: {}, net: {}, aka: {} } // all state of component instance
   // ----------------------------------------
   // opts
+  // ----------------------------------------
   const { src = '', src_active = '' } = opts
   const $src = src // @TODO: make those subscribable signals
   const $src_acitve = src_active
   // ----------------------------------------
   // protocol
+  // ----------------------------------------
   const on = { 'activate': onactivate, 'inactivate': oninactivate }
   const send = protocol(Object.assign(listen, { id }))
   function invalid (message) { console.error('invalid type', message) }
@@ -2375,23 +2467,21 @@ function icon_button (opts, protocol) {
   const el = document.createElement('div')
   const shadow = el.attachShadow({ mode: 'closed' })
   shadow.innerHTML = `<div class="icon_btn"></div>`
+  shadow.adoptedStyleSheets = [sheet]
   const [icon_button] = shadow.children
   icon_button.append(svg_icon)
   // Toggle Icon
   icon_button.onclick = onclick
-  shadow.adoptedStyleSheets = [sheet]
 
   return el
 
   function oninactivate () {
     state.status.active = false
-    console.log('INACTIVATE')
     icon_button.classList.toggle('active', state.status.active)
     if (svg_active) icon_button.replaceChildren(svg_icon)
   }
   function onactivate () {
     state.status.active = true
-    console.log('ACTIVATE')
     icon_button.classList.toggle('active', state.status.active)
     if (svg_active) icon_button.replaceChildren(svg_active)
   }
@@ -2651,43 +2741,31 @@ function get_theme () {
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/buttons")
 },{"_process":2,"path":1}],18:[function(require,module,exports){
-// CSS Boiler Plat
 const sheet = new CSSStyleSheet
 const theme = get_theme()
 sheet.replaceSync(theme)
 
 module.exports = sm_icon_button
 
-// Props - icon/img src
-function sm_icon_button (props) {
-  let { src, src_active, activate } = props
+function sm_icon_button (opts, protocol) {
+  let { src, src_active, activate } = opts
   const el = document.createElement('div')
   const shadow = el.attachShadow({ mode:'closed' })
-  shadow.innerHTML = `
-    <div class="sm_icon_button">
-      ${src}
-    </div>
-  `
-  const sm_icon_button = shadow.querySelector(".sm_icon_button")
-  // Toggle Icon
-  if(activate) {
-    if (src_active) {
-      let activeState = true
-      sm_icon_button.onclick = (e) =>{
-        ;(activeState)?sm_icon_button.innerHTML = src_active: sm_icon_button.innerHTML = src
-        activeState = !activeState
-        toggle_class(e)
-      }
-    } else sm_icon_button.onclick = toggle_class
-  }
-  const style = document.createElement('style')
-  style.textContent = get_theme()
-  shadow.append(sm_icon_button, style)
+  shadow.innerHTML = `<div class="sm_icon_button">${src}</div>`
   shadow.adoptedStyleSheets = [sheet]
+  const sm_icon_button = shadow.querySelector(".sm_icon_button")
+
+  let activeState = true
+
+  if (activate) sm_icon_button.onclick = toggle_class
   
   return el
 
   function toggle_class (e) {
+    if (src_active) {
+      sm_icon_button.innerHTML = activeState ? src_active: src
+      activeState = !activeState
+    }
     let selector = e.target.classList
     ;( selector.contains('active') ) ? selector.remove('active') : selector.add('active')
   }
@@ -2715,59 +2793,66 @@ function get_theme () {
   `
 }
 },{}],19:[function(require,module,exports){
-// CSS Boiler Plat
+(function (__filename){(function (){
 const sheet = new CSSStyleSheet
 const theme = get_theme()
 sheet.replaceSync(theme)
-
-var id = 0
+/******************************************************************************
+  DESKTOP COMPONENT
+******************************************************************************/
+var count = 0
+const ID = __filename
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const default_opts = { toggle: false }
 
 module.exports = sm_icon_button_alt
 
 // opts - icon/img src
-function sm_icon_button_alt (opts, protocol) {
-    const name = `sm_icon_button_alt_${id++}`
-    let { src, src_active } = opts
-    const el = document.createElement('div')
-    const shadow = el.attachShadow({ mode:'closed' })
-    shadow.innerHTML = `
-      <div class="sm_icon_button_alt"> 
-        ${src}
-      </div>
-      <style>${get_theme()}</style>
-    `
-  const sm_icon_button_alt = shadow.querySelector('.sm_icon_button_alt')
-  // Toggle Icon
-  if (protocol) { 
-    const send = protocol({ from:name }, listen) 
-    function listen (message) {
-      // 
-    }
-    let active_state = true
-    sm_icon_button_alt.onclick = (e) => {
-      if (src_active) {
-        ;(active_state)?sm_icon_button_alt.innerHTML = src_active: sm_icon_button_alt.innerHTML = src
-        active_state = !active_state
-        toggle_class(e)
-      } else toggle_class(e)
-      send({
-        head: {
-          by: name,
-          to: 'window_bar_0',
-          mid: 0,
-        },
-        type: 'toggle_window_active_state', 
-        data: { active_state } 
-      })
-    }
-  }
+function sm_icon_button_alt (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // INSTANCE STATE & ID
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const name = id
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const send = protocol({ from:name }, msg => {})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  let { toggle, src, src_active } = opts
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const shadow = el.attachShadow({ mode:'closed' })
+  shadow.innerHTML = `<div class="sm_icon_button_alt">${src}</div>`
   shadow.adoptedStyleSheets = [sheet]
+  const sm_icon_button_alt = shadow.querySelector('.sm_icon_button_alt')
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  let active_state = true
+  sm_icon_button_alt.onclick = onclick
 
   return el
 
-  function toggle_class (e) {
-    let selector = e.target.classList
-    ;( selector.contains('active') ) ? selector.remove('active') : selector.add('active')
+  function onclick (e) {
+    send?.({
+      head: { by: name, to: 'window_bar_0', mid: 0 },
+      type: 'click',
+      data: { active_state }
+    })
+    if (!toggle) return
+    if (src_active) {
+      sm_icon_button_alt.innerHTML = active_state ? src_active : src
+    }
+    sm_icon_button_alt.classList.toggle('active', active_state)
+    active_state = !active_state
   }
 }
 function get_theme () {
@@ -2782,6 +2867,9 @@ function get_theme () {
       cursor: pointer;
       border: 1px solid var(--bg_color);
       background-color: var(--primary_color);
+      &:active {
+        background-color: var(--ac-2)
+      }
       &.active {
         background-color: var(--ac-2)
       }
@@ -2791,6 +2879,7 @@ function get_theme () {
     }
   `
 }
+}).call(this)}).call(this,"/src/node_modules/buttons/sm_icon_button_alt.js")
 },{}],20:[function(require,module,exports){
 // CSS Boiler Plat
 const sheet = new CSSStyleSheet
@@ -2841,61 +2930,78 @@ function get_theme () {
   `
 }
 },{}],21:[function(require,module,exports){
-// CSS Boiler Plat
+(function (__filename){(function (){
 const sheet = new CSSStyleSheet
 const theme = get_theme()
 sheet.replaceSync(theme)
-
-let id = 0
+/******************************************************************************
+  TAB BUTTON COMPONENT
+******************************************************************************/
+var count = 0
+const ID = __filename
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const default_opts = { name: '' }
 
 module.exports = tab_button
 
-function tab_button (props, protocol) {
-  const name = `tab_button-${id++}`
-  const notify = protocol({ from: name }, listen)
-  const { data } = props
+function tab_button (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // INSTANCE STATE & ID
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  // ----------------------------------------
+  const on = { 'activate': toggle_class, 'inactivate': toggle_class }
+  // ----------------------------------------
+  const send = protocol(Object.assign(listen, { id }))
+  const up_channel = state.net[send.id] = { mid: 0, send, on } // store channel
+  state.aka.up = send.id
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
   const { img_src : {
     icon_close_dark= `${prefix}/icon_close_dark.svg`,
-  }} = data
-
+  }} = opts.data
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow({mode:'closed'})
-  shadow.innerHTML = `
-    <div class="tab_button">
-      <div class="text_wrapper"> ${props.name} </div>
-      <div class="close_button"> ${icon_close_dark} </div>
-    </div>
-    <style> ${get_theme()} </style>
-  `
+  const shadow = el.attachShadow({ mode: 'closed' })
+  shadow.innerHTML = `<div class="tab_button">
+    <div class="text_wrapper"> ${opts.name} </div>
+    <div class="close_button"> ${icon_close_dark} </div>
+  </div>`
   const tab_button = shadow.querySelector('.tab_button')
   const text_wrapper = shadow.querySelector('.text_wrapper')
-  text_wrapper.onclick = (e) => {
-    toggle_class()
-    notify({
-      head: { by: name, to: 'terminal', mid: 0 },
-      type: 'tab_btn_click',
-      data: el.id
-    })
-  }
-  toggle_class()
   const close_btn = shadow.querySelector('.close_button')
-  close_btn.onclick = () => {
-    el.remove()
-    notify({
-      head: { by: name, to: 'terminal', mid: 0 },
-      type: 'close_tab',
-      data: el.id
-    })
-  }
+
+  text_wrapper.onclick = onclick
+  close_btn.onclick = onclose
+  toggle_class({ type: 'activate' })
   shadow.adoptedStyleSheets = [sheet]
 
   return el
 
-  function toggle_class () {
-    tab_button.classList.toggle('active')
+  function toggle_class ({ type }) {
+    const mode = type === 'activate'
+    tab_button.classList.toggle('active', mode)
   }
+  function invalid (message) { console.error('invalid type', message) }
   function listen (message) {
-    toggle_class()
+    console.log(`[${id}]`, message)
+    const { on } = up_channel
+    const action = on[message.type] || invalid
+    action(message)
+  }
+  function onclose (event) {
+    el.remove()
+    const head = [id, up_channel.send.id, up_channel.mid++]
+    send({ head, type: 'close' })
+  }
+  function onclick (e) {
+    const head = [id, up_channel.send.id, up_channel.mid++]
+    send({ head, type: 'click' })
   }
 }
 function get_theme () {
@@ -2936,6 +3042,7 @@ function get_theme () {
     }
   `
 }
+}).call(this)}).call(this,"/src/node_modules/buttons/tab_button.js")
 },{}],22:[function(require,module,exports){
 (function (__filename){(function (){
 
@@ -2947,7 +3054,7 @@ sheet.replaceSync(get_theme())
 ******************************************************************************/
 var count = 0
 const ID = __filename
-const STATE = { ids: {}, hub: {} } // all state of component module
+const STATE = { ids: {}, net: {} } // all state of component module
 // ----------------------------------------
 
 module.exports = text_button
@@ -2955,15 +3062,18 @@ module.exports = text_button
 function text_button (opts, protocol) {
   // ----------------------------------------
   // INSTANCE STATE & ID
+  // ----------------------------------------
   const id = `${ID}:${count++}` // assigns their own name
-  const state = STATE.ids[id] = { status: {}, wait: {}, hub: {}, aka: {} } // all state of component instance
+  const state = STATE.ids[id] = { status: {}, wait: {}, net: {}, aka: {} } // all state of component instance
   // ----------------------------------------
   // opts
+  // ----------------------------------------
   const { text } = opts
   const $text = text // @TODO: make it subscribable signals
   // make it a signal: load initial + listen updates
   // ----------------------------------------
   // protocol
+  // ----------------------------------------
   const on = { 'activate': onactivate, 'inactivate': oninactivate }
   const send = protocol(Object.assign(listen, { id }))
   function invalid (message) { console.error('invalid type', message) }
@@ -2976,11 +3086,12 @@ function text_button (opts, protocol) {
   const el = document.createElement('div')
   const shadow = el.attachShadow({ mode: 'closed' })
   shadow.innerHTML = `<div class="text_button">${$text}</div>`
+  shadow.adoptedStyleSheets = [sheet]
   const [text_button] = shadow.children
   text_button.onclick = toggle_class
-  shadow.adoptedStyleSheets = [sheet]
 
   return el
+
   function oninactivate (message) {
     state.status.active = false
     text_button.classList.toggle('active', state.status.active)
@@ -3216,7 +3327,7 @@ function get_theme () {
   `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/comingsoon")
-},{"_process":2,"buttons/sm_text_button":20,"path":1,"window_bar":49}],25:[function(require,module,exports){
+},{"_process":2,"buttons/sm_text_button":20,"path":1,"window_bar":48}],25:[function(require,module,exports){
 const mission_statement = require('mission_statement')
 const important_documents = require('important_documents')
 const our_member = require('our_member')
@@ -3389,7 +3500,7 @@ function get_theme () {
     }
   `
 }
-},{"important_documents":28,"mission_statement":29,"our_member":33,"tools":48}],26:[function(require,module,exports){
+},{"important_documents":28,"mission_statement":29,"our_member":33,"tools":47}],26:[function(require,module,exports){
 const comingsoon = require('comingsoon')
 const app_footer = require('app_footer')
 
@@ -3634,7 +3745,7 @@ function get_theme () {
     }
   `
 }
-},{"window_bar":49}],29:[function(require,module,exports){
+},{"window_bar":48}],29:[function(require,module,exports){
 const window_bar = require('window_bar')
 
 // CSS Boiler Plat
@@ -3736,7 +3847,7 @@ function get_theme () {
     }
   `
 }
-},{"window_bar":49}],30:[function(require,module,exports){
+},{"window_bar":48}],30:[function(require,module,exports){
 const day_button = require('buttons/day_button')
 
 const sheet = new CSSStyleSheet
@@ -3855,7 +3966,7 @@ function get_theme () {
 }
 },{"buttons/day_button":14}],31:[function(require,module,exports){
 const month_card = require('month_card')
-const scrollbar = require('scrollbar_hor')
+const scrollbar = require('scrollbar')
 
 const sheet = new CSSStyleSheet
 const theme = get_theme()
@@ -3901,19 +4012,28 @@ function month_filter (opts, protocol) {
     month_filter_wrapper.append(month_buttons[month.name])
   })
   const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
+  opts.horizontal = true
+  opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_left
+  opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_right
   scrollbar_wrapper.append(scrollbar( opts, month_filter_protocol))
   shadow.adoptedStyleSheets = [sheet]
   
   return el
 
   function month_filter_protocol (handshake, send) {
+    if (!send) {
+      send = handshake
+      handshake = { from: send.id }
+    }
     if (handshake.from.includes('scrollbar')) {
-      month_filter_wrapper.onscroll = send[0]
-      const ro = new ResizeObserver(entries => send[0]());
-      ro.observe(scrollbar_wrapper);
-      PROTOCOL['handleScroll'] = send[0]
-      PROTOCOL['getScrollInfo'] = send[1]
-      return [listen, setScrollLeft]
+
+      month_filter_wrapper.onscroll = event => send({ type: 'handle_scroll' })
+      const ro = new ResizeObserver(entries => send({ type: 'handle_scroll' }))
+      ro.observe(scrollbar_wrapper)
+ 
+      PROTOCOL.scrollbar = send
+
+      return listen
     }
     if (handshake.from.includes('month_card')) {
       PROTOCOL['toggle_month_button'] = toggle_month_button
@@ -3926,12 +4046,14 @@ function month_filter (opts, protocol) {
       const { by, to, mid } = head
       // if( to !== name) return console.error('address unknown', message)
       if (by.includes('scrollbar')) {
+        if (message.type === 'set_scroll_start') return setScrollLeft(message.data)
+        message.type = 'update_size'
         message.data = {
           sh: month_filter_wrapper.scrollWidth,
           ch: month_filter_wrapper.clientWidth,
           st: month_filter_wrapper.scrollLeft
         }
-        PROTOCOL.getScrollInfo(message)
+        PROTOCOL.scrollbar(message)
       }
       else if(by.includes('month_card')) PROTOCOL[type](by, data)
     }
@@ -4017,7 +4139,7 @@ function get_theme () {
     }
   `
 }
-},{"month_card":30,"scrollbar_hor":38}],32:[function(require,module,exports){
+},{"month_card":30,"scrollbar":37}],32:[function(require,module,exports){
 (function (process,__filename,__dirname){(function (){
 const icon_button = require('buttons/icon_button')
 const logo_button = require('buttons/logo_button')
@@ -4031,11 +4153,11 @@ const sheet = new CSSStyleSheet()
 
 sheet.replaceSync(get_theme())
 /******************************************************************************
-NAVBAR COMPONENT
+  NAVBAR COMPONENT
 ******************************************************************************/
 var count = 0
 const ID = __filename
-const STATE = { ids: {}, hub: {} } // all state of component module
+const STATE = { ids: {}, net: {} } // all state of component module
 // ----------------------------------------
 const default_opts = { page: 'HOME' }
 
@@ -4045,17 +4167,17 @@ function navbar (opts = default_opts, protocol) {
   // ----------------------------------------
   // INSTANCE STATE & ID
   const id = `${ID}:${count++}` // assigns their own name
-  const state = STATE.ids[id] = { status: {}, wait: {}, hub: {}, aka: {} } // all state of component instance
+  const state = STATE.ids[id] = { status: {}, wait: {}, net: {}, aka: {} } // all state of component instance
   // ----------------------------------------
   const on = { 'theme': handle_active_change }
   // ----------------------------------------
   const send = protocol(Object.assign(listen, { id }))
-  state.hub[send.id] = { mid: 0, send, on } // store channel
+  state.net[send.id] = { mid: 0, send, on } // store channel
   state.aka.up = send.id
   function invalid (message) { console.error('invalid type', message) }
   function listen (message) {
     console.log(`[${id}]`, message)
-    const { on } = state.hub[state.aka.up] // @TODO: from `to`
+    const { on } = state.net[state.aka.up] // @TODO: from `to`
     const action = on[message.type] || invalid
     action(message)
   }
@@ -4092,13 +4214,16 @@ function navbar (opts = default_opts, protocol) {
       <div class="icon_btn_wrapper"></div>
     </div>
   </div>`
+  shadow.adoptedStyleSheets = [sheet]
   const navbar = shadow.querySelector('.navbar')
   const info_sh = shadow.querySelector('.info_wrapper').attachShadow({ mode: 'closed' })
   const logo_sh = shadow.querySelector('.logo_wrapper').attachShadow({ mode: 'closed' })
   const nav_sh = shadow.querySelector('.nav_toggle').attachShadow({ mode: 'closed' })
   const text_wrapper = shadow.querySelector('.page_btns_wrapper')
   const icon_wrapper = shadow.querySelector('.icon_btn_wrapper')
-
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
   const consortium_btn = icon_button({ src: icon_consortium }, navigation_protocol('CONSORTIUM'))
   const logo_btn = logo_button()
   const nav_btn = icon_button({ src: icon_arrow_down, src_active: icon_arrow_up }, nav_protocol('navtoggle'))
@@ -4121,8 +4246,6 @@ function navbar (opts = default_opts, protocol) {
   nav_sh.append(nav_btn)
   text_wrapper.append(...text_btns.map(wrap('text_button_wrapper')))
   icon_wrapper.append(...icon_btns.map(wrap('')))
-
-  shadow.adoptedStyleSheets = [sheet]
   // ----------------------------------------
   // INIT
   // ----------------------------------------
@@ -4140,13 +4263,13 @@ function navbar (opts = default_opts, protocol) {
   function nav_protocol (petname) {
     return send => {
       const on = { 'click': onclick }
-      const channel = state.hub[send.id] = { mid: 0, send, on }
+      const channel = state.net[send.id] = { mid: 0, send, on }
       state.aka[petname] = send.id
       return Object.assign(listen, { id })
       function invalid (message) { console.error('invalid type', message) }
       function listen (message) {
         console.log(`[${id}]\n${petname}:`, message)
-        const { on } = state.hub[state.aka[petname]]
+        const { on } = state.net[state.aka[petname]]
         const action = on[message.type] || invalid
         action(message)
       }
@@ -4164,18 +4287,18 @@ function navbar (opts = default_opts, protocol) {
   function socials_protocol (petname) {
     return function protocol (send) {
       const on = { 'click': onclick }
-      state.hub[send.id] = { mid: 0, send, on }
+      state.net[send.id] = { mid: 0, send, on }
       state.aka[petname] = send.id
       return Object.assign(listen, { id })
       function invalid (message) { console.error('invalid type', message) }
       function listen (message) {
-        console.log(`[${id}]`, message)
-        const { on } = state.hub[state.aka[petname]]
+        console.log(`[${id}]\n${petname}:`, message)
+        const { on } = state.net[state.aka[petname]]
         const action = on[message.type] || invalid
         action(message)
       }
       function onclick (message) {
-        const up_channel = state.hub[state.aka.up]
+        const up_channel = state.net[state.aka.up]
         const [by, to, mid] = [id, petname, up_channel.mid++]
         up_channel.send({
           head: [by, to, mid],
@@ -4189,19 +4312,19 @@ function navbar (opts = default_opts, protocol) {
   function terminal_protocol (petname) {
     return function protocol (send) {
       const on = { 'click': onclick }
-      const channel = state.hub[send.id] = { mid: 0, send, on }
+      const channel = state.net[send.id] = { mid: 0, send, on }
       state.aka[petname] = send.id
       return Object.assign(listen, { id })
       function invalid (message) { console.error('invalid type', message) }
       function listen (message) {
-        console.log(`[${id}]`, message)
-        const { on } = state.hub[state.aka[petname]]
+        console.log(`[${id}]\n${petname}:`, message)
+        const { on } = state.net[state.aka[petname]]
         const action = on[message.type] || invalid
         action(message)
       }
       function onclick (message) {
         state.status.terminal_collapsed = !state.status.terminal_collapsed
-        const up_channel = state.hub[state.aka.up]
+        const up_channel = state.net[state.aka.up]
         const [by, to, mid] = [id, petname, up_channel.mid++]
         up_channel.send({
           head: [by, to, mid],
@@ -4219,19 +4342,19 @@ function navbar (opts = default_opts, protocol) {
   function theme_button_protocol (petname) {
     return function protocol (send) {
       const on = { 'click': onclick }
-      const channel = state.hub[send.id] = { mid: 0, send, on }
+      const channel = state.net[send.id] = { mid: 0, send, on }
       state.aka[petname] = send.id
       return Object.assign(listen, { id })
       function invalid (message) { console.error('invalid type', message) }
       function listen (message) {
-        console.log(`[${id}]`, message)
-        const { on } = state.hub[state.aka[petname]]
+        console.log(`[${id}]\n${petname}:`, message)
+        const { on } = state.net[state.aka[petname]]
         const action = on[message.type] || invalid
         action(message)
       }
       function onclick (message) {
         state.status.theme_dark = !state.status.theme_dark
-        const up_channel = state.hub[state.aka.up]
+        const up_channel = state.net[state.aka.up]
         const [by, to, mid] = [id, petname, up_channel.mid++]
         up_channel.send({
           head: [by, to, mid],
@@ -4251,8 +4374,8 @@ function navbar (opts = default_opts, protocol) {
     // SET DEFAULTS
     state.status.active_button = state.aka[page]
     const active_id = state.status.active_button
-    const be_channel = state.hub[active_id]
-    const up_channel = state.hub[state.aka.up]
+    const be_channel = state.net[active_id]
+    const up_channel = state.net[state.aka.up]
 
     // APPLY OPTS (1):
     // @TODO: issue: how to submit an `onclick` event to trigger the initial change?
@@ -4273,7 +4396,7 @@ function navbar (opts = default_opts, protocol) {
   function navigation_protocol (petname) {
     return function protocol (send) {
       const on = { 'click': onclick }
-      state.hub[send.id] = { mid: 0, send, on }
+      state.net[send.id] = { mid: 0, send, on }
       state.aka[petname] = send.id
       return Object.assign(listen, { id })
       // APPLY OPTS (3):
@@ -4284,8 +4407,8 @@ function navbar (opts = default_opts, protocol) {
       // ALSO: take care of problems of order in which things get applied synchronously... test for it!       
       function invalid (message) { console.error('invalid type', message) }
       function listen (message) {
-        console.log(`[${id}]`, message)
-        const { on } = state.hub[state.aka[petname]]
+        console.log(`[${id}]\n${petname}:`, message)
+        const { on } = state.net[state.aka[petname]]
         const action = on[message.type] || invalid
         action(message)
       }
@@ -4297,9 +4420,9 @@ function navbar (opts = default_opts, protocol) {
         const [
           next_id, data
         ] = active_id === send.id ? [default_id, page] : [send.id, petname]
-        const be_channel = state.hub[next_id]
-        const ex_channel = state.hub[active_id] // active button
-        const up_channel = state.hub[state.aka.up] // parent element
+        const be_channel = state.net[next_id]
+        const ex_channel = state.net[active_id] // active button
+        const up_channel = state.net[state.aka.up] // parent element
         do_page_change(data, message.head, { be_channel, ex_channel, up_channel })
       }
     }
@@ -4522,7 +4645,7 @@ function get_theme () {
     }
   `
 }
-},{"window_bar":49}],34:[function(require,module,exports){
+},{"window_bar":48}],34:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const sm_icon_button = require('buttons/sm_icon_button')
@@ -4693,7 +4816,7 @@ function get_theme () {
     }
   `
 }
-},{"buttons/select_button":17,"search_input":39}],36:[function(require,module,exports){
+},{"buttons/select_button":17,"search_input":38}],36:[function(require,module,exports){
 const app_projects = require('app_projects')
 const the_dat = require('the_dat')
 const app_footer = require('app_footer')
@@ -4777,7 +4900,7 @@ function get_theme () {
     }
   `
 }
-},{"app_footer":9,"app_projects":10,"the_dat":42}],37:[function(require,module,exports){
+},{"app_footer":9,"app_projects":10,"the_dat":41}],37:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const sm_icon_button = require('buttons/sm_icon_button')
@@ -4785,66 +4908,101 @@ const sm_icon_button = require('buttons/sm_icon_button')
 const cwd = process.cwd()
 const prefix = path.relative(cwd, __dirname)
 
+const svgdot_datauri = `
+<svg width="16px" height="16px" viewBox="8 8 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path fill="#2ACA4B" d="M12 9.5C13.3807 9.5 14.5 10.6193 14.5 12C14.5 13.3807 13.3807 14.5 12 14.5C10.6193 14.5 9.5 13.3807 9.5 12C9.5 10.6193 10.6193 9.5 12 9.5Z"></path>
+</svg>
+`
+
 const sheet = new CSSStyleSheet
 const theme = get_theme()
 sheet.replaceSync(theme)
+/******************************************************************************
+  SCROLL COMPONENT
+******************************************************************************/
 
-let id = 0
+let count = 0
 
 module.exports = scrollbar
 
 function scrollbar (opts, protocol) {
-  const name = "scrollbar-" + id++
-  const { data } = opts
-  let message = {
-    head: { by: name, to: 'app_projects', mid: 0 },
-    type: 'status',
-    data: null
+  const id = "scrollbar-" + count++
+  const state = {
+    content_scrollSize: null,   // Width, Height
+    content_clientSize: null,  // Width, Height
+    content_scrollStart: null, // Left, Top
   }
-  let content_scrollHeight, content_clientHeight, content_scrollTop
-  const [notify, setScrollTop] = protocol({ from: name }, [handle_scroll, listen])
-  function listen (message) {
-    const { head,  refs, type, data, meta } = message
-    const { by, to, id } = head
-    const { sh, ch, st } = data
-    content_clientHeight = ch
-    content_scrollHeight = sh
-    content_scrollTop = st
-  }
-  // Assigning all the icons
-  const { img_src: { 
-    icon_arrow_down = `${prefix}/icon_arrow_down.svg`,
-    icon_arrow_up = `${prefix}/icon_arrow_up.svg`
-  } } = data
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const {
+    horizontal = false,
+    data: {
+      img_src: {
+        icon_arrow_start = svgdot_datauri,
+        icon_arrow_end = svgdot_datauri,
+      }
+    }
+  } = opts
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const notify = scrollbar_protocol(protocol)
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
   el.classList.add('container')
-  const shadow = el.attachShadow({ mode: 'closed'})
-  shadow.innerHTML = `
-    <div class="scrollbar_wrapper">
-      <div class="bar_wrapper">
-        <div class="bar"> </div>
-      </div>
+  const shadow = el.attachShadow({ mode: 'closed' })
+  shadow.innerHTML = `<div class="scrollbar_wrapper">
+    <div class="bar_wrapper">
+      <div class="bar"></div>
     </div>
-    <style> ${get_theme()} </style>
-  `
-  const bar = shadow.querySelector('.bar')
-  let lastPageY;
-  bar.onmousedown = handle_mousedown
-  const arrow_down_btn = sm_icon_button({src: icon_arrow_down, activate: false})
-  arrow_down_btn.classList.add('arrow_down_btn')
-  arrow_down_btn.onclick = () => {
-    notify(message)
-    const ratio = content_clientHeight / content_scrollHeight
-    setScrollTop(content_scrollTop + 30 / ratio)
-  }
-  const arrow_up_btn = sm_icon_button({src: icon_arrow_up, activate: false})
-  arrow_up_btn.classList.add('arrow_up_btn')
-  arrow_up_btn.onclick = () => {
-    notify(message)
-    const ratio = content_clientHeight / content_scrollHeight
-    setScrollTop(content_scrollTop - 30 / ratio)
-  }
+  </div>`
+  shadow.adoptedStyleSheets = [sheet]
   const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
+  const bar_wrapper = shadow.querySelector('.bar_wrapper')
+  const bar = shadow.querySelector('.bar')
+
+  if (horizontal) {
+    scrollbar_wrapper.classList.add('horizontal-wrapper')
+    bar_wrapper.classList.add('horizontal-bar-wrapper')
+    bar.classList.add('horizontal-bar')
+  } else {
+    scrollbar_wrapper.classList.add('vertical-wrapper')
+    bar_wrapper.classList.add('vertical-bar-wrapper')
+    bar.classList.add('vertical-bar')
+  }
+
+  let lastPage
+
+  bar.onmousedown = handle_mousedown
+  const arrow_end_btn = sm_icon_button({
+    src: icon_arrow_end, activate: false
+  })
+  arrow_end_btn.classList.add('arrow_end_btn')
+  arrow_end_btn.onclick = () => {
+    emit_status()
+    const ratio = state.content_clientSize / state.content_scrollSize
+    notify({
+      head: { by: id, to: 'app_projects', mid: 0 },
+      type: 'set_scroll_start',
+      data: state.content_scrollStart + 30 / ratio
+    })
+  }
+  const arrow_start_btn = sm_icon_button({
+    src: icon_arrow_start, activate: false
+  })
+  arrow_start_btn.classList.add('arrow_start_btn')
+  arrow_start_btn.onclick = () => {
+    emit_status()
+    const ratio = state.content_clientSize / state.content_scrollSize
+    notify({
+      head: { by: id, to: 'app_projects', mid: 0 },
+      type: 'set_scroll_start',
+      data: state.content_scrollStart - 30 / ratio
+    })
+  }
   setTimeout(() => {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -4854,54 +5012,104 @@ function scrollbar (opts, protocol) {
         }
       })
     })
-  observer.observe(scrollbar_wrapper)
+    observer.observe(scrollbar_wrapper)
   }, 2000)
-  // setTimeout(window.requestAnimationFrame(handle_scroll), 5000);
-  scrollbar_wrapper.append(arrow_up_btn, arrow_down_btn)
-  shadow.adoptedStyleSheets = [sheet]
+  scrollbar_wrapper.append(arrow_start_btn, arrow_end_btn)
 
   return el
-  
-  function handle_mousedown (e) {
-    lastPageY = e.pageY
-    window.onmousemove = handle_mousemove
-    function handle_mousemove (e) {
-      notify(message)
-      const delta = e.pageY - lastPageY
-      lastPageY = e.pageY
-      const ratio = content_clientHeight / content_scrollHeight
-      setScrollTop(content_scrollTop + delta / ratio)
-    }
-    window.onmouseup = handle_mouseup
-    function handle_mouseup () {
-      window.onmousemove = null
-      window.onmouseup = null
+
+  function scrollbar_protocol (protocol) {
+    const on = { update_size, handle_scroll }
+    return protocol(Object.assign(listen, { id }))
+    function invalid (message) { console.error('invalid type', message) }
+    function listen (message) {
+      console.log(`[${id}]`, message)
+      // const { on } = state.net[state.aka.navbar]
+      const action = on[message.type] || invalid
+      action(message)
     }
   }
+  function update_size ({ data }) {
+    const { sh, ch, st } = data
+    state.content_clientSize = ch
+    state.content_scrollSize = sh
+    state.content_scrollStart = st
+  }
   function handle_scroll () {
-    notify(message)
-    const ratio = content_clientHeight / content_scrollHeight
+    emit_status()
+    const ratio = state.content_clientSize / state.content_scrollSize
     if (ratio >= 1) el.style.cssText = 'display: none;'
     else el.style.cssText = 'display: inline;'
-    bar.style.cssText = 'height:' + Math.max(ratio * 100, 10) + '%; top:' + (content_scrollTop / content_scrollHeight ) * 100 + '%;'
+    const [prop1, prop2] = horizontal ? ['width', 'left'] : ['height', 'top']
+    const percent1 = Math.max(ratio * 100, 10)
+    const percent2 = (state.content_scrollStart / state.content_scrollSize ) * 100
+    bar.style.cssText = `${prop1}: ${percent1}%; ${prop2}: ${percent2}%;`
+  }
+  function emit_status () {
+    notify({
+      head: { by: id, to: 'app_projects', mid: 0 },
+      type: 'status',
+      data: null
+    })
+  }
+  function handle_mousedown (e) {
+    lastPage = horizontal ? e.pageX : e.pageY
+    // @TODO:
+    // => maybe refactor to use ELEMENT instead of WINDOW
+    // https://developer.mozilla.org/en-US/docs/Web/API/Element/mousemove_event
+    window.onmousemove = handle_mousemove
+    window.onmouseup = handle_mouseup
+  }
+  function handle_mouseup () {
+    window.onmousemove = null
+    window.onmouseup = null
+  }
+  function handle_mousemove (e) {
+    emit_status()
+    const nextPage = horizontal ? e.pageX : e.pageY
+    const delta = nextPage - lastPage
+    lastPage = nextPage
+    const ratio = state.content_clientSize / state.content_scrollSize
+    notify({
+      head: { by: id, to: 'app_projects', mid: 0 },
+      type: 'set_scroll_start',
+      data: state.content_scrollStart + delta / ratio
+    })
   }
 }
 function get_theme () {
   return `
-    .scrollbar_wrapper {
+    .horizontal-wrapper {
+      height: 30px;
+      width: 100%;
+      flex-direction: row;
+    }
+    .vertical-wrapper {
       width: 30px;
       height: 100%;
-      display: flex;
       flex-direction: column;
+    }
+    .scrollbar_wrapper {
       box-sizing: border-box;
-      .bar_wrapper {
-        display: flex;
+      display: flex;
+      .vertical-bar-wrapper {
         flex-direction: column;
         height: 100%;
+      }
+      .horizontal-bar-wrapper {
+        width: 100%;
+      }
+      .bar_wrapper {
+        display: flex;
+        .vertical-bar {
+          height: 30px;
+        }
+        .horizontal-bar {
+          width: 30px;
+        }
         .bar {
           position: relative;
           background-color: var(--primary_color);
-          width: 30px;
           cursor: pointer;
           transition: opacity 0.25s linear;
           box-shadow:inset 0px 0px 0px 1px var(--bg_color);
@@ -4922,153 +5130,6 @@ function get_theme () {
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/scrollbar")
 },{"_process":2,"buttons/sm_icon_button":18,"path":1}],38:[function(require,module,exports){
-(function (process,__dirname){(function (){
-const path = require('path')
-const sm_icon_button = require('buttons/sm_icon_button')
-
-const cwd = process.cwd()
-const prefix = path.relative(cwd, __dirname)
-
-const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
-let id = 0
-
-module.exports = scrollbar
-
-function scrollbar (opts, protocol) {
-  const name = "scrollbar-" + id++
-  const { data } = opts
-  let message = {
-    head: { by: name, to: 'app_projects', mid: 0 },
-    type: 'status',
-    data: null
-  }
-  let content_scrollWidth, content_clientWidth, content_scrollLeft
-  const [notify, setScrollLeft] = protocol({ from: name }, [handle_scroll, listen])
-  function listen(message){
-    const { head,  refs, type, data, meta } = message
-    const { by, to, id } = head
-    const { sh, ch, st } = data
-    content_clientWidth = ch
-    content_scrollWidth = sh
-    content_scrollLeft = st
-  }
-  // Assigning all the icons
-  const { img_src: { 
-    icon_arrow_right = `${prefix}/icon_arrow_right.svg`,
-    icon_arrow_left = `${prefix}/icon_arrow_left.svg`
-  } } = data
-  const el = document.createElement('div')
-  el.classList.add('container')
-  const shadow = el.attachShadow({ mode: 'closed'})
-  shadow.innerHTML = `
-    <div class="scrollbar_wrapper">
-      <div class="bar_wrapper">
-        <div class="bar"> </div>
-      </div>
-    </div>
-    <style> ${get_theme()} </style>
-  `
-  const bar = shadow.querySelector('.bar')
-  let lastPageX
-  bar.onmousedown = handle_mousedown
-  const arrow_down_btn = sm_icon_button({ src: icon_arrow_right, activate: false })
-  arrow_down_btn.classList.add('arrow_down_btn')
-  arrow_down_btn.onclick = () => {
-    notify(message)
-    const ratio = content_clientWidth / content_scrollWidth
-    setScrollLeft(content_scrollLeft + 30 / ratio)
-  }
-  const arrow_up_btn = sm_icon_button({ src: icon_arrow_left, activate: false })
-  arrow_up_btn.classList.add('arrow_up_btn')
-  arrow_up_btn.onclick = () => {
-    notify(message)
-    const ratio = content_clientWidth / content_scrollWidth
-    setScrollLeft(content_scrollLeft - 30 / ratio)
-  }
-  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
-  setTimeout(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          handle_scroll()
-          observer.unobserve(entry.target)
-        }
-      })
-    })
-    observer.observe(scrollbar_wrapper)
-  }, 2000)
-  // setTimeout(window.requestAnimationFrame(handle_scroll), 5000);
-  scrollbar_wrapper.append(arrow_up_btn, arrow_down_btn)
-
-  shadow.adoptedStyleSheets = [sheet]
-
-  return el
-
-  function handle_mousedown (e) {
-    lastPageX = e.pageX
-    window.onmousemove = handle_mousemove
-    function handle_mousemove (e) {
-      notify(message)
-      const delta = e.pageX - lastPageX
-      lastPageX = e.pageX;
-      const ratio = content_clientWidth / content_scrollWidth
-      setScrollLeft(content_scrollLeft + delta / ratio)
-    }
-    window.onmouseup = handle_mouseup
-    function handle_mouseup () {
-      window.onmousemove = null
-      window.onmouseup = null
-    }
-  }
-  // Observe one or multiple elements
-  function handle_scroll () {
-    notify(message)
-    const ratio = content_clientWidth / content_scrollWidth
-    if (!ratio || ratio >= 1) el.style.cssText = 'display: none;'
-    else el.style.cssText = 'display: inline;'
-    bar.style.cssText = 'width:' + Math.max(ratio * 100, 10) + '%; left:' + (content_scrollLeft / content_scrollWidth ) * 100 + '%;'
-  }
-}
-function get_theme () {
-  return `
-    * {
-      box-sizing: border-box;
-    }
-    .scrollbar_wrapper {
-      height: 30px;
-      width: 100%;
-      display: flex;
-      box-sizing: border-box;
-      .bar_wrapper {
-        display: flex;
-        width: 100%;
-        .bar {
-          position: relative;
-          background-color: var(--primary_color);
-          height: 30px;
-          cursor: pointer;
-          transition: opacity 0.25s linear;
-          box-shadow:inset 0px 0px 0px 1px var(--bg_color);
-          &:hover {
-            cursor: pointer
-          }
-          &:active {
-            -o-user-select: none;
-            -ms-user-select: none;
-            -moz-user-select: none;
-            -webkit-user-select: none;
-            user-select: none;
-          }
-        }
-      }
-    }
-  `
-}
-}).call(this)}).call(this,require('_process'),"/src/node_modules/scrollbar_hor")
-},{"_process":2,"buttons/sm_icon_button":18,"path":1}],39:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const cwd = process.cwd()   
@@ -5154,170 +5215,246 @@ function get_theme () {
   `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/search_input")
-},{"_process":2,"path":1}],40:[function(require,module,exports){
-module.exports = tab_window
-
-// CSS Boiler Plat
+},{"_process":2,"path":1}],39:[function(require,module,exports){
 const sheet = new CSSStyleSheet
 const theme = get_theme()
 sheet.replaceSync(theme)
 
-function tab_window (opts, protocol) {
-    const el = document.createElement('div')
-    const shadow = el.attachShadow({mode: 'closed'})
+var count = 0
 
-    // adding a `main-wrapper` 
-    shadow.innerHTML = `
-        <div class="main-wrapper">${opts.text}</div>
-        <style>${get_theme()}</style>
-    `
-    shadow.adoptedStyleSheets = [sheet]
-    return el
+module.exports = tab_window
+
+function tab_window (opts, protocol) {
+  const id = count++
+  const send = protocol(Object.assign(listen, { id }))
+  const el = document.createElement('div')
+  const shadow = el.attachShadow({mode: 'closed'})
+  shadow.innerHTML = `<div class="main-wrapper">${opts.text}</div>`
+  shadow.adoptedStyleSheets = [sheet]
+
+  return el
+
+  function listen (message) {}
 }
 
 function get_theme() {
-    return ``
+  return ``
 }
-},{}],41:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
+(function (__filename){(function (){
 const tab_window = require('tab_window')
 const tab_button = require('buttons/tab_button')
 const sm_icon_button_alt = require('buttons/sm_icon_button_alt')
-const scrollbar = require('scrollbar_hor')
+const scrollbar = require('scrollbar')
 
-// CSS Boiler Plat
 const sheet = new CSSStyleSheet
 const theme = get_theme()
 sheet.replaceSync(theme)
-
-let id = 0
+/******************************************************************************
+  TERMINAL COMPONENT
+******************************************************************************/
+var count = 0
+const ID = __filename
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const default_opts = { }
 
 module.exports = terminal
 
-function terminal (opts, protocol) {
-  const name = `terminal-${id++}`
-  let active_tab = 0
-  const tabs = {}
-  const tab_buttons_id = {}
-  let tab_id = 0
-  const PROTOCOL = { close_tab, tab_btn_click }
-  const { data } = opts
-  // Assigning all the icons
-  const { img_src } = data
+function terminal (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // RESOURCE POOL (can't be serialized)
+  // ----------------------------------------
+  const viewports = {}
+  const _ = { viewports }
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = { active_tab: null, tab_id: 0 }
+  const aka = { tab: {} }
+  const state = STATE.ids[id] = { id, status, _, wait: {}, net: {}, aka } // all state of component instance
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
   const {
     icon_terminal,
     icon_close_light,
     icon_plus,
     icon_full_screen
-  } = img_src
+  } = opts.data.img_src
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
   const shadow = el.attachShadow ({ mode : 'closed' })
-  shadow.innerHTML = `
-    <div class="terminal_wrapper">
-      <div class="terminal">
-        <div class="header">${icon_terminal}Terminal</div>
-        <div class="tab_wrapper"></div>
-        <div class="footer">
-          <div class="scrollbar_wrapper">
-            <div class="tab_buttons"></div>
-          </div>
-          <div class="buttons"></div>
+  shadow.innerHTML = `<div class="terminal_wrapper">
+    <div class="terminal">
+      <div class="header">${icon_terminal}Terminal</div>
+      <div class="tab_display"></div>
+      <div class="footer">
+        <div class="scrollbar_wrapper">
+          <div class="tab_buttons"></div>
         </div>
+        <div class="buttons"></div>
       </div>
     </div>
-  `
-  const tab = tab_window({ data: opts.data, text: 'Home' })
-  tabs[tab_id] = tab
-  active_tab = tab_id
-  const tab_buttons = shadow.querySelector('.tab_buttons')
-  const tab_btn = tab_button({data, name:'Home'}, terminal_protocol)
-  tab_btn.id = tab_id
-  tab_buttons.append(tab_btn)
-  const tab_wrapper = shadow.querySelector('.tab_wrapper')
-  tab_wrapper.append(tab)
-  const terminal_wrapper = shadow.querySelector('.terminal')
-  const add_btn = sm_icon_button_alt({ src: icon_plus })
-  add_btn.onclick = e => {
-    tab_id++
-    const tab = tab_window({ data: opts.data, text: 'New Tab' + tab_id })
-    tabs[tab_id] = tab
-    tab_wrapper.replaceChildren(tab)
-    PROTOCOL[`tab_button-${active_tab}`]()
-    active_tab = tab_id
-    const tab_btn = tab_button({data, name:'New Tab' + tab_id}, terminal_protocol)
-    tab_btn.id = tab_id
-    tab_buttons_id[tab_id] = tab_btn
-    tab_buttons.append(tab_btn)
-    PROTOCOL['handleScroll']()
-  }
-  const buttons = shadow.querySelector('.buttons')
-  buttons.append(add_btn)
-  if (screen.width > 510) {
-    const fullscreen_btn = sm_icon_button_alt({ src: icon_full_screen })
-    fullscreen_btn.onclick = e => terminal_wrapper.style.height === '100vh' ? 
-      terminal_wrapper.style.height = '300px' : 
-      terminal_wrapper.style.height = '100vh'
-    buttons.append(fullscreen_btn)
-  }
-  const close_btn = sm_icon_button_alt({ src: icon_close_light })
-  // add_btn.onclick = e => toggle_terminal()
-  buttons.append(close_btn)
-  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
-  scrollbar_wrapper.append(scrollbar( opts, terminal_protocol))
-
+  </div>`
   shadow.adoptedStyleSheets = [sheet]
+  const terminal_wrapper = shadow.querySelector('.terminal')
+  const tab_display = shadow.querySelector('.tab_display')
+  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
+  const tab_buttons = shadow.querySelector('.tab_buttons')
+  const buttons = shadow.querySelector('.buttons')
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  buttons.append(sm_icon_button_alt({ src: icon_plus }, spawn_protocol))
+  if (screen.width > 510) buttons.append(sm_icon_button_alt({
+    src: icon_full_screen
+  }, fullscreen_protocol))
+  buttons.append(sm_icon_button_alt({ src: icon_close_light }, close_protocol))
+  opts.horizontal = true
+  opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_left
+  opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_right
+  scrollbar_wrapper.append(scrollbar(opts, scrollbar_protocol))
+  add_tab('Home')
+
   return el
 
-  // cover protocol
-  function terminal_protocol (handshake, send) {
-    if (handshake.from.includes('scrollbar')) {
-      tab_buttons.onscroll = send[0]
-      const ro = new ResizeObserver(entries => send[0]())
-      ro.observe(tab_buttons)
-      PROTOCOL['handleScroll'] = send[0]
-      PROTOCOL['getScrollInfo'] = send[1]
-      return [listen, setScrollLeft]
+  function add_tab (label) {
+    const petname_win = `win-${label}`
+    const petname_btn = `btn-${label}`
+    const protocol = shell_protocol({ petname_win, petname_btn })
+    const tab_win = tab_window({ data: opts.data, text: label }, protocol.tabwin)
+    const tab_btn = tab_button({ data: opts.data, name: label }, protocol.tabbtn)
+    if (state.status.active_tab) {
+      const active_channel = state.net[state.status.active_tab]
+      active_channel.send({ type: 'inactivate' })
+      const scroll_channel = state.net[state.aka.scrollbar]
+      const head = [id, scroll_channel.send.id, scroll_channel.mid++]
+      scroll_channel.send({ head, type: 'handle_scroll' })
     }
-    if(handshake.from.includes('tab_button')) {
-      PROTOCOL[handshake.from] = send
-    }
-    return listen
-    // Listening to toggle event 
+    const tab_id = state.aka.tab[petname_btn]
+    _.viewports[tab_id] = tab_win
+    state.status.active_tab = tab_id
+    tab_buttons.append(tab_btn)
+    tab_display.replaceChildren(tab_win)
+  }
+  // ----------------------------------------
+  // PROTOCOLS
+  // ----------------------------------------
+  function scrollbar_protocol (send) {
+    const on = { 'set_scroll_start': on_set_scroll_start, 'status': on_update_size }
+    tab_buttons.onscroll = event => send({ type: 'handle_scroll' })
+    const ro = new ResizeObserver(entries => send({ type: 'handle_scroll' }))
+    ro.observe(tab_buttons)
+    const scroll_channel = state.net[send.id] = { mid: 0, send, on }
+    state.aka.scrollbar = send.id
+    return Object.assign(listen, { id })
+    function invalid (message) { console.error('invalid type', message) }
     function listen (message) {
-      const { head, refs, type, data, meta } = message  
-      const { by, to, mid } = head
-      if (by.includes('scrollbar')) {
-        message.data = {
+      console.log(`[${id}]`, message)
+      const { on } = state.net[state.aka.scrollbar]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+    function on_set_scroll_start (message) {
+      setScrollLeft(message.data)
+    }
+    function on_update_size (message) {
+      const head = [id, scroll_channel.send.id, scroll_channel.mid++]
+      scroll_channel.send({
+        head,
+        refs: { head: message.head },
+        type: 'update_size',
+        data: {
           sh: tab_buttons.scrollWidth,
           ch: tab_buttons.clientWidth,
           st: tab_buttons.scrollLeft
         }
-        PROTOCOL.getScrollInfo(message)
-      } else PROTOCOL[type](data)
+      })
+    }
+    async function setScrollLeft (value) {
+      tab_buttons.scrollLeft = value
     }
   }
-  async function invalid (message) { console.error('invalid type', message) }
-  async function setScrollLeft (value) {
-    tab_buttons.scrollLeft = value
-  }
-  async function close_tab (id) {
-    if (Object.keys(tabs).length == 1) tab_wrapper.removeChild(tabs[id])
-    delete tabs[id]
-    if (active_tab == id && !Object.keys(tabs).length == 0) {
-      const temp = Object.values(tabs)[0]
-      tab_wrapper.replaceChildren(temp)
-      active_tab = Object.keys(tabs)[0]
-      PROTOCOL[`tab_button-${active_tab}`]()
+  function shell_protocol ({ petname_win, petname_btn }) {
+    return { tabbtn, tabwin }
+    function tabwin () {
+      return Object.assign(listen, { id })
+      function listen (message) {
+        console.log(`[${id}]\n${petname_win}:`, message)
+      }
     }
-    PROTOCOL['handleScroll']()
+    function tabbtn (send) {
+      const on = { 'close': close_tab, 'click': switch_tab }
+      const channel = state.net[send.id] = { name: petname_btn, mid: 0, send, on }
+      state.aka.tab[petname_btn] = send.id
+      return Object.assign(listen, { id })
+      function invalid (message) { console.error('invalid type', message) }
+      function listen (message) {
+        console.log(`[${id}]\n${petname_btn}:`, message)
+        const { on } = channel
+        const action = on[message.type] || invalid
+        action(message)
+      }
+      async function switch_tab () {
+        const btn_id = send.id
+        if (state.status.active_tab === btn_id) return
+        const active_channel = state.net[state.status.active_tab]
+        active_channel.send({ type: 'inactivate' })
+        state.status.active_tab = btn_id // set tab as active one
+        channel.send({ type: 'activate' })
+        tab_display.replaceChildren(viewports[btn_id])
+      }
+      async function close_tab (message) {
+        const tab_id = send.id
+        if (Object.keys(viewports).length > 1) {
+          if (state.status.active_tab === tab_id) {
+            const ids = Object.keys(state.net)
+            const next_id = ids[(ids.indexOf(tab_id) || ids.length) - 1]
+            state.status.active_tab = next_id
+            const btn_channel = state.net[next_id]
+            btn_channel.send({ type: 'activate' })
+            const next_tab_win = viewports[next_id]
+            tab_display.replaceChildren(next_tab_win)
+          }
+        } else {
+          state.status.active_tab = undefined
+          tab_display.replaceChildren()
+        }
+        delete viewports[tab_id]
+        const { name } = state.net[tab_id]
+        delete state.net[tab_id]
+        delete state.aka.tab[name]
+        const scroll_channel = state.net[state.aka.scrollbar]
+        const head = [id, scroll_channel.send.id, scroll_channel.mid++]
+        scroll_channel.send({ head, refs: { head: message.head }, type: 'handle_scroll' })
+      }
+    }
   }
-  async function tab_btn_click (id) {
-    active_tab && PROTOCOL[`tab_button-${active_tab}`]()
-    active_tab = id
-    tab_wrapper.replaceChildren(tabs[active_tab])
+  // ----------------------------------------
+  function spawn_protocol (msg, send) {
+    return msg => { add_tab('tab-' + state.status.tab_id++) }
   }
+  function fullscreen_protocol (msg, send) {
+    status.fullscreen = terminal_wrapper.style.height === '100vh'
+    return message => onfullscreen()
+    function onfullscreen (e) {
+      const ismax = status.fullscreen
+      terminal_wrapper.style.height = ismax ? '100%' : '100vh'
+      terminal_wrapper.style.width = '100%'
+      terminal_wrapper.style.position = 'absolute'
+      terminal_wrapper.style.bottom = 0
+      status.fullscreen = !ismax
+    }
+  }
+  function close_protocol (msg, send) { return msg => { console.log('CLOSE') } }
+  // ----------------------------------------
 }
 function get_theme () {
-  return`
+  return `
     :host {
       height: 100%;
     }
@@ -5325,13 +5462,16 @@ function get_theme () {
       box-sizing: border-box;
     }
     .terminal_wrapper {
+      display: flex;
+      flex-direction: column;
       container-type: inline-size;
-      flex-grow: 1;
+      width: 100%;
       height: 100%;
       min-height: 300px;
       .terminal {
         display: flex;
         flex-direction: column;
+        flex-grow: 1;
         background-color: var(--bg_color);
         .header {
           display: flex;
@@ -5344,10 +5484,10 @@ function get_theme () {
             fill: white;
           }
         }
-        .tab_wrapper {
+        .tab_display {
           background-color: var(--bg_color);
           border: 5px solid var(--primary_color);
-          height: 100%;
+          flex-grow: 1;
         }
         .footer {
           width: 100%;
@@ -5367,8 +5507,8 @@ function get_theme () {
             overflow: hidden;
             .tab_buttons {
               display: flex;
-              overflow-x: scroll;
-              overflow-y: hidden;
+              overflow-x: hidden;
+              overflow-y: scroll;
               &:::-webkit-scrollbar {
                 display: none;
               }
@@ -5391,7 +5531,8 @@ function get_theme () {
     }
   `
 }
-},{"buttons/sm_icon_button_alt":19,"buttons/tab_button":21,"scrollbar_hor":38,"tab_window":40}],42:[function(require,module,exports){
+}).call(this)}).call(this,"/src/node_modules/terminal/index.js")
+},{"buttons/sm_icon_button_alt":19,"buttons/tab_button":21,"scrollbar":37,"tab_window":39}],41:[function(require,module,exports){
 const window_bar = require('window_bar')
 
 // CSS Boiler Plat
@@ -5505,7 +5646,7 @@ function get_theme () {
     }
   `
 }
-},{"window_bar":49}],43:[function(require,module,exports){
+},{"window_bar":48}],42:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const cwd = process.cwd()
@@ -5552,17 +5693,24 @@ const dark_theme = {
     img_robot_1 : `${prefix}/../assets/images/img_robot_1.png`,
     img_robot_2 : `${prefix}/../assets/images/img_robot_2.png`,
     pattern_img_1 : `${prefix}/../assets/images/pattern_img_1.png`,
+
+    icon_arrow_right: `<svg transform="rotate(90 0 0)" width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.5789 9H18.4211V17H7.89473V27.6667H0V41H18.4211V33H31.5789V41H50V27.6667H42.1053V17H31.5789V9Z" fill="#293648"/></svg>`,
+    icon_arrow_left: `<svg transform="rotate(90 0 0)" width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="#293648"/></svg>`,
+    icon_the_dat : `<svg width="15" height="15" viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M210 280H190V300H210V280Z" fill="#fff"/><path d="M190 160H150V180H190V160Z" fill="#fff"/><path d="M390 20V80H370V100H310V80H290V20H310V0H370V20H390Z" fill="#fff"/><path d="M210 140H190V160H210V140Z" fill="#fff"/><path d="M190 260H150V280H190V260Z" fill="#fff"/><path d="M250 100H230V120H250V100Z" fill="#fff"/><path d="M270 320H250V340H270V320Z" fill="#fff"/><path d="M290 320H270V340H290V320Z" fill="#fff"/><path d="M290 80H250V100H290V80Z" fill="#fff"/><path d="M290 400V340H310V320H370V340H390V400H370V420H310V400H290Z" fill="#fff"/><path d="M130 180H150V260H130V280H50V260H30V180H50V160H130V180Z" fill="#fff"/><path d="M250 300H210V320H250V300Z" fill="#fff"/><path d="M230 120H210V140H230V120Z" fill="#fff"/></svg>`,
+
+    icon_vr: `<svg width="15" height="15" viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><rect x="40" y="108" width="339" height="204" fill="url(#pattern0)"/><path d="M371.952 133.154V116.077H354.905V99H65.0952V116.077H48.0476V133.154H31V303.923H48.0476V321H150.333V303.923H167.381V286.846H184.429V269.769H201.476V252.692H218.524V269.769H235.571V286.846H252.619V303.923H269.667V321H371.952V303.923H389V133.154H371.952ZM82.1429 252.692V150.231H150.333V252.692H82.1429ZM337.857 252.692H269.667V150.231H337.857V252.692Z" fill="white"/><defs><pattern id="pattern0" patternContentUnits="objectBoundingBox" width="1" height="1"><use xlink:href="#image0_2206_52" transform="matrix(0.0454545 0 0 0.0714286 -0.181818 -0.571429)"/></pattern><image id="image0_2206_52" width="30" height="30" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAAXNSR0IArs4c6QAAAIRJREFUSEvtlksOwCAIBfUi3P9cXKSNCzaWT0iepWlw6W9gFOMcRW0WcUeDXzPfqutVE9GFiIKZ1eNUO1FQCVyDP8BoqAX/JnhXFNnw5u9jbsYN/r9qxAMCLye5eJF+KDh72xc8VU6aauvtjTIPwQtmbWJBJcDMuv4IICvI3atVt+pjBm54bHAflRebbgAAAABJRU5ErkJggg=="/></defs></svg>`,
+    icon_full_screen: `<svg width="15" height="15" viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M40 170.465V40H170.465V82.5H82.5V170.465H40ZM380 170.465V40H249.535V82.5H337.5V170.465H380ZM380 249.535H337.5V337.5H249.535V380H380V249.535ZM170.465 380V337.5H82.5V249.535H40V380H170.465Z" fill="white"/></svg>`,
+    icon_plus: `<svg width="15" height="15" viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M176 380V244H40V176H176V40H244V176H380V244H244V380H176Z" fill="#EEECE9"/></svg>`,
   }
 }
 
 module.exports = dark_theme
 }).call(this)}).call(this,require('_process'),"/src/node_modules/theme/dark-theme")
-},{"_process":2,"path":1}],44:[function(require,module,exports){
+},{"_process":2,"path":1}],43:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const cwd = process.cwd()
 const prefix = path.relative(cwd, __dirname)
-
 
 const light_theme = {
   bg_color : '#fff',
@@ -5618,7 +5766,7 @@ const light_theme = {
 
 module.exports = light_theme
 }).call(this)}).call(this,require('_process'),"/src/node_modules/theme/lite-theme")
-},{"_process":2,"path":1}],45:[function(require,module,exports){
+},{"_process":2,"path":1}],44:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const cwd = process.cwd()
@@ -5731,58 +5879,65 @@ function get_theme () {
   `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/timeline_card")
-},{"_process":2,"path":1}],46:[function(require,module,exports){
+},{"_process":2,"path":1}],45:[function(require,module,exports){
 const search_input = require('search_input')
 const select_button = require('../buttons/select_button')
 const sm_icon_button = require('buttons/sm_icon_button')
 const year_button = require('buttons/year_button')
 
-module.exports = timeline_filter
-
-// CSS Boiler Plat
 const sheet = new CSSStyleSheet
 const theme = get_theme()
 sheet.replaceSync(theme)
-
+/******************************************************************************
+  TIMELINE FILTER COMPONENT
+******************************************************************************/
 var id = 0
+
+module.exports = timeline_filter
 
 function timeline_filter (opts, protocol) {
   const name = 'timeline_filter-' + id++
-  const notify = protocol({ from: name }, listen)
+  const send = protocol({ from: name }, listen)
   const PROTOCOL = {}
-  const { data } = opts
-  const { img_src : { icon_arrow_up = `${prefix}/icon_arrow_up.svg` }} = data
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { img_src : { icon_arrow_up = `${prefix}/icon_arrow_up.svg` }} = opts.data
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
   const shadow = el.attachShadow( { mode:`closed` } )
-  shadow.innerHTML = `
-    <div class="filter_wrapper">
-      <div class="timeline_filter">
-        <div class="date_wrapper"></div>
-      </div>
+  shadow.innerHTML = `<div class="filter_wrapper">
+    <div class="timeline_filter">
+      <div class="date_wrapper"></div>
     </div>
-    <style> ${get_theme()} </style>
-  `
+  </div>`
+  shadow.adoptedStyleSheets = [sheet]
+  const timeline_filter = shadow.querySelector('.timeline_filter')
+  const date_wrapper = shadow.querySelector('.date_wrapper')
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
   const search_project = search_input(opts, timeline_filter_protocol)
-  const status_button = select_button({data: opts.data, name: 'STATUS', choices: ['ACTIVE', 'UNACTIVE', 'PAUSED']}, timeline_filter_protocol)
-  const tag_button = select_button({data: opts.data, name: 'TAGS', choices: opts.tags}, timeline_filter_protocol)
-  const month_button = sm_icon_button({src: icon_arrow_up, activate: true})
-  const year_btn = year_button({data, latest_date: opts.latest_date}, timeline_filter_protocol)
-  month_button.onclick = e => notify({
+  const status_button = select_button({ data: opts.data, name: 'STATUS', choices: ['ACTIVE', 'UNACTIVE', 'PAUSED'] }, timeline_filter_protocol)
+  const tag_button = select_button({ data: opts.data, name: 'TAGS', choices: opts.tags }, timeline_filter_protocol)
+  const month_button = sm_icon_button({ src: icon_arrow_up, activate: true })
+  const year_btn = year_button({ data: opts.data, latest_date: opts.latest_date }, timeline_filter_protocol)
+  timeline_filter.prepend(status_button, tag_button, search_project)
+  date_wrapper.append(month_button, year_btn)
+
+  // @TODO: change to month_protocol and year_protocol
+  month_button.onclick = e => send({
       head: {by:name, to:'app_timeline', mid:0},
       type: 'toggle_month_filter',
       data: null
   })
-  year_btn.onclick = e => notify({
+  year_btn.onclick = e => send({
     head: { by: name, to: 'app_timeline', mid: 0 },
     type: 'toggle_year_filter',
     data: null
   })
-  const timeline_filter = shadow.querySelector('.timeline_filter')
-  timeline_filter.prepend(status_button, tag_button, search_project)
-  const date_wrapper = shadow.querySelector('.date_wrapper')
-  date_wrapper.append(month_button, year_btn)
-  // shadow.append(timeline_filter)
-  shadow.adoptedStyleSheets = [sheet]
 
   return el
 
@@ -5792,13 +5947,8 @@ function timeline_filter (opts, protocol) {
     function listen (message) {
       const { head,  refs, type, data, meta } = message
       const { by, to, id } = head
-      // if( to !== id) return console.error('address unknown', message)
-      message = {
-        head: { by: name, to: 'app_timeline', mid: 0 },
-        type: type,
-        data: data
-      }
-      notify(message)
+      message = { head: { by: name, to: 'app_timeline', mid: 0 }, type, data }
+      send(message)
     }
   }
   function listen (message) {
@@ -5829,7 +5979,7 @@ function get_theme () {
     }
   `
 }
-},{"../buttons/select_button":17,"buttons/sm_icon_button":18,"buttons/year_button":23,"search_input":39}],47:[function(require,module,exports){
+},{"../buttons/select_button":17,"buttons/sm_icon_button":18,"buttons/year_button":23,"search_input":38}],46:[function(require,module,exports){
 module.exports = timeline_page
 
 const app_timeline = require('app_timeline')
@@ -5913,7 +6063,7 @@ function get_theme () {
     }
   `
 }
-},{"app_footer":9,"app_timeline":12}],48:[function(require,module,exports){
+},{"app_footer":9,"app_timeline":12}],47:[function(require,module,exports){
 module.exports = tools
 
 const window_bar = require('window_bar')
@@ -6028,7 +6178,7 @@ function get_theme () {
     }
   `
 }
-},{"window_bar":49}],49:[function(require,module,exports){
+},{"window_bar":48}],48:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const path = require('path')
 const sm_icon_button_alt = require('buttons/sm_icon_button_alt')
@@ -6037,114 +6187,117 @@ const sm_text_button = require('buttons/sm_text_button')
 const cwd = process.cwd()
 const prefix = path.relative(cwd, __dirname)
 
-// CSS Boiler Plat
 const sheet = new CSSStyleSheet
 const theme = get_theme()
 sheet.replaceSync(theme)
-
+/******************************************************************************
+  WINDOW BAR COMPONENT
+******************************************************************************/
 var id = 0
 
 module.exports = window_bar
 
 function window_bar (opts, protocol) {
   const name = `window_bar-${id++}`
-  const { data } = opts
-  const send = protocol({ from: name }, listen)
-  // Assigning all the icons
-  const { img_src } = data
+  const up_send = protocol({ from: name }, msg => {})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
   const {
     icon_close_light, 
     icon_arrow_down_light, 
     icon_arrow_up_light
-  } = img_src
+  } = opts.data.img_src
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
   el.style.lineHeight = '0px'
   const shadow = el.attachShadow({ mode : 'closed' })
-  shadow.innerHTML = `
-    <div class="window_bar">
-      <div class="application_icon_wrapper"></div>
-      <div class="application_name"><span>${opts.name}</span></div>
-      <div class="window_bar_actions">
-        <div class="actions_wrapper"></div>
-      </div>
+  shadow.innerHTML = `<div class="window_bar">
+    <div class="application_icon_wrapper"></div>
+    <div class="application_name"><span>${opts.name}</span></div>
+    <div class="window_bar_actions">
+    <div class="actions_wrapper"></div>
+    <div class="actions_toggle_btn"></div>
     </div>
-    <style>${get_theme()}</style>
-  `
-  // adding application icon
-  const application_icon = sm_icon_button_alt({ src: opts.src })
+  </div>`
+  shadow.adoptedStyleSheets = [sheet]
   const application_icon_wrapper = shadow.querySelector('.application_icon_wrapper')
-  application_icon_wrapper.append(application_icon)
-  // adding close window button
   const window_bar_actions = shadow.querySelector('.window_bar_actions')
-  const close_window_btn = sm_icon_button_alt({ src: icon_close_light })
-  // close_window_btn.addEventListener('click', function() {
-  //   send( { active_state : 'active' } )
-  // })
-  close_window_btn.onclick = event => send({
-    head: {
-      by: name,
-      to: 'app_cover_0',
-      mid: 0,
-    },
-    type: 'toggle_active_state', 
-    data: { active_state : 'active' } 
-  })
   const actions_wrapper = shadow.querySelector('.actions_wrapper')
+  const actions_toggle_btn = shadow.querySelector('.actions_toggle_btn')
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  application_icon_wrapper.append(sm_icon_button_alt({ src: opts.src }, app_icon_protocol))
   if (opts.action_buttons) {
-    // adding additional actions wrapper
-    opts.action_buttons.forEach((btn_name) => {
-      const button = sm_text_button({ text: btn_name })
-      actions_wrapper.append(button)
-    })
-    // adding toggle button for action wrapper
-    const actions_toggle_btn = sm_icon_button_alt({
+    actions_wrapper.append(...opts.action_buttons.map(text => {
+      return sm_text_button({ toggle: true, text }, action_protocol(text))
+    }))
+    actions_toggle_btn.append(sm_icon_button_alt({
       src: icon_arrow_down_light,
       src_active: icon_arrow_up_light
-    }, window_bar_protoocol)
-    actions_toggle_btn.classList.add('actions_toggle_btn')
-    actions_toggle_btn.addEventListener('click', function () {
-      // shadow.querySelector('.window_bar_actions').classList.toggle('active');
-    })
-    window_bar_actions.append(actions_toggle_btn)
+    }, window_bar_protoocol))
   }
-  // Adding icon buttons
-  if( opts.icon_buttons) opts.icon_buttons.forEach((btn) => {
-    const button = sm_icon_button_alt({ src: btn.icon }, window_bar_protoocol)
-    button.onclick = () => send({
-      head: {
-          by: name,
-          to: 'app_cover_0',
-          mid: 0,
-      },
-      type: btn.action, 
-      data: {} 
-    })
-    window_bar_actions.append(button)
-  })
-  window_bar_actions.append(close_window_btn)
-  // window_bar_protoocol
-  function window_bar_protoocol (message, send) {
-    return listen
-  }
-  function listen (message) {
-    const { head, refs, type, data, meta } = message  
-    const PROTOCOL = {
-      'toggle_window_active_state': toggle_active_state
-    }
-    const action = PROTOCOL[type] || invalid      
-    action(message)
-  }
-  function invalid (message) { console.error('invalid type', message) }
-  async function toggle_active_state (message) {
-    const { head, refs, type, data, meta } = message
-    const  {active_state } = data
-    // let actions_wrapper
-    ;( active_state)?actions_wrapper.style.display = 'none':actions_wrapper.style.display = 'flex'
-  }
-  shadow.adoptedStyleSheets = [sheet]
+  if (opts.icon_buttons) window_bar_actions.append(...opts.icon_buttons.map(({ icon, action: type }) => {
+    return sm_icon_button_alt({ src: icon }, type_protocol(type))
+  }))
+  window_bar_actions.append(sm_icon_button_alt({ src: icon_close_light }, close_window_protocol))
 
   return el
 
+  function app_icon_protocol () { }
+  function action_protocol (text) { return send => { return msg => {} } }
+  function close_window_protocol (message, send) {
+    return listen
+    function listen (message) {
+      const { head, refs, type, data, meta } = message
+      const on = { 'click': onclose }
+      const action = on[type] || invalid
+      action(message)
+    }
+    function onclose (event) {
+      up_send({
+        head: { by: name, to: 'app_cover_0', mid: 0 },
+        type: 'toggle_active_state',
+        data: { active_state : 'active' }
+      })
+    }
+  }
+  function type_protocol (type) {
+    return (message, send) => {
+      return listen
+      function listen (message) {
+        const { head, refs, type, data, meta } = message
+        const on = { 'click': onclick }
+        const action = on[type] || invalid
+        action(message)
+      }
+    }
+    function onclick (message) {
+      up_send({ head: {  by: name, to: 'app_cover_0', mid: 0 }, type })
+    }
+  }
+  function window_bar_protoocol (message, send) {
+    return listen
+    function listen (message) {
+      const { head, refs, type, data, meta } = message
+      const PROTOCOL = {
+        'click': toggle_window_active_state
+      }
+      const action = PROTOCOL[type] || invalid
+      action(message)
+      async function toggle_window_active_state (message) {
+        console.log('yo')
+        const { head, refs, type, data, meta } = message
+        const  { active_state } = data
+        console.log({active_state})
+        actions_wrapper.style.display = active_state ? 'none' : 'flex'
+      }
+    }
+  }
+  function invalid (message) { console.error('invalid type', message) }
 }
 function get_theme () {
   return `
@@ -6218,7 +6371,7 @@ function get_theme () {
   `
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/window_bar")
-},{"_process":2,"buttons/sm_icon_button_alt":19,"buttons/sm_text_button":20,"path":1}],50:[function(require,module,exports){
+},{"_process":2,"buttons/sm_icon_button_alt":19,"buttons/sm_text_button":20,"path":1}],49:[function(require,module,exports){
 const sheet = new CSSStyleSheet
 const theme = get_theme()
 sheet.replaceSync(theme)
