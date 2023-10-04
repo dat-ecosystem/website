@@ -38,17 +38,18 @@ async function desktop (opts = default_opts, protocol) {
   // TEMPLATE
   // ----------------------------------------
   const el = document.createElement('div')
-  const sh = el.attachShadow({ mode: 'closed' })
-  sh.innerHTML = `<div class="desktop">
+  const shopts = { mode: 'closed' }
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="desktop">
     <div class="navbar"></div>
     <div class="content"></div>
     <div class="shell"></div>
   </div>`
-  sh.adoptedStyleSheets = [sheet]
-  const shopts = { mode: 'closed' }
-  const navbar_sh = sh.querySelector('.navbar').attachShadow(shopts)
-  const content_sh = sh.querySelector('.content').attachShadow(shopts)
-  const terminal_sh = sh.querySelector('.shell').attachShadow(shopts)
+  // ----------------------------------------
+  const navbar_sh = shadow.querySelector('.navbar').attachShadow(shopts)
+  const content_sh = shadow.querySelector('.content').attachShadow(shopts)
+  const terminal_sh = shadow.querySelector('.shell').attachShadow(shopts)
   // ----------------------------------------
   // RESOURCE POOL (can't be serialized)
   // ----------------------------------------

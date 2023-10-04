@@ -89,12 +89,15 @@ async function boot () {
   // ----------------------------------------
   // TEMPLATE
   // ----------------------------------------
-  const shadow = document.body.attachShadow({ mode: 'closed' })
+  const el = document.body
+  const shopts = { mode: 'closed' }
+  // ----------------------------------------
+  const shadow = el.attachShadow(shopts)
   // ----------------------------------------
   // ELEMENTS
   // ----------------------------------------
-  const el = await desktop(opts, desktop_protocol('page', state))
-  shadow.append(el)
+  const page = await desktop(opts, desktop_protocol('page', state))
+  shadow.append(page)
   // ----------------------------------------
   // INIT
   // ----------------------------------------
