@@ -719,11 +719,28 @@ process.umask = function() { return 0; };
 
 },{}],3:[function(require,module,exports){
 module.exports = require('../../../src/node_modules/theme/dark-theme')
-},{"../../../src/node_modules/theme/dark-theme":42}],4:[function(require,module,exports){
+},{"../../../src/node_modules/theme/dark-theme":45}],4:[function(require,module,exports){
 module.exports = require('../../../src/node_modules/theme/lite-theme')
-},{"../../../src/node_modules/theme/lite-theme":43}],5:[function(require,module,exports){
-(function (__dirname){(function (){
-config().then(boot)
+},{"../../../src/node_modules/theme/lite-theme":46}],5:[function(require,module,exports){
+(function (process,__filename,__dirname){(function (){
+const desktop = require('..')
+const light_theme = require('theme/lite-theme')
+const dark_theme = require('theme/dark-theme')
+/******************************************************************************
+  INITIALIZE PAGE
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+let current_theme = light_theme
+const sheet = new CSSStyleSheet()
+sheet.replaceSync(get_theme(current_theme))
+// ----------------------------------------
+config().then(() => boot({ themes: { light_theme, dark_theme } }))
 /******************************************************************************
   CSS & HTML Defaults
 ******************************************************************************/
@@ -738,6 +755,7 @@ async function config () {
   meta.setAttribute('name', 'viewport')
   meta.setAttribute('content', 'width=device-width,initial-scale=1.0')
   const fonts = new CSSStyleSheet()
+  // @TODO: use font api and cache to avoid re-downloading the font data every time
   const path = path => new URL(`../src/node_modules/${path}`, `file://${__dirname}`).href.slice(8)
   const font1_url = path('theme/assets/fonts/Silkscreen-Regular.ttf')
   const font2_url = path('theme/assets/fonts/Silkscreen-Bold.ttf')
@@ -748,7 +766,7 @@ async function config () {
     font-style: normal;
     font-weight: 400;
     font-display: swap;
-    src: url(h${font1_url}) format('truetype');
+    src: url(${font1_url}) format('truetype');
     unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
   }
   /* latin */
@@ -783,146 +801,273 @@ async function config () {
   sheet.replaceSync(`html, body { padding:0px; margin: 0px; }`)
   document.adoptedStyleSheets = [fonts, sheet]
   document.head.append(meta, favicon)
-  await document.fonts.ready
+  await document.fonts.ready // @TODO: investigate why there is a FOUC
 }
 /******************************************************************************
-  INITIALIZE PAGE
+  PAGE BOOT
 ******************************************************************************/
-async function boot () {
-  const desktop = require('..')
-  const light_theme = require('theme/lite-theme')
-  const dark_theme = require('theme/dark-theme')
-
-  const shadow = document.body.attachShadow({ mode: 'closed' })
-  
-  const opts = { page: 'CONSORTIUM', theme: 'dark_theme', themes: { light_theme, dark_theme } }
-  const el = await desktop(opts)
-
-  shadow.append(el)
-}
-}).call(this)}).call(this,"/page")
-},{"..":6,"theme/dark-theme":3,"theme/lite-theme":4}],6:[function(require,module,exports){
-(function (__filename){(function (){
-const home_page = require('home_page')
-const growth_page = require('growth_page')
-const timeline_page = require('timeline_page')
-const projects_page = require('projects_page')
-const consortium_page = require('consortium_page')
-const terminal = require('terminal')
-const navbar = require('navbar')
-
-const sheet = new CSSStyleSheet()
-
-const light_theme = require('theme/lite-theme')
-const dark_theme = require('theme/dark-theme')
-let current_theme = light_theme
-sheet.replaceSync(get_theme(current_theme))
-/******************************************************************************
-  DESKTOP COMPONENT
-******************************************************************************/
-var count = 0
-const ID = __filename
-const STATE = { ids: {}, net: {} } // all state of component module
-// ----------------------------------------
-const default_opts = { page: 'HOME' }
-
-module.exports = desktop
-
-async function desktop (opts = default_opts, protocol) {
+async function boot (opts) {
   // ----------------------------------------
-  // INSTANCE STATE & ID
+  // ID + JSON STATE
   // ----------------------------------------
   const id = `${ID}:${count++}` // assigns their own name
   const status = {}
   const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
-  const pool = {}
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { page = 'CONSORTIUM', theme = 'dark_theme' } = opts
+  const { light_theme, dark_theme } = opts.themes
+  const themes = { light_theme, dark_theme }
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.body
+  const shopts = { mode: 'closed' }
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // desktop
+    const on = { 'theme_change': on_theme }
+    const protocol = use_protocol('desktop')({ state, on })
+    const opts = { page, theme, themes }
+    const element = await desktop(opts, protocol)
+    shadow.append(element)
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+
+  return
+
+  function on_theme (message) {
+    ;current_theme = current_theme === light_theme ? dark_theme : light_theme
+    sheet.replaceSync(get_theme(current_theme))
+  }
+}
+function get_theme (opts) {
+  return `
+  :host {
+    --bg_color: ${opts.bg_color};
+    --ac-1: ${opts.ac_1};
+    --ac-2: ${opts.ac_2};
+    --ac-3: ${opts.ac_3};
+    --primary_color: ${opts.primary_color};
+    --highlight_color: ${opts.highlight_color};
+  }`
+}
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/page/page.js","/page")
+},{"..":6,"_process":2,"theme/dark-theme":3,"theme/lite-theme":4}],6:[function(require,module,exports){
+(function (process,__filename){(function (){
+const home_page = require('home-page')
+const growth_page = require('dat-garden')
+const timeline_page = require('timeline-page')
+const projects_page = require('projects-page')
+const consortium_page = require('consortium-page')
+const terminal = require('terminal')
+const navbar = require('navbar')
+/******************************************************************************
+  DESKTOP COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet()
+sheet.replaceSync(get_theme())
+const default_opts = { page: 'HOME' }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = desktop
+// ----------------------------------------
+async function desktop (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  var current_theme
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { page, theme, themes } = opts
+  const { light_theme, dark_theme } = themes
+  current_theme = themes[theme]
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
   // TEMPLATE
   // ----------------------------------------
   const el = document.createElement('div')
-  const sh = el.attachShadow({ mode: 'closed' })
-  sh.innerHTML = `<div class="desktop">
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="desktop">
     <div class="navbar"></div>
     <div class="content"></div>
     <div class="shell"></div>
   </div>`
-  sh.adoptedStyleSheets = [sheet]
-  const shopts = { mode: 'closed' }
-  const navbar_sh = sh.querySelector('.navbar').attachShadow(shopts)
-  const content_sh = sh.querySelector('.content').attachShadow(shopts)
-  const terminal_sh = sh.querySelector('.shell').attachShadow(shopts)
   // ----------------------------------------
-  // RESOURCES
+  const navbar_sh = shadow.querySelector('.navbar').attachShadow(shopts)
+  const content_sh = shadow.querySelector('.content').attachShadow(shopts)
+  const terminal_sh = shadow.querySelector('.shell').attachShadow(shopts)
   // ----------------------------------------
-  const cache = resources(pool)
-  const navigation = cache({
-    'HOME': () => home_page({ data: current_theme }),
-    'PROJECTS': () => projects_page({ data: current_theme }),
-    'GROWTH PROGRAM': () => growth_page({ data: current_theme }),
-    'TIMELINE': () => timeline_page({ data: current_theme }),
-    'CONSORTIUM': () => consortium_page({ data: current_theme }),
+  // RESOURCE POOL (can't be serialized)
+  // ----------------------------------------
+  const navigate = cache({
+    HOME, PROJECTS, GROWTH_PROGRAM, TIMELINE, CONSORTIUM
   })
-  const widgets = cache({
-    'terminal': () => terminal({ data: current_theme })
-  })
+  const widget = cache({ TERMINAL })
   // ----------------------------------------
-  // NAVBAR
+  // ELEMENTS
   // ----------------------------------------
-  const navbar_opts = { page: opts.page, data: current_theme } // @TODO: SET DEFAULTS -> but change to LOAD DEFAULTS
-  navbar_sh.append(navbar(navbar_opts, navbar_protocol))
-  // ----------------------------------------
-
-  return el
-
-  function navbar_protocol (send) {
-    // const on = { 'ask-opts': on_ask_opts }
+  { // navbar
     const on = {
-      'social': onsocial,
+      'social': on_social,
       'handle_page_change': on_navigate,
       'handle_theme_change': on_theme,
       'toggle_terminal': on_toggle,
     }
-    // --------------------------
-    state.net[send.id] = { mid: 0, send, on }
-    state.aka.navbar = send.id
-    return Object.assign(listen, { id })
-    function invalid (message) { console.error('invalid type', message) }
-    function listen (message) {
-      console.log(`[${id}]`, message)
-      const { on } = state.net[state.aka.navbar]
-      const action = on[message.type] || invalid
-      action(message)
-    }
-    // --------------------------
-    function onsocial (message) {
-      console.log('@TODO: open ', message.data)
-    }
-    function on_navigate (msg) {
-      const { data: active_page } = msg
-      const page = navigation(active_page)
-      content_sh.replaceChildren(page)
-    }
-    function on_theme () {
-      ;current_theme = current_theme === light_theme ? dark_theme : light_theme
-      sheet.replaceSync(get_theme(current_theme))
-    }
-    function on_toggle () {
-      const has_terminal = status.terminal
-      status.terminal = !has_terminal
-      if (has_terminal) return terminal_sh.replaceChildren()
-      terminal_sh.append(widgets('terminal'))
-    }
+    const protocol = use_protocol('scrollbar')({ state, on })
+    const opts = { page, data: current_theme } // @TODO: SET DEFAULTS -> but change to LOAD DEFAULTS
+    const element = navbar(opts, protocol)
+    navbar_sh.append(element)
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+
+  return el
+
+  function on_social (message) {
+    console.log('@TODO: open ', message.data)
+  }
+  function on_navigate (msg) {
+    const { data: active_page } = msg
+    const page = navigate(active_page)
+    content_sh.replaceChildren(page)
+  }
+  function on_theme () {
+    current_theme = current_theme === light_theme ? dark_theme : light_theme
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'theme_change',
+      data: current_theme
+    })
+  }
+  function on_toggle () {
+    const has_terminal = status.terminal
+    status.terminal = !has_terminal
+    if (has_terminal) return terminal_sh.replaceChildren()
+    terminal_sh.append(widget('TERMINAL'))
+  }
+  function HOME () {
+    const on = {}
+    const protocol = use_protocol('home_page')({ state, on })
+    const opts = { data: current_theme }
+    const element = home_page(opts, protocol)
+    return element
+  }
+  function PROJECTS () {
+    const on = {}
+    const protocol = use_protocol('projects_page')({ state, on })
+    const opts = { data: current_theme }
+    const element = projects_page(opts, protocol)
+    return element
+  } 
+  function GROWTH_PROGRAM () {
+    const on = {}
+    const protocol = use_protocol('growth_page')({ state, on })
+    const opts = { data: current_theme }
+    const element = growth_page(opts, protocol)
+    return element
+  }
+  function TIMELINE () {
+    const on = {}
+    const protocol = use_protocol('timeline_page')({ state, on })
+    const opts = { data: current_theme }
+    const element = timeline_page(opts, protocol)
+    return element
+  }
+  function CONSORTIUM () {
+    const on = {}
+    const protocol = use_protocol('consortium_page')({ state, on })
+    const opts = { data: current_theme }
+    const element = consortium_page(opts, protocol)
+    return element
+  }
+  function TERMINAL () {
+    const on = {}
+    const protocol = use_protocol('terminal')({ state, on })
+    const opts = { data: current_theme }
+    const element = terminal(opts, protocol)
+    return element
   }
 }
 function get_theme (opts) {
   return`
     * { box-sizing: border-box; }
     :host {
-      --bg_color: ${opts.bg_color};
-      --ac-1: ${opts.ac_1};
-      --ac-2: ${opts.ac_2};
-      --ac-3: ${opts.ac_3};
-      --primary_color: ${opts.primary_color};
       display: flex;
       flex-direction: column;
       font-family: Silkscreen;
@@ -947,6 +1092,43 @@ function get_theme (opts) {
     }
   `
 }
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
 function resources (pool) {
   var num = 0
   return factory => {
@@ -960,24 +1142,38 @@ function resources (pool) {
     return Object.assign(get, factory)
   }
 }
-}).call(this)}).call(this,"/src/desktop.js")
-},{"consortium_page":25,"growth_page":26,"home_page":27,"navbar":32,"projects_page":36,"terminal":40,"theme/dark-theme":42,"theme/lite-theme":43,"timeline_page":46}],7:[function(require,module,exports){
-(function (process,__dirname){(function (){
-const path = require('path')
-const window_bar = require('window_bar')
-const sm_text_button = require('buttons/sm_text_button')
-
-const cwd = process.cwd()
-const prefix = path.relative(cwd, __dirname)
-
-// CSS Boiler Plat
+}).call(this)}).call(this,require('_process'),"/src/desktop.js")
+},{"_process":2,"consortium-page":26,"dat-garden":27,"home-page":28,"navbar":33,"projects-page":37,"terminal":42,"timeline-page":49}],7:[function(require,module,exports){
+(function (process,__filename){(function (){
+const window_bar = require('window-bar')
+/******************************************************************************
+  WINDOW BAR COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = app_about_us
-
-function app_about_us (opts) {
+// ----------------------------------------
+function app_about_us (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
   const { data } = opts
   // Assigning all the icons
   const { img_src: { 
@@ -985,9 +1181,20 @@ function app_about_us (opts) {
     img_robot_1 = `${prefix}/img_robot_1.svg`,
     icon_pdf_reader = `${prefix}/icon_pdf_reader.svg`,
   } } = data
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode : 'closed' })
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `
+  <div class="about_us_window">
+    <div class="windowbar"></div>
     <div class="about_us_wrapper">
       <div class="about_us_cover_image">
         <img src="${about_us_cover}"/>
@@ -1000,43 +1207,45 @@ function app_about_us (opts) {
     <div class="about_us_desc">
       Dat ecosystem garden supports open source projects that strengthen P2P foundations, with a focus on builder tools, infrastructure, research, and community resources.
     </div>
-    <style> ${get_theme()} </style>
-  `
-  const cover_window = window_bar({
-    name:'Learn_about_us.pdf', 
-    src: icon_pdf_reader,
-    action_buttons: ['IMPORTANT DOCUMENTS', 'TELL ME MORE'],
-    data
-  }, about_us_protocol)
-  shadow.prepend(cover_window)
-  shadow.adoptedStyleSheets = [sheet]
+  </div>`
+  // ----------------------------------------
+  const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // windowbar
+    const on = {
+      'toggle_active_state': toggle_active_state
+    }
+    const protocol = use_protocol('windobar')({ state, on })
+    const opts = {
+      name:'Learn_about_us.pdf', 
+      src: icon_pdf_reader,
+      action_buttons: ['IMPORTANT DOCUMENTS', 'TELL ME MORE'],
+      data
+    }
+    const element = window_bar(opts, protocol)
+    windowbar_shadow.append(element)
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
   return el
 
-  // about us protocol
-  function about_us_protocol (message, send) {
-    return listen
-  }
-  // Listening to toggle event 
-  function listen (message) {
-    const { head, refs, type, data, meta } = message  
-    const PROTOCOL = {
-      'toggle_active_state': toggle_active_state
-    }
-    const action = PROTOCOL[type] || invalid      
-    action(message)
-  }
-  function invalid (message) { console.error('invalid type', message) }
-  async function toggle_active_state (message) {
-    const { head, refs, type, data, meta } = message
+  async function toggle_active_state ({ data }) {
     const { active_state } = data
-    ;(active_state === 'active')?el.style.display = 'none':''
+    if (active_state === 'active') el.style.display = 'none'
   }
 }
 function get_theme () {
-  return`
+  return `
     * {
       box-sizing: border-box;
+    }
+    .about_us_window {
+      display: flex;
+      flex-direction: column;
     }
     .about_us_wrapper {
       position:r elative;
@@ -1109,27 +1318,88 @@ function get_theme () {
     }
   `
 }
-}).call(this)}).call(this,require('_process'),"/src/node_modules/app_about_us")
-},{"_process":2,"buttons/sm_text_button":20,"path":1,"window_bar":48}],8:[function(require,module,exports){
-(function (process,__dirname){(function (){
-const path = require('path')
-const window_bar = require('window_bar')
-const sm_text_button = require('buttons/sm_text_button')
-
-const cwd = process.cwd()
-const prefix = path.relative(cwd, __dirname)
-
-// CSS Boiler Plat
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/app-about-us/app-about-us.js")
+},{"_process":2,"window-bar":51}],8:[function(require,module,exports){
+(function (process,__filename){(function (){
+const window_bar = require('window-bar')
+/******************************************************************************
+  APP COVER COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
-let id = 0
-
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = cover_app
-
-function cover_app (opts, protocol) {
-  const name = `cover_app-${id++}`
+// ----------------------------------------
+function cover_app (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
   const { data } = opts
   // Assigning all the icons
   const {img_src} = data
@@ -1138,56 +1408,62 @@ function cover_app (opts, protocol) {
     tree_character = `${prefix}/tree_character.png`,
     icon_pdf_reader
   } = img_src
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode : 'closed' })
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `
-    <div class="cover_wrapper">
-      <div class="cover_content">
-        <div class="cover_image">
-          <img src="${banner_cover}" />
-        </div>
-        <div class="content_wrapper">
-          <img src="${tree_character}" />
-          ALL UNDER ONE TREE
-        </div>
+  <div class="cover_wrapper">
+    <div class="windowbar"></div>
+    <div class="cover_content">
+      <div class="cover_image">
+        <img src="${banner_cover}" />
+      </div>
+      <div class="content_wrapper">
+        <img src="${tree_character}" />
+        ALL UNDER ONE TREE
       </div>
     </div>
-    <style> ${get_theme()} </style>
-  `
-  const cover_window = window_bar({
-    name:'Cover.pdf',
-    src: icon_pdf_reader,
-    action_buttons: ['View more (20)', 'TELL ME MORE'],
-    data
-  }, cover_protocol)
+  </div>`
   const cover_wrapper = shadow.querySelector('.cover_wrapper')
-  cover_wrapper.prepend(cover_window)
-  shadow.adoptedStyleSheets = [sheet]
-
-  return el
-
-  // cover protocol
-  function cover_protocol(message, send){
-    return listen
-  }
-  // Listening to toggle event 
-  function listen (message) {
-    const { head, refs, type, data, meta } = message  
-    const PROTOCOL = {
+  // ----------------------------------------
+  const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  {
+    const on = {
       'toggle_active_state': toggle_active_state
     }
-    const action = PROTOCOL[type] || invalid      
-    action(message)
+    const protocol = use_protocol('windowbar')({ state, on })
+    const opts = {
+      name: 'Cover.pdf',
+      src: icon_pdf_reader,
+      action_buttons: ['View more (20)', 'TELL ME MORE'],
+      data
+    }
+    const element = window_bar(opts, protocol)
+    windowbar_shadow.append(element)
+    async function toggle_active_state (message) {
+      const { active_state } = message.data
+      if (active_state === 'active') el.style.display = 'none'
+    }
   }
-  function invalid (message) { console.error('invalid type', message) }
-  async function toggle_active_state (message) {
-    const { head, refs, type, data, meta } = message
-    const { active_state } = data
-    ;( active_state === 'active')?cover_wrapper.style.display = 'none':''
-  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+
+  return el
 }
 function get_theme () {
-  return`
+  return `
     * {
       box-sizing: border-box;
     }
@@ -1235,24 +1511,89 @@ function get_theme () {
     }
   `
 }
-}).call(this)}).call(this,require('_process'),"/src/node_modules/app_cover")
-},{"_process":2,"buttons/sm_text_button":20,"path":1,"window_bar":48}],9:[function(require,module,exports){
-(function (process,__dirname){(function (){
-const path = require('path')
-const window_bar = require('window_bar')
-const sm_text_button = require('buttons/sm_text_button')
-
-const cwd = process.cwd()
-const prefix = path.relative(cwd, __dirname)
-
-// CSS Boiler Plat
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/app-cover/app-cover.js")
+},{"_process":2,"window-bar":51}],9:[function(require,module,exports){
+(function (process,__filename){(function (){
+const window_bar = require('window-bar')
+const sm_text_button = require('buttons/sm-text-button')
+/******************************************************************************
+  APP FOOTER COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = app_footer
-
-function app_footer (opts) {
+// ----------------------------------------
+function app_footer (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
   const { data } = opts
   // Assigning all the icons
   const { img_src: {
@@ -1260,61 +1601,68 @@ function app_footer (opts) {
     img_robot_2 = `${prefix}/img_robot_2.png`,
     pattern_img_1 = `${prefix}/pattern_img_1.png`,
   } } = data
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode : 'closed' })
-  shadow.innerHTML = `
-    <div class="main_wrapper">
-      <div class="footer_wrapper">
-        <div class="robot_img_2"><img src="${img_robot_2}"></div>
-        <div class="footer_info_wrapper">
-          <div class="title"> INTERESTED IN JOINING DAT ECOSYSTEM CHAT NETWORKING? </div>
-          <div class="desc"> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vitae porta aliquet sit amet ornare sagittis, ultricies sed. Viverra sit felis ullamcorper pharetra mattis amet, vel. </div>
-          <apply_button></apply_button>    
-        </div>
-      </div>
-      <div class="pattern_img"><img src="${pattern_img_1}"></div>
-    </div>
-    <style> ${get_theme()} </style>
-  `
-  // the following is the pattern we usually use, but what you do is more or less the same
-  // so you can also keep your three liner :-)
-  const join_programe = sm_text_button({ text: 'JOIN OUR GROWTH PROGRAME' })
-  shadow.querySelector('apply_button').replaceWith(join_programe)
-  // Adding Footer Window
-  const footer_window = window_bar({
-    name:'FOOTER.pdf', 
-    src: icon_pdf_reader,
-    data,
-  }, footer_protocol)
-  shadow.prepend(footer_window)
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `
+  <div class="main_wrapper">
+    <div class="windowbar"></div>
+    <div class="footer_wrapper">
+      <div class="robot_img_2"><img src="${img_robot_2}"></div>
+      <div class="footer_info_wrapper">
+        <div class="title"> INTERESTED IN JOINING DAT ECOSYSTEM CHAT NETWORKING? </div>
+        <div class="desc"> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vitae porta aliquet sit amet ornare sagittis, ultricies sed. Viverra sit felis ullamcorper pharetra mattis amet, vel. </div>
+        <div class="apply_button"></div>
+      </div>
+    </div>
+    <div class="pattern_img"><img src="${pattern_img_1}"></div>
+  </div>`
+  // ----------------------------------------
+  const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
+  const apply_button_shadow = shadow.querySelector('.apply_button').attachShadow(shopts)
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // join_program_button
+    const on = {}
+    const protocol = use_protocol('join_button')({ state, on })
+    const opts = { text: 'JOIN OUR GROWTH PROGRAME' }
+    const element = sm_text_button(opts, protocol)
+    apply_button_shadow.append(element)
+  }
+  { // footer window
+    const on = {
+      'toggle_active_state': toggle_active_state
+    }
+    const protocol = use_protocol('footer')({ state, on })
+    const opts = { name: 'FOOTER.pdf', src: icon_pdf_reader, data }
+    const element = window_bar(opts, protocol)
+    windowbar_shadow.append(element)
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
   return el
 
-  // footer protocol
-  function footer_protocol (message, send) {
-    return listen
-  }
-  // Listening to toggle event 
-  function listen (message) {
-    const { head, refs, type, data, meta } = message  
-    const PROTOCOL = {
-      'toggle_active_state': toggle_active_state
-    }
-    const action = PROTOCOL[type] || invalid      
-    action(message)
-  }
-  function invalid (message) { console.error('invalid type', message) }
-  async function toggle_active_state (message) {
-    const { head, refs, type, data, meta } = message
+  async function toggle_active_state ({ data }) {
     const { active_state } = data
-    ;( active_state === 'active')?el.style.display = 'none':''
+    if (active_state === 'active') el.style.display = 'none'
   }
 }
 function get_theme () {
-  return`
+  return `
     * { box-sizing: border-box; }
     .main_wrapper {
+      box-sizing: border-box;
       position: relative;
       container-type: inline-size;
       background-color: var(--bg_color);
@@ -1374,28 +1722,222 @@ function get_theme () {
     }
   `
 }
-}).call(this)}).call(this,require('_process'),"/src/node_modules/app_footer")
-},{"_process":2,"buttons/sm_text_button":20,"path":1,"window_bar":48}],10:[function(require,module,exports){
-(function (process,__dirname){(function (){
-const path = require('path')
-const project_card = require('project_card')
-const window_bar = require('window_bar')
-const project_filter = require('project_filter')
-const scrollbar = require('scrollbar')
-
-const cwd = process.cwd()
-const prefix = path.relative(cwd, __dirname)
-
-// CSS Boiler Plat
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/app-footer/app-footer.js")
+},{"_process":2,"buttons/sm-text-button":21,"window-bar":51}],10:[function(require,module,exports){
+(function (process,__filename){(function (){
+const svg_element = require('svg-element')
+/******************************************************************************
+  WINDOW BAR COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = app_icon
+// ----------------------------------------
+function app_icon (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { source, label } = opts
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="app-icon">
+    <div class="svg-element"></div>
+    <span>${label}</span>
+  </div>`
+  const svg_shadow = shadow.querySelector('.svg-element').attachShadow(shopts)
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  {
+    const on = {}
+    const protocol = use_protocol('svg')({ state, on })
+    const opts = { source }
+    const element = svg_element(opts, protocol)
+    svg_shadow.append(element)  
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
-module.exports = app_projects
-
-function app_projects (opts, protocol) {
+  return el
+}
+function get_theme () {
+  return `
+    .app-icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+    span {
+      background-color: var(--bg_color);
+      width: 150px;
+      padding: 10px 0;
+      text-align: center;
+      word-wrap: break-word;
+    }
+  `
+}
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/app-icon/app-icon.js")
+},{"_process":2,"svg-element":40}],11:[function(require,module,exports){
+(function (process,__filename){(function (){
+const window_bar = require('window-bar')
+const project_card = require('project-card')
+/******************************************************************************
+  APP PROJECTS MINI COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = app_projects_mini
+// ----------------------------------------
+function app_projects_mini (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
   const { data } = opts
-  const PROTOCOL = { setFilter }
   // Assigning all the icons
   const { img_src: {
     icon_discord = `${prefix}/icon_discord.png`,
@@ -1404,25 +1946,251 @@ function app_projects (opts, protocol) {
     icon_folder = `${prefix}/icon_folder.svg`,
     project_logo_1 = `${prefix}/project_logo_1.png`,
   } } = data
+
+  const cards_data = [{ 
+    title: 'Official starting of the web course.',
+    project_logo: project_logo_1,
+    data: data,
+    project: 'Agregore', 
+    link: '/',
+    socials: [icon_github, icon_twitter, icon_discord],
+    desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
+    tags: ['Hypercore', 'Hypercore', 'Hypercore'],
+  },{ 
+    title: 'Official starting of the web course.',
+    project_logo: project_logo_1,
+    data: data,
+    project: 'Agregore', 
+    link: '/',
+    socials: [icon_github, icon_twitter, icon_discord],
+    desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
+    tags: ['Hypercore', 'Hypercore', 'Hypercore'],
+  },{ 
+    title: 'Official starting of the web course.',
+    project_logo: project_logo_1,
+    data: data,
+    project: 'Agregore', 
+    link: '/',
+    socials: [icon_github, icon_twitter, icon_discord],
+    desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
+    tags: ['Hypercore', 'Hypercore', 'Hypercore'],
+  }]
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode: 'closed' })
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `
+  <div class="project_section">
+    <div class="windowbar"></div>
     <div class="main_wrapper">
-      <div class="filter_wrapper">
-        <div class="project_wrapper"></div>
-      </div>
+      <div class="windowbar"></div>
+      <div class="project_wrapper"></div>
     </div>
-    <style> ${get_theme()} </style>
-  `
-  // Adding applcation window bar
-  const app_project_window = window_bar({
-    name: 'OUR_PROJECTS',
-    src: icon_folder,
-    data,
-  }, app_projects_protocol)
-  // Adding project cards
+  </div>`
   const project_wrapper = shadow.querySelector('.project_wrapper')
-  const cardsData = [{ 
+  // ----------------------------------------
+  const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // windowbar
+    const on = { 'toggle_active_state': toggle_active_state }
+    const protocol = use_protocol('windowbar')({ state, on })
+    const opts = {
+      name:'OUR PROJECTS', 
+      src: icon_folder,
+      action_buttons: ['View more (12)'],
+      data
+    }
+    const element = window_bar(opts, protocol)
+    windowbar_shadow.append(element)
+    function toggle_active_state (message) {
+      const { active_state } = message.data
+      if (active_state === 'active') el.style.display = 'none'
+    }
+  }
+  { // project cards
+    const on = {}
+    function make_card (card_data, i) {
+      const protocol = use_protocol(`project_${i}`)({ state, on })
+      const opts = card_data
+      const element = shadowfy()(project_card(opts, protocol))
+      return element
+    }
+    const elements = cards_data.map(make_card)
+    project_wrapper.append(...elements)
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+
+  return el
+}
+function get_theme () {
+  return `
+    .project_section {
+      display: flex;
+      flex-direction: column;
+    }
+    .main_wrapper {
+      box-sizing: border-box;
+      container-type: inline-size;
+      width: 100%;
+      height: 100%;
+      * {
+        box-sizing: border-box;
+      }
+
+      .project_wrapper {
+        --s: 20px; /* control the size */
+        --_g: var(--bg_color) /* first color */ 0 25%, #0000 0 50%;
+        background:
+          repeating-conic-gradient(at 66% 66%,var(--_g)),
+          repeating-conic-gradient(at 33% 33%,var(--_g)),
+          var(--primary_color);  /* second color */ 
+        background-size: var(--s) var(--s);  
+        border: 1px solid var(--primary_color);
+        width: 100%;
+        height: 100%;
+        padding: 0px;
+        display: grid;
+        gap: 20px;
+        grid-template-columns: 12fr;
+        margin-bottom: 30px;
+        box-sizing: border-box;
+      }
+    }
+    @container (min-width: 768px) {
+      .main_wrapper {
+        .project_wrapper {
+          grid-template-columns: repeat(2, 6fr);
+        }
+      }
+    }
+    @container (min-width: 1200px) {
+      .main_wrapper {
+        .project_wrapper {
+          grid-template-columns: repeat(3, 4fr);
+        }
+      }
+    }
+  `
+}
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/app-projects-mini/app-projects-mini.js")
+},{"_process":2,"project-card":35,"window-bar":51}],12:[function(require,module,exports){
+(function (process,__filename){(function (){
+const project_card = require('project-card')
+const window_bar = require('window-bar')
+const project_filter = require('project-filter')
+const scrollbar = require('scrollbar')
+/******************************************************************************
+  APP PROJECTS COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = app_projects
+// ----------------------------------------
+function app_projects (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // RESOURCE POOL (can't be serialized)
+  // ----------------------------------------
+  const ro = new ResizeObserver(entries => {
+    console.log('ResizeObserver:terminal:resize')
+    const scroll_channel = state.net[state.aka.scrollbar]
+    scroll_channel.send({
+      head: [id, scroll_channel.send.id, scroll_channel.mid++],
+      refs: { },
+      type: 'handle_scroll',
+    })
+  })
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { data } = opts
+  // Assigning all the icons
+  const { img_src: {
+    icon_discord = `${prefix}/icon_discord.png`,
+    icon_twitter = `${prefix}/icon_twitter.png`,
+    icon_github = `${prefix}/icon_github.png`,
+    icon_folder = `${prefix}/icon_folder.svg`,
+    project_logo_1 = `${prefix}/project_logo_1.png`,
+  } } = data
+
+  const cards_data = [{ 
     title: 'Official starting of the web course.',
     project_logo: project_logo_1,
     project: 'Agregore', 
@@ -1493,99 +2261,160 @@ function app_projects (opts, protocol) {
     active_state: 'ACTIVE',
     data
   }]
-  const tags = new Set()
-  cardsData.forEach(card_data => card_data.tags.forEach(tag => tags.add(tag))) 
-  project_wrapper.append(...cardsData.map(project_card))
-  const main_wrapper = shadow.querySelector('.main_wrapper')
-  opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_up
-  opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_down
-  main_wrapper.append(scrollbar({data}, app_projects_protocol))
-  const filter_wrapper = shadow.querySelector('.filter_wrapper')
-  filter_wrapper.append(project_filter({data, tags: Array.from(tags)}, app_projects_protocol))
-  shadow.prepend(app_project_window)
+  const tags = new Set(cards_data.flatMap(card => card.tags))
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `
+  <div class="main_wrapper">
+    <div class="windowbar"></div>
+    <div class="content_area">
+      <div class="project_wrapper"></div>
+    </div>
+    <div class="filter_wrapper">
+      <div class="filterbar"></div>
+    </div>
+  </div>`
+  const content_area = shadow.querySelector('.content_area')
+  const project_wrapper = shadow.querySelector('.project_wrapper')
+  const main_wrapper = shadow.querySelector('.main_wrapper')
+  // ----------------------------------------
+  const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
+  const filterbar_shadow = shadow.querySelector('.filterbar').attachShadow(shopts)
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // windowbar
+    const on = { 'toggle_active_state': toggle_active_state }
+    const protocol = use_protocol('windowbar')({ state, on })
+    const opts = {
+      name: 'OUR_PROJECTS',
+      src: icon_folder,
+      data,
+    }
+    const element = window_bar(opts, protocol)
+    windowbar_shadow.append(element)
+    async function toggle_active_state (message) {
+      const { active_state } = message.data
+      if (active_state === 'active') el.style.display = 'none'
+    }
+  }
+  { // project cards
+    const on = {}
+    function make_card ({ on, state }) {
+      return (card_data, i) => {
+        const protocol = use_protocol(`card_${i}`)({ state, on })
+        const opts = card_data
+        const element = shadowfy()(project_card(opts, protocol))
+        card_data.element = element
+        return element
+      }
+    }
+    project_wrapper.append(...cards_data.map(make_card({ on, state })))
+    project_wrapper.onscroll = on_scroll
+  }
+  { // scrollbar
+    const on = { 'set_scroll': on_set_scroll, status: onstatus }
+    const protocol = use_protocol('scrollbar')({ state, on })
+    opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_up
+    opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_down
+    const opts1 = { data }
+    const element = shadowfy()(scrollbar(opts1, protocol))
+    content_area.append(element)
+  }
+  { // project filter
+    const on = { 'value': on_value }
+    const protocol = use_protocol('project_filter')({ state, on })
+    const opts = { data, tags: Array.from(tags) }
+    const element = project_filter(opts, protocol)
+    filterbar_shadow.append(element)
+  }
+
+  function on_value (message) {
+    setFilter(message.data)
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+  watch_scrollbar()
 
   return el
 
-  //protocol
-  function app_projects_protocol (handshake, send) {
-    if (!send) {
-      send = handshake
-      handshake = { from: send.id }
-    }
-    if (handshake.from.includes('scrollbar')) {
-
-      const ro = new ResizeObserver(entries => send({ type: 'handle_scroll' }))
-      ro.observe(main_wrapper)
-      project_wrapper.onscroll = event => send({ type: 'handle_scroll' })
-      PROTOCOL.scrollbar = send
-
-      return listen
-    }
-    else if (handshake.from.includes('project_filter')) {
-      return listen
-    }
-    else if (handshake.from.includes('window_bar')) {
-      PROTOCOL['toggle_active_state'] = toggle_active_state
-      return listen
-    }
-    function listen (message) {
-      const { head,  refs, type, data, meta } = message
-      const { by, to, mid } = head
-      // if( to !== name) return console.error('address unknown', message)
-      if (by.includes('scrollbar')) {
-        if (message.type === 'set_scroll_start') return setScrollTop(message.data)
-        message.type = 'update_size'
-        message.data = {
-          sh: project_wrapper.scrollHeight,
-          ch: project_wrapper.clientHeight,
-          st: project_wrapper.scrollTop
-        }
-        PROTOCOL.scrollbar(message)
+  function watch_scrollbar () {
+    const channel = state.net[state.aka.scrollbar]
+    ro.observe(main_wrapper)
+  }
+  function on_scroll (message) {
+    const channel = state.net[state.aka.scrollbar]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      refs: { },
+      type: 'handle_scroll',
+    })
+  }
+  function on_set_scroll (message) {
+    console.log('set_scroll', message) 
+    setScrollTop(message.data)
+  }
+  function onstatus (message) {
+    const channel = state.net[state.aka.scrollbar]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      refs: { cause: message.head },
+      type: 'update_size',
+      data: {
+        sh: project_wrapper.scrollHeight,
+        ch: project_wrapper.clientHeight,
+        st: project_wrapper.scrollTop
       }
-      else if (by.includes('project_filter')) {
-        PROTOCOL[type](data)
-      }
-      else if (by.includes('window_bar')) {
-        PROTOCOL[type](message)
-      }
-    }
+    })
   }
   async function setScrollTop (value) {
     project_wrapper.scrollTop = value
   }
   async function setFilter (data) {
-    PROTOCOL[data.filter] = data.value
-    project_wrapper.innerHTML = ''
-    let cardfilter = [...cardsData]
-    if (PROTOCOL.SEARCH) {
+    status[data.filter] = data.value
+    let cardfilter = [...cards_data]
+    if (status.SEARCH) {
       cardfilter = cardfilter.filter((card_data) => {
-        return card_data.project.toLowerCase().match(PROTOCOL.SEARCH.toLowerCase())
+        return card_data.project.toLowerCase().match(status.SEARCH.toLowerCase())
       })
     }
-    if (PROTOCOL.STATUS && PROTOCOL.STATUS !== 'NULL') {
+    if (status.STATUS && status.STATUS !== 'NULL') {
       cardfilter = cardfilter.filter((card_data) => {
-        return card_data.active_state === PROTOCOL.STATUS && card_data
+        return card_data.active_state === status.STATUS && card_data
       })
     }
-    if (PROTOCOL.TAGS && PROTOCOL.TAGS !== 'NULL') {
+    if (status.TAGS && status.TAGS !== 'NULL') {
       cardfilter = cardfilter.filter((card_data) => {
-        return card_data.tags.includes(PROTOCOL.TAGS) && card_data
+        return card_data.tags.includes(status.TAGS) && card_data
       })
     }
-    project_wrapper.append(...cardfilter.map(project_card))
-    PROTOCOL.scrollbar({ type: 'handle_scroll' })
-  }
-  async function toggle_active_state (message) {
-    const { head, refs, type, data, meta } = message
-    const { active_state } = data
-    ;(active_state === 'active')?el.style.display = 'none':''
+    project_wrapper.replaceChildren(...cardfilter.map(({ element }) => element))
+    const channel = state.net[state.aka.scrollbar]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'handle_scroll'
+    })
   }
 }
 function get_theme () {
-  return`
-    .main_wrapper {
+  return `
+    .content_area {
       display: flex;
+    }
+    .main_wrapper {
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
       container-type: inline-size;
       width: 100%;
       height: 100%;
@@ -1597,159 +2426,279 @@ function get_theme () {
       .filter_wrapper {
         width: 100%;
         height: 100%;
-        .project_wrapper {
-          --s: 20px; /* control the size */
-          --_g: var(--bg_color) /* first color */ 0 25%, #0000 0 50%;
-          background:
-            repeating-conic-gradient(at 66% 66%,var(--_g)),
-            repeating-conic-gradient(at 33% 33%,var(--_g)),
-            var(--primary_color);  /* second color */ 
-          background-size: var(--s) var(--s);  
-          border: 1px solid var(--primary_color);
-          width: 100%;
-          height: 400px;
-          padding: 0px;
-          display: grid;
-          gap: 20px;
-          grid-template-columns: 12fr;
-          box-sizing: border-box;
-          overflow: scroll;
-          scrollbar-width: none; /* For Firefox */
-          &::-webkit-scrollbar {
-            display: none;
-          }
-        }
+      }
+    }
+    .project_wrapper {
+      --s: 20px; /* control the size */
+      --_g: var(--bg_color) /* first color */ 0 25%, #0000 0 50%;
+      background:
+        repeating-conic-gradient(at 66% 66%,var(--_g)),
+        repeating-conic-gradient(at 33% 33%,var(--_g)),
+        var(--primary_color);  /* second color */ 
+      background-size: var(--s) var(--s);  
+      border: 1px solid var(--primary_color);
+      width: 100%;
+      height: 400px;
+      padding: 0px;
+      display: grid;
+      gap: 20px;
+      grid-template-columns: 12fr;
+      box-sizing: border-box;
+      overflow: scroll;
+      scrollbar-width: none; /* For Firefox */
+      &::-webkit-scrollbar {
+        display: none;
       }
     }
     @container (min-width: 768px) {
-      .main_wrapper {
-        .filter_wrapper {
-          .project_wrapper {
-            grid-template-columns: repeat(2, 6fr);
-          }
-        }
+      .project_wrapper {
+        grid-template-columns: repeat(2, 6fr);
       }
     }
     @container (min-width: 1200px) {
-      .main_wrapper {
-        .filter_wrapper {
-          .project_wrapper {
-            grid-template-columns: repeat(3, 4fr);
-          }
-        }
+      .project_wrapper {
+        grid-template-columns: repeat(3, 4fr);
       }
     }
   `
 }
-}).call(this)}).call(this,require('_process'),"/src/node_modules/app_projects")
-},{"_process":2,"path":1,"project_card":34,"project_filter":35,"scrollbar":37,"window_bar":48}],11:[function(require,module,exports){
-(function (process,__dirname){(function (){
-const path = require('path')
-const window_bar = require('window_bar')
-const project_card = require('project_card')
-
-const cwd = process.cwd()
-const prefix = path.relative(cwd, __dirname)
-
-// CSS Boiler Plat
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/app-projects/app-projects.js")
+},{"_process":2,"project-card":35,"project-filter":36,"scrollbar":38,"window-bar":51}],13:[function(require,module,exports){
+(function (process,__filename){(function (){
+const window_bar = require('window-bar')
+const timeline_card = require('timeline-card')
+const scrollbar = require('scrollbar')
+/******************************************************************************
+  APP TIMELINE MINI COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
-module.exports = app_projects_mini
-
-function app_projects_mini (opts) {
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = app_timeline_mini
+// ----------------------------------------
+function app_timeline_mini (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // RESOURCE POOL (can't be serialized)
+  // ----------------------------------------
+  const ro = new ResizeObserver(entries => {
+    console.log('ResizeObserver:terminal:resize')
+    const scroll_channel = state.net[state.aka.scrollbar]
+    scroll_channel.send({
+      head: [id, scroll_channel.send.id, scroll_channel.mid++],
+      refs: { },
+      type: 'handle_scroll',
+    })
+  })
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
   const { data } = opts
   // Assigning all the icons
   const { img_src: {
-    icon_discord = `${prefix}/icon_discord.png`,
-    icon_twitter = `${prefix}/icon_twitter.png`,
-    icon_github = `${prefix}/icon_github.png`,
-    icon_folder = `${prefix}/icon_folder.svg`,
-    project_logo_1 = `${prefix}/project_logo_1.png`,
+    icon_folder= `${prefix}/icon_folder.svg`,
   } } = data
-  const el = document.createElement('div')
-  const shadow = el.attachShadow ({ mode : 'closed' })
-  shadow.innerHTML = `
-    <div class="main_wrapper">
-      <div class="project_wrapper"></div>
-    </div>
-    <style> ${get_theme()} </style>
-  `
-  // Adding Applicatin window Bar
-  const cover_window = window_bar({
-    name:'OUR PROJECTS', 
-    src: icon_folder,
-    action_buttons: ['View more (12)'],
-    data: data
-  }, projects_mini_protocol)
-  // Adding project cards
-  const project_wrapper = shadow.querySelector('.project_wrapper')
-  const cardsData = [{ 
-    title: 'Official starting of the web course.',
-    project_logo: project_logo_1,
-    data: data,
-    project: 'Agregore', 
-    link: '/',
-    socials: [icon_github, icon_twitter, icon_discord],
-    desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-    tags: ['Hypercore', 'Hypercore', 'Hypercore'],
-  },{ 
-    title: 'Official starting of the web course.',
-    project_logo: project_logo_1,
-    data: data,
-    project: 'Agregore', 
-    link: '/',
-    socials: [icon_github, icon_twitter, icon_discord],
-    desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-    tags: ['Hypercore', 'Hypercore', 'Hypercore'],
-  },{ 
-    title: 'Official starting of the web course.',
-    project_logo: project_logo_1,
-    data: data,
-    project: 'Agregore', 
-    link: '/',
-    socials: [icon_github, icon_twitter, icon_discord],
-    desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-    tags: ['Hypercore', 'Hypercore', 'Hypercore'],
+    const cards_data = [{
+    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
+  },{
+    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
+  },{
+    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
+  },{
+    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
+  },{
+    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
+  },{
+    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
+  },{
+    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
+  },{
+    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
+  },{
+    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
+  },{
+    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
   }]
-  project_wrapper.append(...cardsData.map(project_card))
-  shadow.prepend(cover_window)
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `
+  <div class="timeline_section">
+    <div class="windowbar"></div>
+    <div class="main_wrapper">
+      <div class="timeline_wrapper"></div>
+    </div>~
+  </div>`
+  const timeline_wrapper = shadow.querySelector('.timeline_wrapper')
+  const main_wrapper = shadow.querySelector('.main_wrapper')
+  // ----------------------------------------
+  const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // windowbar
+    const on = { 'toggle_active_state': toggle_active_state }
+    const protocol = use_protocol('windowbar')({ state, on })
+    const opts = {
+      name:'TIMELINE', 
+      src: icon_folder,
+      action_buttons: ['View more (12)'],
+      data
+    }
+    const element = window_bar(opts, protocol)
+    windowbar_shadow.append(element)
+    function toggle_active_state (message) {
+      const { active_state } = message.data
+      if (active_state === 'active') el.style.display = 'none'
+    }
+  }
+  { // timeline cards
+    const on = {}
+    function make_card (card_data, i) {
+      const protocol = use_protocol(`event_${i}`)({ state, on })
+      const opts = card_data
+      const element = shadowfy()(timeline_card(opts, protocol))
+      return element
+    }
+    const elements = cards_data.map(make_card)
+    timeline_wrapper.append(...elements)
+  }
+  { // scrollbar
+    const on = { 'set_scroll': on_set_scroll, status: onstatus }
+    const protocol = use_protocol('scrollbar')({ state, on })
+    opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_up
+    opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_down  
+    const scroll_opts = { data }
+    const element = scrollbar(scroll_opts, protocol)
+
+    const channel = state.net[state.aka.scrollbar]
+    timeline_wrapper.onscroll = onscroll
+    ro.observe(main_wrapper)
+
+    main_wrapper.append(shadowfy()(element))
+
+    function onscroll (event) {
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        refs: { },
+        type: 'handle_scroll',
+      })
+    }
+    function on_set_scroll (message) {
+      console.log('set_scroll', message) 
+      setScrollTop(message.data)
+    }
+    function onstatus (message) {
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        refs: { cause: message.head },
+        type: 'update_size',
+        data: {
+          sh: timeline_wrapper.scrollHeight,
+          ch: timeline_wrapper.clientHeight,
+          st: timeline_wrapper.scrollTop
+        }
+      })
+    }
+    function setScrollTop (value) {
+      timeline_wrapper.scrollTop = value
+    }
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
   return el
-
-  // projects mini protocol
-  function projects_mini_protocol (message, send) {
-    return listen
-  }
-  // Listening to toggle event 
-  function listen (message) {
-    const { head, refs, type, data, meta } = message  
-    const PROTOCOL = {
-      'toggle_active_state': toggle_active_state
-    }
-    const action = PROTOCOL[type] || invalid      
-    action(message)
-  }
-  function invalid (message) { console.error('invalid type', message) }
-  async function toggle_active_state (message) {
-    const { head, refs, type, data, meta } = message
-    const { active_state } = data
-    ;( active_state === 'active') ? el.style.display = 'none': ''
-  }
 }
 function get_theme () {
-  return`
+  return `
+    .timeline_section {
+      display: flex;
+      flex-direction: column;
+    }
     .main_wrapper {
+      box-sizing: border-box;
+      display: flex;
       container-type: inline-size;
       width: 100%;
       height: 100%;
-      * {
-        box-sizing: border-box;
-      }
-
-      .project_wrapper {
+      margin-bottom: 30px;
+      border: 1px solid var(--primary_color);
+      * { box-sizing: border-box; }
+      .timeline_wrapper {
         --s: 20px; /* control the size */
         --_g: var(--bg_color) /* first color */ 0 25%, #0000 0 50%;
         background:
@@ -1757,94 +2706,143 @@ function get_theme () {
           repeating-conic-gradient(at 33% 33%,var(--_g)),
           var(--primary_color);  /* second color */ 
         background-size: var(--s) var(--s);  
+        overflow: scroll;
+        scrollbar-width: none; /* For Firefox */
         border: 1px solid var(--primary_color);
         width: 100%;
-        height: 100%;
+        height: 400px;
         padding: 0px;
         display: grid;
         gap: 20px;
         grid-template-columns: 12fr;
-        margin-bottom: 30px;
-        box-sizing: border-box;
+        &::-webkit-scrollbar {
+          display: none;
+        }
       }
     }
     @container (min-width: 768px) {
       .main_wrapper {
-        .project_wrapper {
+        .timeline_wrapper {
           grid-template-columns: repeat(2, 6fr);
         }
       }
     }
     @container (min-width: 1200px) {
       .main_wrapper {
-        .project_wrapper {
+        .timeline_wrapper {
           grid-template-columns: repeat(3, 4fr);
         }
       }
     }
   `
 }
-}).call(this)}).call(this,require('_process'),"/src/node_modules/app_projects_mini")
-},{"_process":2,"path":1,"project_card":34,"window_bar":48}],12:[function(require,module,exports){
-(function (process,__dirname){(function (){
-const path = require('path')
-const window_bar = require('window_bar')
-const timeline_card = require('timeline_card')
-const timeline_filter = require('timeline_filter')
-const year_filter = require('year_filter')
-const month_filter = require('month_filter')
-const scrollbar = require('scrollbar')
-
-const cwd = process.cwd()
-const prefix = path.relative(cwd, __dirname)
-
-// CSS Boiler Plat
-const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
-let id = 0
-
-module.exports = app_timeline_mini
-
-function app_timeline_mini (opts, protocol) {
-  const name = `app_timeline_mini-${id++}`
-  const {data} = opts
-  const PROTOCOL = {
-    YEAR: '',
-    MONTH: '',
-    DATE: '',
-    updateCalendar,
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
   }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/app-timeline-mini/app-timeline-mini.js")
+},{"_process":2,"scrollbar":38,"timeline-card":47,"window-bar":51}],14:[function(require,module,exports){
+(function (process,__filename){(function (){
+const window_bar = require('window-bar')
+const timeline_card = require('timeline-card')
+const timeline_filter = require('timeline-filter')
+const year_filter = require('year-filter')
+const month_filter = require('month-filter')
+const scrollbar = require('scrollbar')
+/******************************************************************************
+  APP TIMELINE COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = app_timeline
+// ----------------------------------------
+function app_timeline (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // RESOURCE POOL (can't be serialized)
+  // ----------------------------------------
+  const ro = new ResizeObserver(entries => {
+    console.log('ResizeObserver:terminal:resize')
+    const scroll_channel = state.net[state.aka.scrollbar]
+    scroll_channel.send({
+      head: [id, scroll_channel.send.id, scroll_channel.mid++],
+      refs: { },
+      type: 'handle_scroll',
+    })
+  })
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  status.YEAR = ''
+  status.MONTH = ''
+  status.DATE = ''
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { data } = opts
   // Assigning all the icons
   const { img_src: {
       icon_folder= `${prefix}/icon_folder.svg`,
   } } = data
-  const el = document.createElement('div')
-  const shadow = el.attachShadow ({ mode : 'closed' })
-  shadow.innerHTML = `<div class="main_wrapper">
-    <div class="filter_wrapper">
-      <div class="month_wrapper">
-        <div class="scrollbar_wrapper">
-          <div class="timeline_wrapper"></div>
-        </div>
-      </div>
-    </div>
-  </div>`
-  shadow.adoptedStyleSheets = [sheet]
-  const main_wrapper = shadow.querySelector('.main_wrapper')
-  const timeline_wrapper = shadow.querySelector('.timeline_wrapper')
-  const filter_wrapper = shadow.querySelector('.filter_wrapper')
-  const month_wrapper = shadow.querySelector('.month_wrapper')
-  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
-
-  // Adding Applicatin window Bar
-  const cover_window = window_bar({
-    name:'TIMELINE', 
-    src: icon_folder,
-    data: data
-  }, app_timeline_protocol)
-  // Adding timeline cards
   const cards_data = [{
     title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data, active_state: 'ACTIVE'
   },{
@@ -1865,228 +2863,299 @@ function app_timeline_mini (opts, protocol) {
     title: 'Official starting of the web course.', date: 'April 11, 2023', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data, active_state: 'PAUSED'
   },{
     title: 'Official starting of the web course.', date: 'July 11, 2023', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data, active_state: 'PAUSED'
-  }]
-  const convert_time_format = (time) => {
-    let temp = time.slice(0,2)
-    if (time.includes('PM')) { temp = parseInt(temp) + 12 }
-    return temp + time.slice(2, -2)
-  }
-  const tags = new Set()
-  const new_cards_data = []
-  cards_data.forEach((card_data, i) => {
-    card_data.tags.forEach(tag => tags.add(tag))
-    const date = new Date(card_data.date + ' ' + convert_time_format(card_data.time))
-    card_data = {...card_data, date_raw: date.getTime()}
-    cards_data[i] = card_data
-  })
-  cards_data.sort(function (a, b) { return  b.date_raw - a.date_raw })
-  PROTOCOL.YEAR = new Date(cards_data[0].date_raw).getFullYear()
+  }].map(card => {
+    const date = new Date(card.date + ' ' + convert_time_format(card.time))
+    card.date_raw = date.getTime()
+    return card
+  }).sort(function (a, b) { return  b.date_raw - a.date_raw })
+  const tags = new Set(cards_data.flatMap(card => card.tags))
   const card_groups = []
   let year_cache, card_group
-  const timeline_cards = cards_data.map((card_data) => {
-    const card = timeline_card(card_data)
-    const slice = cards_data[card.id.slice(-1)].date.slice(-4)
-    if (year_cache !== slice) {
-      card_group = document.createElement('div')
-      card_group.classList.add('card_group')
-      card_groups.push(card_group)
-      year_cache = slice
+  status.YEAR = new Date(cards_data[0].date_raw).getFullYear()
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const PROTOCOL = {}
+  const on = {}
+  const channel = use_protocol('app_timeline')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `
+  <div class="timeline_section">
+    <div class="windowbar"></div>
+    <div class="main_wrapper">
+      <div class="filter_wrapper">
+        <div class="month_wrapper">
+          <div class="scrollbar_wrapper">
+            <div class="timeline_wrapper"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`
+  const main_wrapper = shadow.querySelector('.main_wrapper')
+  const timeline_wrapper = shadow.querySelector('.timeline_wrapper')
+  const filter_wrapper = shadow.querySelector('.filter_wrapper')
+  const month_wrapper = shadow.querySelector('.month_wrapper')
+  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
+  // ----------------------------------------
+  const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // windowbar
+    const on = { 'toggle_active_state': toggle_active_state }
+    const protocol = use_protocol('windowbar')({ state, on })
+    const opts = {
+      name: 'TIMELINE', 
+      src: icon_folder,
+      data: data
     }
-    card_group.append(card)
-    return card
-  })
-  timeline_wrapper.append(...card_groups)
-  main_wrapper.append(timeline_filter({
-    data, tags: Array.from(tags),
-    latest_date: cards_data[0].date_raw
-  }, app_timeline_protocol))
-  const year_filter_wrapper = year_filter({
-    data, latest_date: cards_data[0].date_raw
-  }, app_timeline_protocol)
-  const month_filter_wrapper = month_filter({ data }, app_timeline_protocol)
-  opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_up
-  opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_down
-  scrollbar_wrapper.append(scrollbar({ data }, app_timeline_protocol))
+    const element = window_bar(opts, protocol)
+    windowbar_shadow.append(element)
+    async function toggle_active_state (message) {
+      const { active_state } = message.data
+      if (active_state === 'active') el.style.display = 'none'
+    }
+  }
+  var timeline_cards
+  { // timeline cards
+    const on = {}
+    function make_card (card_data, i) {
+      const protocol = use_protocol(`card_${i}`)({ state, on })
+      const opts = card_data
+      const element = shadowfy()(timeline_card(opts, protocol))          
+      const slice = card_data.date.slice(-4)
+      if (year_cache !== slice) {
+        card_group = document.createElement('div')
+        card_group.classList.add('card_group')
+        card_groups.push(card_group)
+        year_cache = slice
+      }
+      card_group.append(element)
+      element.idx = i
+      return element
+    }
+    timeline_cards = cards_data.map(make_card)
+    timeline_wrapper.append(...card_groups)
+    timeline_wrapper.onscroll = onscroll
+  }
+  { // timeline filter
+    const on = {
+      'toggle_month_filter': toggle_month_filter,
+      'toggle_year_filter': toggle_year_filter,
+      'value': on_value,
+      'set_filter': setFilter
+    }
+    const protocol = use_protocol('timeline_filter')({ state, on })
+    const opts = {
+      data, tags: Array.from(tags),
+      latest_date: cards_data[0].date_raw
+    }
+    const element = shadowfy()(timeline_filter(opts, protocol))
+    main_wrapper.append(element)
+    function on_value (message) { setFilter(message.data) }
+    async function toggle_month_filter (message) {
+      if (month_wrapper.contains(month_filter_wrapper)) {
+        month_wrapper.removeChild(month_filter_wrapper)
+      } else month_wrapper.append(month_filter_wrapper)
+    }
+    async function toggle_year_filter (message) {
+      if (filter_wrapper.contains(year_filter_wrapper)) {
+        filter_wrapper.removeChild(year_filter_wrapper)
+      } else filter_wrapper.append(year_filter_wrapper)
+    }
+  }
+  var year_filter_wrapper
+  { // year filter
+    const on = { 'set_scroll': on_set_scroll }
+    const protocol =  use_protocol('year_filter')({ state, on })
+    const opts = {
+      data, latest_date: cards_data[0].date_raw
+    }
+    year_filter_wrapper = shadowfy()(year_filter(opts, protocol))
+    function on_set_scroll ({ data }) {
+      set_scroll(data)
+      updateCalendar()
+    }
+  }
+  var month_filter_wrapper
+  { // month filter
+    const on = { 'set_scroll': on_set_scroll, 'set_filter': setFilter }
+    const protocol = use_protocol('month_filter')({ state, on })
+    const opts = { data }
+    month_filter_wrapper = shadowfy()(month_filter(opts, protocol))
+    function on_set_scroll ({ data }) {
+      set_scroll(data)
+      updateCalendar()
+    }
+  }
+  { // scrollbar
+    const on = { 'set_scroll': on_set_scroll, status: onstatus }
+    const protocol = use_protocol('scrollbar')({ state, on })
+    opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_up
+    opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_down
+    const scroll_opts = { data }
+    const element = shadowfy()(scrollbar(scroll_opts, protocol))
+    scrollbar_wrapper.append(element)
+
+    const channel = state.net[state.aka.scrollbar]
+    ro.observe(scrollbar_wrapper)
+    function on_set_scroll (message) { setScrollTop(message.data) }
+    function onstatus (message) {
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        refs: { cause: message.head },
+        type: 'update_size',
+        data: {
+          sh: timeline_wrapper.scrollHeight,
+          ch: timeline_wrapper.clientHeight,
+          st: timeline_wrapper.scrollTop
+        }
+      })
+    }
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
   updateCalendar()
-  timeline_wrapper.onscroll = () => {
-    PROTOCOL.scrollbar({ type: 'handle_scroll' })
+
+  return el
+
+  function onscroll (event) {
+    const scroll_channel = state.net[state.aka.scrollbar]
+    scroll_channel.send({
+      head: [id, scroll_channel.send.id, scroll_channel.mid++],
+      type: 'handle_scroll'
+    })
     const parent_top = timeline_wrapper.getBoundingClientRect().top
     timeline_cards.some(card => {
+      const { idx } = card
       const child_top = card.getBoundingClientRect().top
       if (child_top >= parent_top -100 && child_top < parent_top + 200) {
-        const year = cards_data[card.id.slice(-1)].date.slice(-4)
-        PROTOCOL.YEAR = year
-        PROTOCOL.updateCalendar()
-        PROTOCOL['year_filter']({
-          head: { by: name, to: 'year_filter', mid: 0 },
-          type: null,
+        const year = cards_data[idx].date.slice(-4)
+        status.YEAR = year
+        updateCalendar()
+        const channel = state.net[state.aka.year_filter]
+        channel.send({
+          head: [id, channel.send.id, channel.mid++],
+          type: 'update_year_filter',
           data: year
         })
         return true
       }
     })
-    PROTOCOL['get_date']({
-      head: { by:name, to: 'timeline_filter', mid: 0 },
-      type: null,
-      data: { month: PROTOCOL.MONTH , year: PROTOCOL.YEAR }
+    const channel = state.net[state.aka.timeline_filter]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'update_timeline_filter',
+      data: { month: status.MONTH , year: status.YEAR }
     })
   }
-  shadow.prepend(cover_window)
-  
-  return el
-    
-  //Setting protocols
-  function app_timeline_protocol (handshake, send) {
-    if (!send) {
-      send = handshake
-      handshake = { from: send.id }
-    }
-    if (handshake.from.includes('scrollbar')) {
-
-
-      const ro = new ResizeObserver(entries => send({ type: 'handle_scroll' }))
-      ro.observe(scrollbar_wrapper)
-      PROTOCOL.scrollbar = send
-
-      return listen
-    }
-    else if (handshake.from.includes('window_bar')) {
-      PROTOCOL['toggle_active_state'] = toggle_active_state
-    }
-    else if (handshake.from.includes('timeline_filter')) {
-      PROTOCOL['setFilter'] = setFilter
-      PROTOCOL['toggle_month_filter'] = toggle_month_filter
-      PROTOCOL['toggle_year_filter'] = toggle_year_filter
-      PROTOCOL['get_date'] = send
-    }
-    else if (handshake.from.includes('year_filter')) {
-      PROTOCOL['setScroll'] = setScroll
-      PROTOCOL['year_filter'] = send
-    }
-    else if (handshake.from.includes('month_filter')) {
-      PROTOCOL['setFilter'] = setFilter
-      PROTOCOL['month_filter'] = send
-    }
-
-    return listen
-
-    function listen (message) {
-      const { head,  refs, type, data, meta } = message
-      const { by, to, mid } = head
-      // if( to !== name) return console.error('address unknown', message)
-      if (by.includes('scrollbar')) {
-          if (message.type === 'set_scroll_start') return setScrollTop(message.data)
-          message.type = 'update_size'
-          message.data = {sh: timeline_wrapper.scrollHeight, ch: timeline_wrapper.clientHeight, st: timeline_wrapper.scrollTop}
-          PROTOCOL.scrollbar(message)
+  function convert_time_format (time) {
+    let temp = time.slice(0, 2)
+    if (time.includes('PM')) { temp = parseInt(temp) + 12 }
+    return temp + time.slice(2, -2)
+  }
+  async function set_scroll (data) {
+    status[data.filter] = data.value
+    timeline_cards.some(card => {
+      const { idx } = card
+      const card_date = cards_data[idx].date
+      if (card_date.includes(data.value) && card_date.includes(status.YEAR)) {
+        setScrollTop(card.getBoundingClientRect().top - timeline_wrapper.getBoundingClientRect().top + timeline_wrapper.scrollTop)
+        return true
       }
-      else if (by.includes('timeline_filter') || by.includes('month_filter')) {
-        PROTOCOL[type](data)
-      }
-      else if (by.includes('year_filter')) {
-        PROTOCOL[type](data)
-        PROTOCOL.updateCalendar()
-      }
-      else if (by.includes('window_bar')) {
-        PROTOCOL[type](message)
-      }
-    }
-    async function setScroll (data) {
-      PROTOCOL[data.filter] = data.value
-      timeline_cards.some(card => {
-        const card_date = cards_data[card.id.slice(-1)].date
-        if( card_date.includes(data.value) && card_date.includes(PROTOCOL.YEAR)) {
-          setScrollTop(card.getBoundingClientRect().top - timeline_wrapper.getBoundingClientRect().top + timeline_wrapper.scrollTop)
-          return true
-        }
+    })
+    const timeline_channel = state.net[state.aka.timeline_filter]
+    timeline_channel.send({
+      head: [id, timeline_channel.send.id, timeline_channel.mid++],
+      type: 'update_timeline_filter',
+      data: { month: status.MONTH , year: status.YEAR }
+    })
+    const year_channel = state.net[state.aka.year_filter]
+    year_channel.send({
+      head: [id, year_channel.send.id, year_channel.mid++],
+      type: 'update_year_filter',
+      data: status.YEAR
+    })
+  }
+  async function setScrollTop (value) {
+    timeline_wrapper.scrollTop = value
+  }
+  async function setFilter (data) {
+    status[data.filter] = data.value
+    timeline_wrapper.innerHTML = ''
+    let cardfilter = [...cards_data]
+    if (data.value) {
+      if (status.SEARCH) cardfilter = cardfilter.filter((card_data) => {
+        return card_data.title.toLowerCase().match(status.SEARCH.toLowerCase())
       })
-      PROTOCOL['get_date']({
-        head: { by: name, to: 'timeline_filter', mid: 0 },
-        type: null,
-        data: { month: PROTOCOL.MONTH , year: PROTOCOL.YEAR }
+      if (status.STATUS && status.STATUS !== 'NULL') cardfilter = cardfilter.filter((card_data) => {
+        return card_data.active_state === status.STATUS && card_data
       })
-      PROTOCOL['year_filter']({
-        head:  {by: name, to: 'year_filter', mid: 0 },
-        type: null,
-        data: PROTOCOL.YEAR
-      })
-    }
-    async function setScrollTop (value) {
-      timeline_wrapper.scrollTop = value
-    }
-    async function setFilter(data){
-      PROTOCOL[data.filter] = data.value
-      timeline_wrapper.innerHTML = ''
-      let cardfilter = [...cards_data]
-      if (PROTOCOL.SEARCH) cardfilter = cardfilter.filter((card_data) => {
-        return card_data.title.toLowerCase().match(PROTOCOL.SEARCH.toLowerCase())
-      })
-      if (PROTOCOL.STATUS && PROTOCOL.STATUS !== 'NULL') cardfilter = cardfilter.filter((card_data) => {
-        return card_data.active_state === PROTOCOL.STATUS && card_data
-      })
-      if (PROTOCOL.TAGS && PROTOCOL.TAGS !== 'NULL') {
+      if (status.TAGS && status.TAGS !== 'NULL') {
         cardfilter = cardfilter.filter((card_data) => {
-          return card_data.tags.includes(PROTOCOL.TAGS) && card_data
+          return card_data.tags.includes(status.TAGS) && card_data
         })
       }
-      const card_groups = []
-      let year_cache
-      let card_group
-      timeline_cards.forEach((card) => {
-        const card_data = cards_data[card.id.slice(-1)]
-        if (cardfilter.includes(card_data)) {
-          const slice = card_data.date.slice(-4)
-          if (year_cache !== slice) {
-            card_group = document.createElement('div')
-            card_group.classList.add('card_group')
-            card_groups.push(card_group)
-            year_cache = slice
-          }
-          card_group.append(card)
+    }
+    const card_groups = []
+    let year_cache
+    let card_group
+    timeline_cards.forEach(card => {
+      const { idx } = card
+      const card_data = cards_data[idx]
+      if (cardfilter.includes(card_data)) {
+        const slice = card_data.date.slice(-4)
+        if (year_cache !== slice) {
+          card_group = document.createElement('div')
+          card_group.classList.add('card_group')
+          card_groups.push(card_group)
+          year_cache = slice
         }
-      })
-      card_groups.forEach((card_group) => {
-        timeline_wrapper.append(card_group)
-      })
-      PROTOCOL.scrollbar({ type: 'handle_scroll' })
-      PROTOCOL.setScroll({
-        filter: 'YEAR',
-        value: String(new Date(cardfilter[0].date_raw).getFullYear())
-      })
-    }
-    async function toggle_active_state (message) {
-      const { head, refs, type, data, meta } = message
-      const { active_state } = data
-      ;( active_state === 'active') ? el.style.display = 'none' : ''
-    }
-    async function toggle_month_filter (message) {
-      if (month_wrapper.contains(month_filter_wrapper))
-        month_wrapper.removeChild(month_filter_wrapper)
-      else
-        month_wrapper.append(month_filter_wrapper)
-    }
-    async function toggle_year_filter (message) {
-      if (filter_wrapper.contains(year_filter_wrapper))
-        filter_wrapper.removeChild(year_filter_wrapper)
-      else
-        filter_wrapper.append(year_filter_wrapper)
-    }
+        card_group.append(card)
+      }
+    })
+    card_groups.forEach((card_group) => {
+      timeline_wrapper.append(card_group)
+    })
+    const channel = state.net[state.aka.scrollbar]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'handle_scroll'
+    })
+    if (!cardfilter[0]) return
+    set_scroll({
+      filter: 'YEAR',
+      value: String(new Date(cardfilter[0].date_raw).getFullYear())
+    })
   }
   async function updateCalendar () {
     let dates = []
-    if (PROTOCOL.YEAR) cards_data.forEach(card_data => {
-      if (card_data.date.includes(PROTOCOL.YEAR)) dates.push(card_data.date)
+    if (status.YEAR) cards_data.forEach(card_data => {
+      if (card_data.date.includes(status.YEAR)) dates.push(card_data.date)
     })
-    PROTOCOL.month_filter({
-      head: { by: name, to: 'month_filter', mid: 0 },
-      type: null,
+    const channel = state.net[state.aka.month_filter]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'update_calendar',
       data: dates
     })
   }
 }
 function get_theme () {
   return`
+    .timeline_section {
+      display: flex;
+      flex-direction: column;
+    }
     .main_wrapper {
+      box-sizing: border-box;
       display: flex;
       flex-direction: column;
       container-type: inline-size;
@@ -2173,220 +3242,124 @@ function get_theme () {
     }
   `
 }
-}).call(this)}).call(this,require('_process'),"/src/node_modules/app_timeline")
-},{"_process":2,"month_filter":31,"path":1,"scrollbar":37,"timeline_card":44,"timeline_filter":45,"window_bar":48,"year_filter":49}],13:[function(require,module,exports){
-(function (process,__dirname){(function (){
-const path = require('path')
-const window_bar = require('window_bar')
-const timeline_card = require('timeline_card')
-const sm_text_button = require('buttons/sm_text_button')
-const scrollbar = require('scrollbar')
-
-const cwd = process.cwd()
-const prefix = path.relative(cwd, __dirname)
-
-// CSS Boiler Plat
-const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
-let id = 0
-
-module.exports = app_timeline_mini
-
-function app_timeline_mini (opts, protocol) {
-  const name = `app_timeline_mini-${id++}`
-  const { data } = opts
-  const PROTOCOL = {}
-  // Assigning all the icons
-  const { img_src: {
-    icon_folder= `${prefix}/icon_folder.svg`,
-  } } = data
-  const el = document.createElement('div')
-  const shadow = el.attachShadow ({ mode : 'closed' })
-  shadow.innerHTML = `
-    <div class="main_wrapper">
-      <div class="timeline_wrapper"></div>
-    </div>
-    <style> ${get_theme()} </style>
-  `
-  // Adding Applicatin window Bar
-  const cover_window = window_bar({
-    name:'TIMELINE', 
-    src: icon_folder,
-    action_buttons: ['View more (12)'],
-    data: data
-  }, timeline_mini_protocol)
-  // Adding timeline cards
-  const timeline_wrapper = shadow.querySelector('.timeline_wrapper')
-  const cards_data = [{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  }]
-  timeline_wrapper.append(...cards_data.map(timeline_card))
-  const main_wrapper = shadow.querySelector('.main_wrapper')
-  opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_up
-  opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_down
-  main_wrapper.append(scrollbar({data: data}, timeline_mini_protocol))
-  shadow.prepend(cover_window)
-  shadow.adoptedStyleSheets = [ sheet ]
-
-  return el
-
-  function timeline_mini_protocol (handshake, send) {
-    if (!send) {
-      send = handshake
-      handshake = { from: send.id }
-    }
-    if (handshake.from.includes('scrollbar')) {
-
-
-      timeline_wrapper.onscroll = event => send({ type: 'handle_scroll' })
-      const ro = new ResizeObserver(entries => send({ type: 'handle_scroll' }))
-      ro.observe(main_wrapper)
-      PROTOCOL.scrollbar = send
-
-
-      return listen
-    }
-    else if (handshake.from.includes('window_bar')) {
-      PROTOCOL['toggle_active_state'] = toggle_active_state;
-      return listen;
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
     }
     function listen (message) {
-      const { head,  refs, type, data, meta } = message
-      const { by, to, id } = head
-      // if( to !== name) return console.error('address unknown', message)
-      if (by.includes('scrollbar')) {
-        if (message.type === 'set_scroll_start') return setScrollTop(message.data)
-
-        message.type = 'update_size'
-        message.data = {sh: timeline_wrapper.scrollHeight, ch: timeline_wrapper.clientHeight, st: timeline_wrapper.scrollTop}
-        PROTOCOL.scrollbar(message)
-
-
-      }
-      else if (by.includes('window_bar')) {
-        PROTOCOL[type](message)
-      }
-    }
-    function setScrollTop (value) {
-      timeline_wrapper.scrollTop = value
-    }
-    async function toggle_active_state (message) {
-      const { head, refs, type, data, meta } = message
-      const { active_state } = data
-      ;( active_state === 'active')?el.style.display = 'none':''
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
     }
   }
 }
-function get_theme () {
-  return`
-    .main_wrapper {
-      display: flex;
-      container-type: inline-size;
-      width: 100%;
-      height: 100%;
-      margin-bottom: 30px;
-      border: 1px solid var(--primary_color);
-      * { box-sizing: border-box; }
-      .timeline_wrapper {
-        --s: 20px; /* control the size */
-        --_g: var(--bg_color) /* first color */ 0 25%, #0000 0 50%;
-        background:
-          repeating-conic-gradient(at 66% 66%,var(--_g)),
-          repeating-conic-gradient(at 33% 33%,var(--_g)),
-          var(--primary_color);  /* second color */ 
-        background-size: var(--s) var(--s);  
-        overflow: scroll;
-        scrollbar-width: none; /* For Firefox */
-        border: 1px solid var(--primary_color);
-        width: 100%;
-        height: 400px;
-        padding: 0px;
-        display: grid;
-        gap: 20px;
-        grid-template-columns: 12fr;
-        &::-webkit-scrollbar {
-          display: none;
-        }
-      }
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
     }
-    @container (min-width: 768px) {
-      .main_wrapper {
-        .timeline_wrapper {
-          grid-template-columns: repeat(2, 6fr);
-        }
-      }
-    }
-    @container (min-width: 1200px) {
-      .main_wrapper {
-        .timeline_wrapper {
-          grid-template-columns: repeat(3, 4fr);
-        }
-      }
-    }
-  `
+    return Object.assign(get, factory)
+  }
 }
-}).call(this)}).call(this,require('_process'),"/src/node_modules/app_timeline_mini")
-},{"_process":2,"buttons/sm_text_button":20,"path":1,"scrollbar":37,"timeline_card":44,"window_bar":48}],14:[function(require,module,exports){
-// CSS Boiler Plat
+}).call(this)}).call(this,require('_process'),"/src/node_modules/app-timeline/app-timeline.js")
+},{"_process":2,"month-filter":32,"scrollbar":38,"timeline-card":47,"timeline-filter":48,"window-bar":51,"year-filter":52}],15:[function(require,module,exports){
+(function (process,__filename){(function (){
+/******************************************************************************
+  DAY BUTTON COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = day_button
-
+// ----------------------------------------
 // Props - icon/img src
-function day_button (protocol) {
-  const name = `day_button`
-  const notify = protocol({ from: name }, listen)
-  const PROTOCOL = {
+function day_button (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { i } = opts
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {
     toggle_active,
     add_highlight,
     remove_highlight
   }
+  const up_channel = use_protocol('up')({ protocol, state, on })
+  // const notify = protocol({ from: id }, listen)
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode: 'closed' })
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `<div class="day_button"></div>`
   const day_button = shadow.querySelector(".day_button")
-  // Toggle Icon
-  day_button.onclick = (e) => {
-    toggle_active()
-    notify({
-      head: { by: name, to: 'month_card', mid: 0 },
-      type: 'toggle_day_button',
-      data: el.id
-    })
-  }
-  const style = document.createElement('style')
-  style.textContent = get_theme()
-  shadow.append(day_button, style)
-  shadow.adoptedStyleSheets = [sheet]
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  shadow.append(day_button)
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+  day_button.onclick = onclick
 
   return el
 
-  function listen (message) {
-    const { head,  refs, type, data, meta } = message
-    const { by, to, mid } = head
-    PROTOCOL[type]()
+  function onclick (e) {
+    toggle_active()
+    up_channel.send({
+      head: [id, up_channel.send.id, up_channel.mid++],
+      type: 'toggle_day_button',
+    })
   }
   function toggle_active () {
     day_button.classList.toggle('active')
@@ -2399,7 +3372,7 @@ function day_button (protocol) {
   }
 }
 function get_theme () {
-  return`
+  return `
     .day_button {
       display: flex;
       justify-content: center;
@@ -2419,59 +3392,115 @@ function get_theme () {
     }
   `
 }
-},{}],15:[function(require,module,exports){
-(function (__filename){(function (){
-
-const sheet = new CSSStyleSheet
-
-sheet.replaceSync(get_theme())
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/buttons/day-button.js")
+},{"_process":2}],16:[function(require,module,exports){
+(function (process,__filename){(function (){
 /******************************************************************************
-  ICON COMPONENT
+  ICON BUTTON COMPONENT
 ******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
 var count = 0
-const ID = __filename
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
 const STATE = { ids: {}, net: {} } // all state of component module
 // ----------------------------------------
-
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = icon_button
-
-function icon_button (opts, protocol) {
+// ----------------------------------------
+function icon_button (opts = default_opts, protocol) {
   // ----------------------------------------
-  // INSTANCE STATE & ID
+  // ID + JSON STATE
   // ----------------------------------------
   const id = `${ID}:${count++}` // assigns their own name
-  const status = { active: true }
-  const state = STATE.ids[id] = { status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
   // ----------------------------------------
-  // opts
+  // OPTS
   // ----------------------------------------
   const { src = '', src_active = '' } = opts
   const $src = src // @TODO: make those subscribable signals
   const $src_acitve = src_active
   // ----------------------------------------
-  // protocol
+  // PROTOCOL
   // ----------------------------------------
   const on = { 'activate': onactivate, 'inactivate': oninactivate }
-  const send = protocol(Object.assign(listen, { id }))
-  function invalid (message) { console.error('invalid type', message) }
-  function listen (message) {
-    console.log(`[${id}]`, message)
-    const action = on[message.type] || invalid
-    action(message)
-  }
+  const channel = use_protocol('up')({ protocol, state,  on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="icon_btn"></div>`
+  const icon_button = shadow.querySelector('.icon_btn')
+  // ----------------------------------------
+  // ELEMENTS
   // ----------------------------------------
   const [svg_icon, svg_active] = Object.assign(document.createElement('div'), {
     innerHTML: `${src} ${src_active}` // svg icons
   }).children
-  // ----------------------------------------
-  const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode: 'closed' })
-  shadow.innerHTML = `<div class="icon_btn"></div>`
-  shadow.adoptedStyleSheets = [sheet]
-  const [icon_button] = shadow.children
   icon_button.append(svg_icon)
   // Toggle Icon
   icon_button.onclick = onclick
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
   return el
 
@@ -2486,9 +3515,10 @@ function icon_button (opts, protocol) {
     if (svg_active) icon_button.replaceChildren(svg_active)
   }
   function onclick (e) {
-    const [by, to, mid] = [id, send.id, 0]
-    const message = { head: [by, to, mid], type: 'click' }
-    send(message)
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'click'
+    })
   }
 }
 function get_theme () {
@@ -2514,36 +3544,110 @@ function get_theme () {
     }
   `
 }
-}).call(this)}).call(this,"/src/node_modules/buttons/icon_button.js")
-},{}],16:[function(require,module,exports){
-(function (process,__dirname){(function (){
-const path = require('path')
-const cwd = process.cwd()
-const prefix = path.relative(cwd, __dirname)
-
-// CSS Boiler Plat
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/buttons/icon-button.js")
+},{"_process":2}],17:[function(require,module,exports){
+(function (process,__filename){(function (){
+/******************************************************************************
+  LOGO BUTTON COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = logo_button
-
-function logo_button () {
+// ----------------------------------------
+function logo_button (opts = default_opts) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  const prefix = ID.split('/').slice(0, -1).join('/')
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { data } = opts
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode: 'closed' })
-  shadow.innerHTML = `
-    <div class="logo_button">
-      <img src="${prefix}/logo.png" />
-      <span> DAT ECOSYSTEM </span>
-    </div>
-    <style>${get_theme()}</style>
-  `
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="logo_button">
+    <img src="${prefix}/logo.png" />
+    <span> DAT ECOSYSTEM </span>
+  </div>`
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
   return el
 }
 function get_theme () {
-  return`
+  return `
     .logo_button {
       width: 100%;
       height: 40px;
@@ -2560,26 +3664,89 @@ function get_theme () {
     }
   `
 }
-}).call(this)}).call(this,require('_process'),"/src/node_modules/buttons")
-},{"_process":2,"path":1}],17:[function(require,module,exports){
-(function (process,__dirname){(function (){
-const path = require('path')
-const cwd = process.cwd()
-const prefix = path.relative(cwd, __dirname)
-
-// CSS Boiler Plat
-const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
-module.exports = select_button
-
-function select_button (opts, protocol) {
-  const notify = protocol(null, listen)
-  let message = {
-    head: ['select_button', 'project_filter', 'project_filter'],
-    type: 'setFilter',
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
   }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/buttons/logo-button.js")
+},{"_process":2}],18:[function(require,module,exports){
+(function (process,__filename){(function (){
+/******************************************************************************
+  SELECT BUTTON COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = select_button
+// ----------------------------------------
+function select_button (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  let active_option = ''
+  let active_state = true
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
   const { data } = opts
   // Assigning all the icons
   const { img_src } = data
@@ -2587,31 +3754,39 @@ function select_button (opts, protocol) {
     icon_arrow_down,
     icon_arrow_up
   } = img_src
-  let active_option = ''
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode:`closed` })
-  shadow.innerHTML = `
-    <div class="select_button_wrapper bottom">
-      <div class="option_wrapper">
-        ${opts.choices.map(choice => `<div class="option">${choice}</div>`).join('')}
-      </div>
-      <div class="button_wrapper">
-        <span class="button_name">${opts.name}: </span>
-        <span class="selected_option">${'NULL'}</span>
-        <span class="arrow_icon">
-          ${icon_arrow_up}
-        </span>
-      </div>
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="select_button_wrapper bottom">
+    <div class="option_wrapper">
+      ${opts.choices.map(choice => `<div class="option">${choice}</div>`).join('')}
     </div>
-    <style> ${get_theme()} </style>
-  `
+    <div class="button_wrapper">
+      <span class="button_name">${opts.name}: </span>
+      <span class="selected_option">${'NULL'}</span>
+      <span class="arrow_icon">
+        ${icon_arrow_up}
+      </span>
+    </div>
+  </div>`
   const select_button_wrapper = shadow.querySelector('.select_button_wrapper')
-  // Adding Select Toggle function
   const select_toggle_btn = shadow.querySelector('.button_wrapper')
-  let active_state = true
+  const options = shadow.querySelectorAll('.option')
+  const selected_option = shadow.querySelector('.selected_option')
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
   select_toggle_btn.onclick = (e) => {
-    select_button_wrapper.classList.toggle('active');
-    ;(active_state)?shadow.querySelector('.arrow_icon').innerHTML = icon_arrow_down: shadow.querySelector('.arrow_icon').innerHTML = icon_arrow_up
+    select_button_wrapper.classList.toggle('active')
+    shadow.querySelector('.arrow_icon').innerHTML = active_state ? icon_arrow_down : icon_arrow_up
     active_state = !active_state
   }
   // select_toggle_btn.addEventListener('click', function() {
@@ -2622,8 +3797,6 @@ function select_button (opts, protocol) {
   //   console.log(e.target.className)
   // })
   // Select all .option divs
-  const options = shadow.querySelectorAll('.option')
-  const selected_option = shadow.querySelector('.selected_option')
   // Attach click event listener to each .option div
   options.forEach((option) => {
     option.addEventListener('click', () => {
@@ -2638,23 +3811,21 @@ function select_button (opts, protocol) {
         active_option = option
       }
       select_button_wrapper.classList.remove('active')
-      message['data'] = { filter: opts.name, value: selected_option.innerHTML }
-      notify(message)
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'value',
+        data: { filter: opts.name, value: selected_option.innerHTML }
+      })
     })
   })
-  // shadow.append(main, navbar(opts, protocol))
-  shadow.adoptedStyleSheets = [sheet]
-  
-  return el
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
-  function listen (message) {
-    // const {head,  refs, type, data, meta} = message
-    // const [by, to, id] = head
-    // if( to !== id) return console.error('address unknown', message)
-  }
+  return el
 }
 function get_theme () {
-  return`
+  return `
     .select_button_wrapper {
       box-sizing: border-box;
       position: relative;
@@ -2739,124 +3910,126 @@ function get_theme () {
     }
   `
 }
-}).call(this)}).call(this,require('_process'),"/src/node_modules/buttons")
-},{"_process":2,"path":1}],18:[function(require,module,exports){
-const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
-module.exports = sm_icon_button
-
-function sm_icon_button (opts, protocol) {
-  let { src, src_active, activate } = opts
-  const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode:'closed' })
-  shadow.innerHTML = `<div class="sm_icon_button">${src}</div>`
-  shadow.adoptedStyleSheets = [sheet]
-  const sm_icon_button = shadow.querySelector(".sm_icon_button")
-
-  let activeState = true
-
-  if (activate) sm_icon_button.onclick = toggle_class
-  
-  return el
-
-  function toggle_class (e) {
-    if (src_active) {
-      sm_icon_button.innerHTML = activeState ? src_active: src
-      activeState = !activeState
-    }
-    let selector = e.target.classList
-    ;( selector.contains('active') ) ? selector.remove('active') : selector.add('active')
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
   }
 }
-function get_theme () {
-  return`
-    .sm_icon_button {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 30px;
-      box-sizing: border-box;
-      aspect-ratio: 1/1;
-      cursor: pointer;
-      border: 1px solid var(--primary_color);
-      // border-left: var(--bg_color);
-      background-color: var(--bg_color);
-      &.active {
-        background-color: var(--ac-2)
-      }
-      svg, svg * {
-        pointer-events:none !important;
-      }
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
     }
-  `
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
 }
-},{}],19:[function(require,module,exports){
-(function (__filename){(function (){
-const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/buttons/select-button.js")
+},{"_process":2}],19:[function(require,module,exports){
+(function (process,__filename){(function (){
 /******************************************************************************
-  DESKTOP COMPONENT
+  SM ICON BUTTON ALT COMPONENT
 ******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
 var count = 0
-const ID = __filename
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
 const STATE = { ids: {}, net: {} } // all state of component module
 // ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
 const default_opts = { toggle: false }
-
+// ----------------------------------------
 module.exports = sm_icon_button_alt
-
+// ----------------------------------------
 // opts - icon/img src
 function sm_icon_button_alt (opts = default_opts, protocol) {
   // ----------------------------------------
-  // INSTANCE STATE & ID
+  // ID + JSON STATE
   // ----------------------------------------
   const id = `${ID}:${count++}` // assigns their own name
   const status = {}
   const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
-  const name = id
-  // ----------------------------------------
-  // PROTOCOL
-  // ----------------------------------------
-  const send = protocol({ from:name }, msg => {})
+  const cache = resources({})
+  let active_state = true
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
   let { toggle, src, src_active } = opts
   // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state , on })
+  // ----------------------------------------
   // TEMPLATE
   // ----------------------------------------
   const el = document.createElement('div')
   const shadow = el.attachShadow({ mode:'closed' })
-  shadow.innerHTML = `<div class="sm_icon_button_alt">${src}</div>`
   shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="sm_icon_button_alt">${src}</div>`
   const sm_icon_button_alt = shadow.querySelector('.sm_icon_button_alt')
   // ----------------------------------------
-  // TEMPLATE
+  // ELEMENTS
   // ----------------------------------------
-  let active_state = true
   sm_icon_button_alt.onclick = onclick
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
   return el
 
   function onclick (e) {
-    send?.({
-      head: { by: name, to: 'window_bar_0', mid: 0 },
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
       type: 'click',
       data: { active_state }
     })
     if (!toggle) return
-    if (src_active) {
-      sm_icon_button_alt.innerHTML = active_state ? src_active : src
-    }
+    if (src_active) sm_icon_button_alt.innerHTML = active_state ? src_active : src
     sm_icon_button_alt.classList.toggle('active', active_state)
     active_state = !active_state
   }
 }
 function get_theme () {
-  return`
+  return `
     .sm_icon_button_alt {
       display: flex;
       justify-content: center;
@@ -2879,37 +4052,263 @@ function get_theme () {
     }
   `
 }
-}).call(this)}).call(this,"/src/node_modules/buttons/sm_icon_button_alt.js")
-},{}],20:[function(require,module,exports){
-// CSS Boiler Plat
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/buttons/sm-icon-button-alt.js")
+},{"_process":2}],20:[function(require,module,exports){
+(function (process,__filename){(function (){
+/******************************************************************************
+  SM ICON BUTTON COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
-module.exports = sm_text_button
-
-function sm_text_button (props) {
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = sm_icon_button
+// ----------------------------------------
+function sm_icon_button (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  let activeState = true
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  let { src, src_active, activate } = opts
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state , on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode:'closed' })
-  shadow.innerHTML = `
-    <div class="sm_text_button"> 
-      ${props.text}
-    </div>
-    <style>${get_theme()}</style>
-  `
-  let sm_text_button = shadow.querySelector('.sm_text_button')
-  sm_text_button.onclick = toggle_class
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
-  
+  shadow.innerHTML = `<div class="sm_icon_button">${src}</div>`
+  const sm_icon_button = shadow.querySelector(".sm_icon_button")
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  sm_icon_button.onclick = toggle_class
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+
+  return el
+
+  function toggle_class (e) {
+    if (activate) {
+      if (src_active) {
+        sm_icon_button.innerHTML = activeState ? src_active: src
+        activeState = !activeState
+      }
+      let selector = e.target.classList
+      selector.toggle('active', !selector.contains('active'))  
+    }
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'click'
+    })
+  }
+}
+function get_theme () {
+  return `
+    .sm_icon_button {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 30px;
+      box-sizing: border-box;
+      aspect-ratio: 1/1;
+      cursor: pointer;
+      border: 1px solid var(--primary_color);
+      // border-left: var(--bg_color);
+      background-color: var(--bg_color);
+      &.active {
+        background-color: var(--ac-2)
+      }
+      svg, svg * {
+        pointer-events:none !important;
+      }
+    }
+  `
+}
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/buttons/sm-icon-button.js")
+},{"_process":2}],21:[function(require,module,exports){
+(function (process,__filename){(function (){
+/******************************************************************************
+  SM TEXT BUTTON COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = sm_text_button
+// ----------------------------------------
+function sm_text_button (opts = default_opts) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { data } = opts
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ state , on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="sm_text_button"> 
+    ${opts.text}
+  </div>`
+  let sm_text_button = shadow.querySelector('.sm_text_button')
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  sm_text_button.onclick = toggle_class
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+
   return el
 
   function toggle_class (e) {
     let selector = e.target.classList
-    ;( selector.contains('active') ) ? selector.remove('active') : selector.add('active')
+    selector.toggle('active', !selector.contains('active'))
   }
 }
 function get_theme () {
-  return`
+  return `
     .sm_text_button {
       text-align: center;
       font-size: 0.875em;
@@ -2929,45 +4328,101 @@ function get_theme () {
     }
   `
 }
-},{}],21:[function(require,module,exports){
-(function (__filename){(function (){
-const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/buttons/sm-text-button.js")
+},{"_process":2}],22:[function(require,module,exports){
+(function (process,__filename){(function (){
 /******************************************************************************
   TAB BUTTON COMPONENT
 ******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
 var count = 0
-const ID = __filename
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
 const STATE = { ids: {}, net: {} } // all state of component module
 // ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
 const default_opts = { name: '' }
-
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = tab_button
-
+// ----------------------------------------
 function tab_button (opts = default_opts, protocol) {
   // ----------------------------------------
-  // INSTANCE STATE & ID
+  // ID + JSON STATE
+  // ----------------------------------------
   const id = `${ID}:${count++}` // assigns their own name
   const status = {}
   const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
-  // ----------------------------------------
-  const on = { 'activate': toggle_class, 'inactivate': toggle_class }
-  // ----------------------------------------
-  const send = protocol(Object.assign(listen, { id }))
-  const up_channel = state.net[send.id] = { mid: 0, send, on } // store channel
-  state.aka.up = send.id
+  const cache = resources({})
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
   const { img_src : {
-    icon_close_dark= `${prefix}/icon_close_dark.svg`,
+    icon_close_dark = `${prefix}/icon_close_dark.svg`,
   }} = opts.data
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = { 'activate': toggle_class, 'inactivate': toggle_class }
+  const up_channel = use_protocol('up')({ protocol, state , on })
   // ----------------------------------------
   // TEMPLATE
   // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode: 'closed' })
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `<div class="tab_button">
     <div class="text_wrapper"> ${opts.name} </div>
     <div class="close_button"> ${icon_close_dark} </div>
@@ -2975,11 +4430,15 @@ function tab_button (opts = default_opts, protocol) {
   const tab_button = shadow.querySelector('.tab_button')
   const text_wrapper = shadow.querySelector('.text_wrapper')
   const close_btn = shadow.querySelector('.close_button')
-
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
   text_wrapper.onclick = onclick
   close_btn.onclick = onclose
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
   toggle_class({ type: 'activate' })
-  shadow.adoptedStyleSheets = [sheet]
 
   return el
 
@@ -2987,25 +4446,22 @@ function tab_button (opts = default_opts, protocol) {
     const mode = type === 'activate'
     tab_button.classList.toggle('active', mode)
   }
-  function invalid (message) { console.error('invalid type', message) }
-  function listen (message) {
-    console.log(`[${id}]`, message)
-    const { on } = up_channel
-    const action = on[message.type] || invalid
-    action(message)
-  }
   function onclose (event) {
     el.remove()
-    const head = [id, up_channel.send.id, up_channel.mid++]
-    send({ head, type: 'close' })
+    up_channel.send({
+      head: [id, up_channel.send.id, up_channel.mid++],
+      type: 'close'
+    })
   }
   function onclick (e) {
-    const head = [id, up_channel.send.id, up_channel.mid++]
-    send({ head, type: 'click' })
+    up_channel.send({
+      head: [id, up_channel.send.id, up_channel.mid++],
+      type: 'click'
+    })
   }
 }
 function get_theme () {
-  return`
+  return `
     .tab_button {
       display: flex;
       cursor: pointer;
@@ -3042,53 +4498,110 @@ function get_theme () {
     }
   `
 }
-}).call(this)}).call(this,"/src/node_modules/buttons/tab_button.js")
-},{}],22:[function(require,module,exports){
-(function (__filename){(function (){
-
-const sheet = new CSSStyleSheet
-
-sheet.replaceSync(get_theme())
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/buttons/tab-button.js")
+},{"_process":2}],23:[function(require,module,exports){
+(function (process,__filename){(function (){
 /******************************************************************************
-  TEXT COMPONENT
+  TEXT BUTTON COMPONENT
 ******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
 var count = 0
-const ID = __filename
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
 const STATE = { ids: {}, net: {} } // all state of component module
 // ----------------------------------------
-
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = text_button
-
-function text_button (opts, protocol) {
+// ----------------------------------------
+function text_button (opts = default_opts, protocol) {
   // ----------------------------------------
-  // INSTANCE STATE & ID
+  // ID + JSON STATE
   // ----------------------------------------
   const id = `${ID}:${count++}` // assigns their own name
-  const state = STATE.ids[id] = { status: {}, wait: {}, net: {}, aka: {} } // all state of component instance
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
   // ----------------------------------------
-  // opts
+  // OPTS
   // ----------------------------------------
   const { text } = opts
   const $text = text // @TODO: make it subscribable signals
   // make it a signal: load initial + listen updates
   // ----------------------------------------
-  // protocol
+  // PROTOCOL
   // ----------------------------------------
   const on = { 'activate': onactivate, 'inactivate': oninactivate }
-  const send = protocol(Object.assign(listen, { id }))
-  function invalid (message) { console.error('invalid type', message) }
-  function listen (message) {
-    console.log(`[${id}]`, message)
-    const action = on[message.type] || invalid
-    action(message)
-  }
+  const channel = use_protocol('up')({ protocol, state , on })
+  // ----------------------------------------
+  // TEMPLATE
   // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode: 'closed' })
-  shadow.innerHTML = `<div class="text_button">${$text}</div>`
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
-  const [text_button] = shadow.children
+  shadow.innerHTML = `<div class="text_button">${$text}</div>`
+  const text_button = shadow.querySelector('.text_button')
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
   text_button.onclick = toggle_class
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
   return el
 
@@ -3101,9 +4614,10 @@ function text_button (opts, protocol) {
     text_button.classList.toggle('active', state.status.active)
   }
   function toggle_class (e) {
-    const [by, to, mid] = [id, send.id, 0]
-    let message = { head: [by, to, mid], type: 'click' }
-    send(message)
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'click'
+    })
   }
 }
 function get_theme () {
@@ -3127,51 +4641,135 @@ function get_theme () {
     }
   `
 }
-}).call(this)}).call(this,"/src/node_modules/buttons/text_button.js")
-},{}],23:[function(require,module,exports){
-// CSS Boiler Plat
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/buttons/text-button.js")
+},{"_process":2}],24:[function(require,module,exports){
+(function (process,__filename){(function (){
+/******************************************************************************
+  WINDOW BAR COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = year_button
-
-function year_button (props, protocol) {
-  const name = 'year_button'
-  const notify = protocol({ from: name }, listen)
-  const { data, latest_date } = props
+// ----------------------------------------
+function year_button (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { data, latest_date } = opts
   const { img_src : {
     icon_arrow_up= `${prefix}/icon_arrow_up.svg`,
   }} = data
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = { 'update_label': on_update_label }
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode:'closed' })
+  const shadow = el.attachShadow(shopts)
   const date = new Date(latest_date)
-  shadow.innerHTML = `
-    <div class="year_button">
-      <div class="text_wrapper">${date.getFullYear()}</div>
-      ${icon_arrow_up}
-    </div>
-    <style> ${get_theme()} </style>
-  `
-  const year_button = shadow.querySelector('.year_button')
-  year_button.onclick = toggle_class
-  const text_wrapper = shadow.querySelector('.text_wrapper')
   shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="year_button">
+    <div class="text_wrapper">${date.getFullYear()}</div>
+    ${icon_arrow_up}
+  </div>`
+  const year_button = shadow.querySelector('.year_button')
+  const text_wrapper = shadow.querySelector('.text_wrapper')
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  year_button.onclick = toggle_class
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
   return el
 
   function toggle_class (e) {
-    year_button.classList.toggle('active')
+    const bool = year_button.classList.toggle('active')
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'click',
+      data: bool
+    })
   }
-  function listen (message) {
-    const { head,  refs, type, data, meta } = message
-    const { by, to, id } = head
+  function on_update_label (message) {
+    const { data } = message
     if (data.month || data.year) text_wrapper.innerHTML = `<b>${data.month.slice(0,3)}</b>${data.month && data.year && '/'}${data.year}`
     else text_wrapper.innerHTML = 'Select date'
   }
 }
 function get_theme () {
-  return`
+  return `
     .year_button {
       display: flex;
       cursor: pointer;
@@ -3200,26 +4798,88 @@ function get_theme () {
     }
   `
 }
-},{}],24:[function(require,module,exports){
-(function (process,__dirname){(function (){
-const window_bar = require('window_bar')
-const sm_text_button = require('buttons/sm_text_button')
-const path = require('path')
-
-const cwd = process.cwd()
-const prefix = path.relative(cwd, __dirname)
-
-// CSS Boiler Plat
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/buttons/year-button.js")
+},{"_process":2}],25:[function(require,module,exports){
+(function (process,__filename){(function (){
+const window_bar = require('window-bar')
+/******************************************************************************
+  COMING SOON COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
-let id = 0
-
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = commingsoon
-
-function commingsoon (opts, protocol) {
-  const name = `commingsoon-${id++}`
+// ----------------------------------------
+function commingsoon (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
   const { data } = opts
   // Assigning all the icons
   const { img_src } = data
@@ -3228,55 +4888,59 @@ function commingsoon (opts, protocol) {
     tree_character = `${prefix}/tree_character.png`,
     icon_pdf_reader
   } = img_src
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = { }
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow ({ mode : 'closed' })
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `
-    <div class="cover_wrapper">
-      <div class="cover_content">
-        <div class="cover_image">
-          <img src="${banner_cover}" />
-        </div>
-        <div class="content_wrapper">
-          <img src="${tree_character}" />
-          Coming Soon
-        </div>
+  <div class="cover_wrapper">
+    <div class="windowbar"></div>
+    <div class="cover_content">
+      <div class="cover_image">
+        <img src="${banner_cover}" />
+      </div>
+      <div class="content_wrapper">
+        <img src="${tree_character}" />
+        Coming Soon
       </div>
     </div>
-    <style> ${get_theme()} </style>
-  `
-  const cover_window = window_bar({
-    name: 'Coming_soon.pdf', 
-    src: icon_pdf_reader,
-    data: data
-  }, cover_protocol)
+  </div>`
   const cover_wrapper = shadow.querySelector('.cover_wrapper')
-  cover_wrapper.prepend(cover_window)
-  shadow.adoptedStyleSheets = [sheet]
+  // ----------------------------------------
+  const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // windowbar
+    const on = { 'toggle_active_state': toggle_active_state }
+    const protocol = use_protocol('windowbar')({ state, on })
+    const opts = {
+      name: 'Coming_soon.pdf', 
+      src: icon_pdf_reader,
+      data
+    }
+    const element = window_bar(opts, protocol)
+    windowbar_shadow.append(element)
+    async function toggle_active_state (message) {
+      const { active_state } = message.data
+      if (active_state === 'active') el.style.display = 'none'
+    }
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
   return el
-
-  // cover protocol
-  function cover_protocol (message, send) {
-    return listen
-  }
-  // Listening to toggle event 
-  function listen (message) {
-    const { head, refs, type, data, meta } = message  
-    const PROTOCOL = {
-      'toggle_active_state': toggle_active_state
-    }
-    const action = PROTOCOL[type] || invalid      
-    action(message)
-  }
-  function invalid (message) { console.error('invalid type', message) }
-  async function toggle_active_state (message) {
-    const { head, refs, type, data, meta } = message
-    const { active_state } = data
-    ;( active_state === 'active')?cover_wrapper.style.display = 'none':''
-  }
 }
 function get_theme () {
-  return`
+  return `
     * {
       box-sizing: border-box;
     }
@@ -3326,19 +4990,92 @@ function get_theme () {
     }
   `
 }
-}).call(this)}).call(this,require('_process'),"/src/node_modules/comingsoon")
-},{"_process":2,"buttons/sm_text_button":20,"path":1,"window_bar":48}],25:[function(require,module,exports){
-const mission_statement = require('mission_statement')
-const important_documents = require('important_documents')
-const our_member = require('our_member')
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/comingsoon/comingsoon.js")
+},{"_process":2,"window-bar":51}],26:[function(require,module,exports){
+(function (process,__filename){(function (){
+const mission_statement = require('mission-statement')
+const important_documents = require('important-documents')
+const our_members = require('our-members')
 const tools = require('tools')
-
-const sheet = new CSSStyleSheet()
+const app_icon = require('app-icon')
+/******************************************************************************
+  WINDOW BAR COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
 sheet.replaceSync(get_theme())
-
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = consortium_page
-
-function consortium_page (opts, protocol) {
+// ----------------------------------------
+function consortium_page (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
   // Image data
   const { data } = opts
   const { img_src } = data
@@ -3346,72 +5083,118 @@ function consortium_page (opts, protocol) {
     icon_pdf_reader,
     icon_folder,
   } = img_src
-  // Communication data
-  const PROTOCOLS = {}
-  const el = document.createElement('div')
-  const shadow = el.attachShadow({mode: 'closed'})
-  // adding a `main_wrapper` 
-  shadow.innerHTML = `
-    <div class="main_wrapper">
-      <div class="icon_wrapper"></div>
-      <div class="popup_wrapper">
-        <div class="mini_popup_wrapper"></div>
-      </div>
-    </div>
-    <style>${get_theme()}</style>
-  `
   const icons_data = [{
-    name: 'mission_ statement',
+    name: 'mission_statement',
     type: '.md',
     img: icon_pdf_reader,
-    window: 'mission_statement'
   },{
-    name: 'important_ documents',
+    name: 'important_documents',
     type: '.md',
     img: icon_pdf_reader,
-    window: 'important_documents'
   },{
-    name: 'our_ member',
+    name: 'our_member',
     type: '.md',
     img: icon_pdf_reader,
-    window: 'our_member'
   },{
     name: 'tools',
-    type: '',
+    type: '/', // folder
     img: icon_folder,
-    window: 'tools'
   }]
-  const icon_wrapper = shadow.querySelector('.icon_wrapper')
-  icons_data.forEach((icon_data) => {
-    const icon = document.createElement('div')
-    icon.classList.add('icon')
-    icon.innerHTML = `
-      ${icon_data.img}
-      <span>${icon_data.name}${icon_data.type}</span>
-    `
-    icon.ondblclick = () => {PROTOCOLS['notify_'+icon_data.window]()}
-    icon.ontouchend = () => {PROTOCOLS['notify_'+icon_data.window]()}
-    icon_wrapper.append(icon)
-  })
-  const mini_popup_wrapper = shadow.querySelector('.mini_popup_wrapper')
-  mini_popup_wrapper.append(
-    important_documents({ data }, consortium_protocol), 
-    our_member({ data }, consortium_protocol),
-    tools({ data }, consortium_protocol)
-  )
-  const popup_wrapper = shadow.querySelector('.popup_wrapper')
-  popup_wrapper.append(mission_statement({ data }, consortium_protocol))
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="main_wrapper">
+    <div class="icon_wrapper"></div>
+    <div class="popup_wrapper">
+      <div class="mini_popup_wrapper"></div>
+    </div>
+  </div>`
+  const popup_wrapper = shadow.querySelector('.popup_wrapper')
+  const mini_popup_wrapper = shadow.querySelector('.mini_popup_wrapper')
+  const icon_wrapper = shadow.querySelector('.icon_wrapper')
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // desktop icons
+    const on = {}
+    function make_element (icon_data, i) {
+      const { name, type, img: source } = icon_data
+      const label = `${name}${type}`
+      const protocol = use_protocol(label)({ state, on })
+      const opts = { source, label }
+      const element = shadowfy()(app_icon(opts, protocol))
+      const onclick = show(label)
+      element.ondblclick = onclick // () => {PROTOCOLS['notify_'+window]()}
+      element.ontouchend = onclick // () => {PROTOCOLS['notify_'+window]()}
+      return element
+      function show (label) {
+        return event => {
+          const channel = state.net[state.aka[name]]
+          channel.send({
+            head: [id, channel.send.id, channel.mid++],
+            type: 'show'
+          })
+        }
+      }
+    }
+    const elements = icons_data.map(make_element)
+    icon_wrapper.append(...elements)
+  }
+  const program = cache({
+    'HOME': () => home_page({ data: current_theme }, use_protocol('home_page')({ state })),
+    'PROJECTS': () => projects_page({ data: current_theme }, use_protocol('projects_page')({ state })),
+    'GROWTH PROGRAM': () => growth_page({ data: current_theme }, use_protocol('growth_page')({ state })),
+    'TIMELINE': () => timeline_page({ data: current_theme }, use_protocol('timeline_page')({ state })),
+    'CONSORTIUM': () => consortium_page({ data: current_theme }, use_protocol('consortium_page')({ state })),
+  })
+  { // important documents
+    const { name: petname } = important_documents
+    const protocol = use_protocol(petname)({ state })
+    const opts = { data }
+    const element = shadowfy()(important_documents(opts, protocol))
+    mini_popup_wrapper.append(element)
+  }
+  { // our members
+    const { name: petname } = our_members
+    const protocol = use_protocol(petname)({ state })
+    const opts = { data }
+    const element = shadowfy()(our_members(opts, protocol))
+    mini_popup_wrapper.append(element)
+  }
+  { // tools
+    const { name: petname } = tools
+    const protocol = use_protocol(petname)({ state })
+    const opts = { data }
+    const element = shadowfy()(tools(opts, protocol))
+    mini_popup_wrapper.append(element)
+  }
+  { // mission statement
+    const { name: petname } = mission_statement
+    const protocol = use_protocol(petname)({ state })
+    const opts = { data }
+    const element = shadowfy()(mission_statement(opts, protocol))
+    popup_wrapper.append(element)
+    // @TODO: why popup_wrapper vs. mini_popup_wrapper ?
+    // @TODO: separate data from programs!
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
   return el
-
-  function consortium_protocol (handshake, send, mid = 0) {
-    PROTOCOLS['notify_'+handshake.from] = send
-  }
 }
 function get_theme () {
   return `
     .main_wrapper {
+      box-sizing: border-box;
       container-type: inline-size;
       display: flex;
       gap: 20px;
@@ -3419,7 +5202,6 @@ function get_theme () {
       margin: 0;
       padding:30px 10px;
       opacity: 1;
-      background-image: radial-gradient(var(--primary_color) 2px, var(--bg_color) 2px);
       background-size: 16px 16px;
       .icon_wrapper {
         display: flex;
@@ -3430,25 +5212,6 @@ function get_theme () {
         height: fit-content;
         align-items: center;
         user-select: none;
-        .icon{
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          svg {
-            height: 50px;
-            width: 50px;
-            margin: 5px 0;
-            background-color: white;
-            path{ fill: black; }
-          }
-          span {
-            background-color: var(--bg_color);
-            width: 150px;
-            padding: 10px 0;
-            text-align: center;
-            word-wrap: break-word;
-          }   
-        }
         &:hover {
           cursor: default;
         }
@@ -3500,35 +5263,125 @@ function get_theme () {
     }
   `
 }
-},{"important_documents":28,"mission_statement":29,"our_member":33,"tools":47}],26:[function(require,module,exports){
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/consortium-page/consortium-page.js")
+},{"_process":2,"app-icon":10,"important-documents":29,"mission-statement":30,"our-members":34,"tools":50}],27:[function(require,module,exports){
+(function (process,__filename){(function (){
 const comingsoon = require('comingsoon')
-const app_footer = require('app_footer')
-
-module.exports = growth_page
-
-// CSS Boiler Plat
+const app_footer = require('app-footer')
+/******************************************************************************
+  DAT GARDEN COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
-function growth_page (opts, protocol) {
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = growth_page
+// ----------------------------------------
+function growth_page (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
   const { data } = opts
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode: 'closed' })
-  // adding a `main-wrapper` 
-  shadow.innerHTML = `
-    <div class="main-wrapper">
-      <div class="main"></div>
-    </div>
-    <style>${get_theme()}</style>
-  `
-  const components = [
-    comingsoon({ data }),
-    app_footer({ data }),
-  ]
-  const main = shadow.querySelector('.main')
-  main.append(...components)
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="main-wrapper">
+    <div class="main"></div>
+  </div>`
+  const main = shadow.querySelector('.main')
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // coming soon
+    const on = {}
+    const protocol = use_protocol('comingsoon')({ state, on })
+    const opts = { data }
+    const element = shadowfy()(comingsoon(opts, protocol))
+    main.append(element)
+  }
+  { // app_footer
+    const on = {}
+    const protocol = use_protocol('app_footer')({ state, on })
+    const opts = { data }
+    const element = shadowfy()(app_footer(opts, protocol))
+    main.append(element)
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
   return el
 }
@@ -3543,7 +5396,6 @@ function get_theme () {
         margin: 0;
         padding: 30px 10px;
         opacity: 1;
-        background-image: radial-gradient(var(--primary_color) 2px, var(--bg_color) 2px);
         background-size: 16px 16px;
       }
     }
@@ -3554,76 +5406,156 @@ function get_theme () {
     }
   `
 }
-},{"app_footer":9,"comingsoon":24}],27:[function(require,module,exports){
-const cover_app = require('app_cover')
-const app_timeline_mini = require('app_timeline_mini')
-const app_projects_mini = require('app_projects_mini')
-const app_about_us = require('app_about_us')
-const app_footer = require('app_footer')
-
-// CSS Boiler Plat
-const sheet = new CSSStyleSheet
-sheet.replaceSync(get_theme())
-
-// HOME PAGE
-module.exports = home_page
-
-function home_page (opts, protocol) {
-    const { data } = opts
-    const components = [
-      cover_app({ data }),
-      app_timeline_mini({ data }),
-      app_projects_mini({ data }),
-      app_about_us({ data }),
-      app_footer({ data }),
-    ]
-  const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode: 'closed' })
-  // adding a `main-wrapper` 
-  shadow.innerHTML = `
-    <div class="main-wrapper">
-      <div class="main"></div>
-    </div>
-    <style>${get_theme()}</style>
-  `
-  const main = shadow.querySelector('.main')
-  main.append(...components)
-  // shadow.append(main)
-  shadow.adoptedStyleSheets = [sheet]
-
-  return el
-
-  // Placeholder code for learning purposes
-  // Will be removed
-  function home_protocol (handshake, send){
-    listen.id  = id
-    if (send) return listen
-    const PROTOCOL = {
-      'toggle_display' : toggle_display
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
     }
-    send = handshake(null, listen)
-    function listen (message){
-      function format (new_message = {
-        head: [from = 'alice', to = 'bob', message_id = 1],
-        refs: { cause: message.head }, // reply to received message
-        type: 'change_theme',
-        data: `.foo { background-color: red; }`
-      }) { return new_message }
-      console.log(format())
-      // const { head, type, data } = message
-      // const [by, to, id] = head
-      // if (to !== id) return console.error('address unknown', message)
-      // const action = PROTOCOL[type] || invalid
-      // action(message)
-    }
-    function invalid (message) { console.error('invalid type', message) }
-    async function toggle_display ({ head: [to], data: theme }) {
-      // @TODO: apply theme to `sheet` and/or `style` and/or css `var(--property)`
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
     }
   }
 }
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/dat-garden/dat-garden.js")
+},{"_process":2,"app-footer":9,"comingsoon":25}],28:[function(require,module,exports){
+(function (process,__filename){(function (){
+const cover_app = require('app-cover')
+const app_timeline_mini = require('app-timeline-mini')
+const app_projects_mini = require('app-projects-mini')
+const app_about_us = require('app-about-us')
+const app_footer = require('app-footer')
+/******************************************************************************
+  HOME PAGE COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = home_page
+// ----------------------------------------
+function home_page (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { data } = opts
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const shadow = el.attachShadow(shopts)
+  // adding a `main-wrapper` 
+  shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="main-wrapper">
+    <div class="main"></div>
+  </div>`
+  // ----------------------------------------
+  const main = shadow.querySelector('.main').attachShadow(shopts)
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // cover app
+    const on = {}
+    const protocol = use_protocol('cover_app')({ state, on })
+    const opts = { data }
+    const element = shadowfy()(cover_app(opts, protocol))
+    main.append(element)
+  }
+  { // app timeline mini
+    const on = {}
+    const protocol = use_protocol('app_timeline_mini')({ state, on })
+    const opts = { data }
+    const element = shadowfy()(app_timeline_mini(opts, protocol))
+    main.append(element)
+  }
+  { // app projects mini
+    const on = {}
+    const protocol = use_protocol('app_projects_mini')({ state, on })
+    const opts = { data }
+    const element = shadowfy()(app_projects_mini(opts, protocol))
+    main.append(element)
+  }
+  { // app about us
+    const on = {}
+    const protocol = use_protocol('app_about_us')({ state, on })
+    const opts = { data }
+    const element = shadowfy()(app_about_us(opts, protocol))
+    main.append(element)
+  }
+  { // app footer
+    const on = {}
+    const protocol = use_protocol('app_footer')({ state, on })
+    const opts = { data }
+    const element = shadowfy()(app_footer(opts, protocol))
+    main.append(element)
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+
+  return el
+}
 function get_theme () {
-  return`
+  return `
     * {
       box-sizing: border-box;
     }
@@ -3633,7 +5565,6 @@ function get_theme () {
         margin: 0;
         padding: 30px 10px;
         opacity: 1;
-        background-image: radial-gradient(var(--primary_color) 2px, var(--bg_color) 2px);
         background-size: 16px 16px;
       }
     }
@@ -3644,76 +5575,150 @@ function get_theme () {
     }
   `
 }
-},{"app_about_us":7,"app_cover":8,"app_footer":9,"app_projects_mini":11,"app_timeline_mini":13}],28:[function(require,module,exports){
-const window_bar = require('window_bar')
-
-// CSS Boiler Plat
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/home-page/home-page.js")
+},{"_process":2,"app-about-us":7,"app-cover":8,"app-footer":9,"app-projects-mini":11,"app-timeline-mini":13}],29:[function(require,module,exports){
+(function (process,__filename){(function (){
+const window_bar = require('window-bar')
+/******************************************************************************
+  IMPORTANT DOCUMENTS COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 const sheet = new CSSStyleSheet
 sheet.replaceSync(get_theme())
-
-let id = 0
-
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = important_documents
-
-function important_documents (opts, protocol) {
-  const name = `important_documents`
-  protocol({ from: name }, listen)
-  function listen () {
-    important_documents_wrapper.style.display = 'inline'
-  }
+// ----------------------------------------
+function important_documents (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
   const { data } = opts
   // Assigning all the icons
   const { img_src } = data
   const {
     icon_pdf_reader
   } = img_src
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = { 'show': on_show }
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow ({ mode : 'closed' })
-  shadow.innerHTML = `
-    <div class="important_documents">
-      <div class="documents_content">
-        <h2>Visit links for more info</h2>
-        <ol type="1">
-          <li>Manifesto</li>
-          <li>Organization github repository</li>
-        </ol>  
-      </div>
-    </div>
-    <style> ${get_theme()} </style>
-  `
-  const window = window_bar({
-    name: 'important_documents.md', 
-    src: icon_pdf_reader,
-    data: data
-  }, important_documents_protocol)
-  const important_documents_wrapper = shadow.querySelector('.important_documents')
-  important_documents_wrapper.prepend(window)
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
-
-    return el
-
-  // cover protocol
-  function important_documents_protocol (message, send) {
-    return listen
-    // Listening to toggle event 
-    function listen (message) {
-      const { head, refs, type, data, meta } = message  
-      const PROTOCOL = {
-        'toggle_active_state': toggle_active_state
-      }
-      const action = PROTOCOL[type] || invalid      
-      action(message)
+  shadow.innerHTML = `<div class="important_documents">
+    <div class="window_bar_wrapper"></div>
+    <div class="documents_content">
+      <h2>Visit links for more info</h2>
+      <ol type="1">
+        <li>Manifesto</li>
+        <li>Organization github repository</li>
+      </ol>
+    </div>
+  </div>`
+  const important_documents_wrapper = shadow.querySelector('.important_documents')
+  // ----------------------------------------
+  const window_bar_wrapper = shadow.querySelector('.window_bar_wrapper').attachShadow(shopts)
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // windowbar
+    const on = {
+      'toggle_active_state': toggle_active_state
     }
-    function invalid (message) { console.error('invalid type', message) }
+    const protocol = use_protocol('windowbar')({ state, on })
+    const opts = {
+      name: 'important_documents.md', 
+      src: icon_pdf_reader,
+      data
+    }
+    const element = window_bar(opts, protocol)
+    window_bar_wrapper.append(element)
     async function toggle_active_state (message) {
-      const { head, refs, type, data, meta } = message
-      const { active_state } = data
-      ;( active_state === 'active')?important_documents_wrapper.style.display = 'none':''
+      const { active_state } = message.data
+      if (active_state === 'active') important_documents_wrapper.style.display = 'none'
     }
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+
+  return el
+
+  function on_show (message) {
+    important_documents_wrapper.style.display = 'inline'
   }
 }
 function get_theme () {
-  return`
+  return `
     * {
       box-sizing: border-box;
     }
@@ -3745,76 +5750,149 @@ function get_theme () {
     }
   `
 }
-},{"window_bar":48}],29:[function(require,module,exports){
-const window_bar = require('window_bar')
-
-// CSS Boiler Plat
-const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
-let id = 0
-
-module.exports = mission_statement
-
-function mission_statement (opts, protocol) {
-  const name = `mission_statement`
-  protocol({ from: name }, listen)
-  function listen () {
-    mission_statement_wrapper.style.display = 'inline'
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
   }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/important-documents/important-documents.js")
+},{"_process":2,"window-bar":51}],30:[function(require,module,exports){
+(function (process,__filename){(function (){
+const window_bar = require('window-bar')
+/******************************************************************************
+  MISSION STATEMENT COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = mission_statement
+// ----------------------------------------
+function mission_statement (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
   const { data } = opts
   // Assigning all the icons
   const { img_src } = data
   const {
     icon_pdf_reader
   } = img_src
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = { 'show': on_show }
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow ({ mode : 'closed' })
-  shadow.innerHTML = `
-    <div class="mission_statement">
-      <div class="mission_content">
-        <h2>OUR MISSION</h2>
-        <p>We aim to connect and support the dat community, promoting user rights and decentralized democracy, dat ecosystem provides resources to advance your hyprecore project.</p>
-        <h2>OUR MISSION</h2>
-        <p>We aim to connect and support the dat community, promoting user rights and decentralized democracy, dat ecosystem provides resources to advance your hyprecore project.</p>    
-      </div>
-    </div>
-    <style> ${get_theme()} </style>
-  `
-  const window = window_bar({
-    name: 'Mission_statement.md', 
-    src: icon_pdf_reader,
-    data: data
-  }, mission_statement_protocol)
-  const mission_statement_wrapper = shadow.querySelector('.mission_statement')
-  mission_statement_wrapper.prepend(window)
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="mission_statement">
+    <div class="window_bar_wrapper"></div>
+    <div class="mission_content">
+      <h2>OUR MISSION</h2>
+      <p>We aim to connect and support the dat community, promoting user rights and decentralized democracy, dat ecosystem provides resources to advance your hyprecore project.</p>
+      <h2>OUR MISSION</h2>
+      <p>We aim to connect and support the dat community, promoting user rights and decentralized democracy, dat ecosystem provides resources to advance your hyprecore project.</p>    
+    </div>
+  </div>`
+  const mission_statement_wrapper = shadow.querySelector('.mission_statement')
+  // ----------------------------------------
+  const window_bar_wrapper = shadow.querySelector('.window_bar_wrapper').attachShadow(shopts)
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // windowbar
+    const on = {
+      'toggle_active_state': toggle_active_state
+    }
+    const protocol = use_protocol('windowbar')({ state, on })
+    const opts = {
+      name: 'Mission_statement.md', 
+      src: icon_pdf_reader,
+      data
+    }
+    const element = window_bar(opts, protocol)
+    window_bar_wrapper.append(element)
+    async function toggle_active_state (message) {
+      const { active_state } = message.data
+      if (active_state === 'active') mission_statement_wrapper.style.display = 'none'
+    }
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
   return el
 
-  // cover protocol
-  function mission_statement_protocol (message, send) {
-    return listen
-    // Listening to toggle event 
-    function listen (message) {
-      const { head, refs, type, data, meta } = message  
-      const PROTOCOL = {
-        'toggle_active_state': toggle_active_state
-      }
-      const action = PROTOCOL[type] || invalid      
-      action(message)
-    }
-    function invalid (message) { console.error('invalid type', message) }
-    async function toggle_active_state (message) {
-      const { head, refs, type, data, meta } = message
-      const { active_state } = data
-      ;( active_state === 'active')?mission_statement_wrapper.style.display = 'none':''
-    }
+  function on_show (message) {
+    mission_statement_wrapper.style.display = 'inline'
   }
 }
 function get_theme () {
-  return`
+  return `
     * {
       box-sizing: border-box;
       color: var(--primary_color);
@@ -3847,91 +5925,166 @@ function get_theme () {
     }
   `
 }
-},{"window_bar":48}],30:[function(require,module,exports){
-const day_button = require('buttons/day_button')
-
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/mission-statement/mission-statement.js")
+},{"_process":2,"window-bar":51}],31:[function(require,module,exports){
+(function (process,__filename){(function (){
+const day_button = require('buttons/day-button')
+/******************************************************************************
+  MONTH CARD COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 const sheet = new CSSStyleSheet
 sheet.replaceSync(get_theme())
-
-let id = 0
-
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = month_card
-
-function month_card (opts, protocol) {
-  const name = `month_card-${id++}`
-  const notify = protocol({ from: name }, listen)
-  const PROTOCOL = {
-    day_toggle: [],
-    toggle_day_button,
+// ----------------------------------------
+function month_card (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { name: label, days } = opts
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {
     toggle_month_button,
     toggle_all_days,
     toggle_day_highlight,
-    active_day: 0,
   }
+  const up_channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode: 'closed' })
-  shadow.innerHTML = `
-    <div class="month_card">
-      <span class="month_name"><b>${opts.name}</b></span>
-      <div class="days_wrapper"></div>
-    </div>
-    <style>${get_theme()}</style>
-  `
-  const days_wrapper = shadow.querySelector('.days_wrapper')
-  for (let i=1; i<=opts.days; i++) {
-    const btn = day_button(month_card_protocol)
-    btn.id = i
-    days_wrapper.append(btn)
-  }
-  const month_name = shadow.querySelector('.month_name')
-  month_name.onclick = e => {
-    notify({
-      head: { by:name, to:'month_filter', mid: 0 },
-      type: 'toggle_month_button',
-      data: opts.name
-    })
-  }
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="month_card">
+    <span class="month_name"><b>${label}</b></span>
+    <div class="days_wrapper"></div>
+  </div>`
+  const days_wrapper = shadow.querySelector('.days_wrapper')
+  const month_name = shadow.querySelector('.month_name')
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // day buttons
+    const elements = []
+    for (let i = 1; i <= days; i++) {
+      const petname = `day_${i}`
+      const on = { toggle_day_button }
+      const protocol = use_protocol(petname)({ state, on })
+      const opts = { i }
+      const element = shadowfy()(day_button(opts, protocol))
+      elements.push(element)
+      async function toggle_day_button ({ data }) {
+        up_channel.send({
+          head: [id, up_channel.send.id, up_channel.mid++],
+          type: 'toggle_day_button',
+          data: petname
+        })
+      }
+    }
+    days_wrapper.append(...elements)
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+  month_name.onclick = onclick
 
   return el
 
-  function month_card_protocol (handshake, send) {
-    PROTOCOL['day_toggle'].push(send)
-    return listen
-    function listen (message) {
-      const { head,  refs, type, data, meta } = message
-      const { by, to, mid } = head
-      PROTOCOL[type](data)
-    }
-  }
-  async function toggle_day_button (data) {
-    notify({
-      head: { by:name, to:'month_filter', mid: 0 },
-      type: 'toggle_day_button',
-      data: opts.name + ' ' + data
+  function onclick (e) {
+    up_channel.send({
+      head: [id, up_channel.send.id, up_channel.mid++],
+      type: 'toggle_month_button',
+      data: label
     })
   }
-  function listen (message) {
-    const { head,  refs, type, data, meta } = message
-    const { by, to, mid } = head
-    PROTOCOL[type](data)
-  }
-  async function toggle_month_button (data) {
+  async function toggle_month_button ({ data }) {
     month_name.classList.toggle('active')
   }
-  async function toggle_all_days (data) {
+  async function toggle_all_days ({ data }) {
     const day = new Date(data).getDate()
-    PROTOCOL.day_toggle[day-1]({
-      head: { by:name, to:'day_button', mid: 0 },
+    const petname = `day_${day}`
+    const channel = state.net[state.aka[petname]]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
       type: 'toggle_active',
       data: ''
     })
   }
-  async function toggle_day_highlight (data) {
-    const {mode, date} = data
+  async function toggle_day_highlight ({ data }) {
+    const { mode, date } = data
     const day = new Date(date).getDate()
-    PROTOCOL.day_toggle[day-1]({
-      head: { by:name, to:'day_button', mid: 0 },
+    const petname = `day_${day}`
+    const channel = state.net[state.aka[petname]]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
       type: mode,
       data: ''
     })
@@ -3940,6 +6093,7 @@ function month_card (opts, protocol) {
 function get_theme () {
   return `
     .month_card {
+      /* box-sizing: border-box; */
       width: 140px;
       height: 130px;
       border: 1px solid var(--primary_color);
@@ -3964,164 +6118,271 @@ function get_theme () {
     }
   `
 }
-},{"buttons/day_button":14}],31:[function(require,module,exports){
-const month_card = require('month_card')
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/month-card/month-card.js")
+},{"_process":2,"buttons/day-button":15}],32:[function(require,module,exports){
+(function (process,__filename){(function (){
+const month_card = require('month-card')
 const scrollbar = require('scrollbar')
-
+/******************************************************************************
+  MONTH FILTER COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
-let id = 0
-
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = month_filter
-
-function month_filter (opts, protocol) {
-  const name = `month_filter-${id++}`
-  const notify = protocol({ from: name }, listen)
-  const PROTOCOL = {}
+// ----------------------------------------
+function month_filter (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // RESOURCE POOL (can't be serialized)
+  // ----------------------------------------
+  const ro = new ResizeObserver(entries => {
+    console.log('ResizeObserver:terminal:resize')
+    const scroll_channel = state.net[state.aka.scrollbar]
+    scroll_channel.send({
+      head: [id, scroll_channel.send.id, scroll_channel.mid++],
+      refs: { },
+      type: 'handle_scroll',
+    })
+  })
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
   let active_month = ''
   let active_day = ''
   let active_date_prev = []
   const month_buttons = {}
-  const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode: 'closed' })
-  shadow.innerHTML = `
-    <div class="scrollbar_wrapper">
-      <div class="month_filter_wrapper"></div>
-    </div>
-    <style>${get_theme()}</style>
-  `
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { data } = opts
   const month_data = [
-    {name: 'January', days: 31},
-    {name: 'February', days: 28},
-    {name: 'March', days: 31},
-    {name: 'April', days: 30},
-    {name: 'May', days: 31},
-    {name: 'June', days: 30},
-    {name: 'July', days: 31},
-    {name: 'August', days: 31},
-    {name: 'September', days: 30},
-    {name: 'October', days: 31},
-    {name: 'November', days: 30},
-    {name: 'December', days: 31},
+    { name: 'January', days: 31 },
+    { name: 'February', days: 28 },
+    { name: 'March', days: 31 },
+    { name: 'April', days: 30 },
+    { name: 'May', days: 31 },
+    { name: 'June', days: 30 },
+    { name: 'July', days: 31 },
+    { name: 'August', days: 31 },
+    { name: 'September', days: 30 },
+    { name: 'October', days: 31 },
+    { name: 'November', days: 30 },
+    { name: 'December', days: 31 },
   ]
-  const month_filter_wrapper = shadow.querySelector('.month_filter_wrapper')
-  month_data.forEach(month => {
-    month_buttons[month.name] = month_card(month, month_filter_protocol)
-    month_filter_wrapper.append(month_buttons[month.name])
-  })
-  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
-  opts.horizontal = true
-  opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_left
-  opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_right
-  scrollbar_wrapper.append(scrollbar( opts, month_filter_protocol))
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = { 'update_calendar': update_calendar }
+  const up_channel = use_protocol('up')({ protocol, state, on })
+
+  function update_calendar ({ data }) {
+    active_date_prev.forEach(date => {
+      const petname = `month_${new Date(date).getMonth()}`
+      const channel = state.net[state.aka[petname]]
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'toggle_day_highlight',
+        data: { mode: 'remove_highlight', date }
+      })
+    })
+    active_date_prev = data
+    data.forEach(date => {
+      const petname = `month_${new Date(date).getMonth()}`
+      const channel = state.net[state.aka[petname]]
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'toggle_day_highlight',
+        data: { mode: 'add_highlight', date }
+      })
+    })
+  }
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
-  
-  return el
-
-  function month_filter_protocol (handshake, send) {
-    if (!send) {
-      send = handshake
-      handshake = { from: send.id }
-    }
-    if (handshake.from.includes('scrollbar')) {
-
-      month_filter_wrapper.onscroll = event => send({ type: 'handle_scroll' })
-      const ro = new ResizeObserver(entries => send({ type: 'handle_scroll' }))
-      ro.observe(scrollbar_wrapper)
- 
-      PROTOCOL.scrollbar = send
-
-      return listen
-    }
-    if (handshake.from.includes('month_card')) {
-      PROTOCOL['toggle_month_button'] = toggle_month_button
-      PROTOCOL['toggle_day_button'] = toggle_day_button
-      PROTOCOL[handshake.from] = send
-    }
-    return listen
-    function listen (message) {
-      const { head,  refs, type, data, meta } = message
-      const { by, to, mid } = head
-      // if( to !== name) return console.error('address unknown', message)
-      if (by.includes('scrollbar')) {
-        if (message.type === 'set_scroll_start') return setScrollLeft(message.data)
-        message.type = 'update_size'
-        message.data = {
-          sh: month_filter_wrapper.scrollWidth,
-          ch: month_filter_wrapper.clientWidth,
-          st: month_filter_wrapper.scrollLeft
-        }
-        PROTOCOL.scrollbar(message)
+  shadow.innerHTML = `<div class="scrollbar_wrapper">
+    <div class="month_filter_wrapper"></div>
+    <div class="scrollbar-wrapper"></div>
+  </div>`
+  const month_filter_wrapper = shadow.querySelector('.month_filter_wrapper')
+  const scrollbar_wrapper = shadow.querySelector('.scrollbar-wrapper')
+  // ----------------------------------------
+  const scrollbar_wrapper_shadow = scrollbar_wrapper.attachShadow(shopts)
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // month cards
+    function make_card (month, i) {
+      const on = {
+        'toggle_month_button': toggle_month_button,
+        'toggle_day_button': toggle_day_button
       }
-      else if(by.includes('month_card')) PROTOCOL[type](by, data)
+      const petname = `month_${i}`
+      const protocol = use_protocol(petname)({ state, on })
+      const opts = month
+      const element = shadowfy()(month_card(opts, protocol))
+      const channel = state.net[state.aka[petname]]
+      return element
     }
-    async function setScrollLeft (value) {
-      month_filter_wrapper.scrollLeft = value
-    }
-    async function toggle_month_button(by, data){
+    const elements = month_data.map(make_card)
+    month_filter_wrapper.append(...elements)
+    async function toggle_month_button (message) {
+      const { head: [by] } = message
       if (active_month) {
-        PROTOCOL[active_month]({
-          head: {by: name, to: 'month_card', mid: 0},
+        const active_channel = state.net[active_month]
+        active_channel.send({
+          head: [id, active_channel.send.id, active_channel.mid++],
           type: 'toggle_month_button',
           data: ''
         })
       }
-      if (active_month === by) {
-        active_month = ''
-        data = ''
-      }
-      else {
-        active_month = by
-        PROTOCOL[by]({
-          head: { by: name, to: 'month_card', mid: 0 },
+      if (active_month !== by) {
+        const by_channel = state.net[by]
+        by_channel.send({
+          head: [id, by_channel.send.id, by_channel.mid++],
           type: 'toggle_month_button',
           data: ''
         })
       }
-      notify({
-        head: { by: name, to: 'app_timeline', mid: 0 },
-        type: 'setScroll',
-        data: { filter: 'MONTH', value: data }
+      const value = active_month = active_month === by ? '' : by
+      up_channel.send({
+        head: [id, up_channel.send.id, up_channel.mid++],
+        type: 'set_scroll',
+        data: { filter: 'MONTH', value }
       })
     }
-    async function toggle_day_button (by, data) {
-      toggle_month_button(active_month, '')
+    async function toggle_day_button (message) {
+      const { data } = message
+      toggle_month_button({ head: [active_month] })
       if (active_day && active_day !== data) {
-        PROTOCOL[`month_card-${new Date(active_day).getMonth()}`]({
-          head: { by: name, to: 'month_card', mid: 0 },
+        const key = `month_card-${new Date(active_day).getMonth()}`
+        const channel = state.net[state.aka[key]]
+        if (!channel) return
+        channel.send({
+          head: [id, channel.send.id, channel.mid++],
           type: 'toggle_all_days',
           data: active_day
         })
       }
-      if (active_day === data) {
-        active_day = ''
-        data = ''
-      }
-      else active_day = data
-      notify({
-        head: { by: name, to: 'app_timeline', mid: 0 },
-        type: 'setScroll',
-        data: { filter: 'DATE', value: data }
+      const value = active_day = active_day === data ? '' : data
+      up_channel.send({
+        head: [id, up_channel.send.id, up_channel.mid++],
+        type: 'set_scroll',
+        data: { filter: 'DATE', value }
       })
     }
   }
-  function listen (message) {
-    const { head,  refs, type, data, meta } = message
-    const { by, to, mid } = head
-    active_date_prev.forEach(date => PROTOCOL[`month_card-${new Date(date).getMonth()}`]({
-      head: { by: name, to: 'month_card', mid: 0 },
-      type: 'toggle_day_highlight',
-      data: { mode: 'remove_highlight', date }
-    }))
-    active_date_prev = data
-    data.forEach(date => PROTOCOL[`month_card-${new Date(date).getMonth()}`]({
-      head: { by: name, to: 'month_card', mid: 0 },
-      type: 'toggle_day_highlight',
-      data: { mode: 'add_highlight', date }
-    }))
+  { // scrollbar
+    const on = { 'set_scroll': on_set_scroll, status: onstatus }
+    const protocol = use_protocol('scrollbar')({ state, on })
+    opts.horizontal = true
+    opts.data.img_src.icon_arrow_start = data.img_src.icon_arrow_left
+    opts.data.img_src.icon_arrow_end = data.img_src.icon_arrow_right  
+    const scroll_opts = opts 
+    const element = scrollbar(scroll_opts, protocol)
+
+    ro.observe(scrollbar_wrapper)
+    month_filter_wrapper.onscroll = onscroll
+
+    scrollbar_wrapper_shadow.append(element)
+    
+    function onscroll (event) {
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        refs: { },
+        type: 'handle_scroll',
+      })
+    }
+    function on_set_scroll (message) {
+      console.log('set_scroll', message) 
+      setScrollLeft(message.data)
+    }
+    function onstatus (message) {
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        refs: { cause: message.head },
+        type: 'update_size',
+        data: {
+          sh: month_filter_wrapper.scrollHeight,
+          ch: month_filter_wrapper.clientHeight,
+          st: month_filter_wrapper.scrollTop
+        }
+      })
+    }
+    async function setScrollLeft (value) {
+      month_filter_wrapper.scrollLeft = value
+    }
   }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+  
+  return el
 }
 function get_theme () {
   return `
@@ -4139,49 +6400,87 @@ function get_theme () {
     }
   `
 }
-},{"month_card":30,"scrollbar":37}],32:[function(require,module,exports){
-(function (process,__filename,__dirname){(function (){
-const icon_button = require('buttons/icon_button')
-const logo_button = require('buttons/logo_button')
-const text_button = require('buttons/text_button')
-const path = require('path')
-
-const cwd = process.cwd()
-const prefix = path.relative(cwd, __dirname)
-
-const sheet = new CSSStyleSheet()
-
-sheet.replaceSync(get_theme())
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/month-filter/month-filter.js")
+},{"_process":2,"month-card":31,"scrollbar":38}],33:[function(require,module,exports){
+(function (process,__filename){(function (){
+const icon_button = require('buttons/icon-button')
+const logo_button = require('buttons/logo-button')
+const text_button = require('buttons/text-button')
 /******************************************************************************
   NAVBAR COMPONENT
 ******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
 var count = 0
-const ID = __filename
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
 const STATE = { ids: {}, net: {} } // all state of component module
 // ----------------------------------------
+const sheet = new CSSStyleSheet()
+sheet.replaceSync(get_theme())
 const default_opts = { page: 'HOME' }
-
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = navbar
-
+// ----------------------------------------
 function navbar (opts = default_opts, protocol) {
   // ----------------------------------------
-  // INSTANCE STATE & ID
+  // ID + JSON STATE
+  // ----------------------------------------
   const id = `${ID}:${count++}` // assigns their own name
-  const state = STATE.ids[id] = { status: {}, wait: {}, net: {}, aka: {} } // all state of component instance
-  // ----------------------------------------
-  const on = { 'theme': handle_active_change }
-  // ----------------------------------------
-  const send = protocol(Object.assign(listen, { id }))
-  state.net[send.id] = { mid: 0, send, on } // store channel
-  state.aka.up = send.id
-  function invalid (message) { console.error('invalid type', message) }
-  function listen (message) {
-    console.log(`[${id}]`, message)
-    const { on } = state.net[state.aka.up] // @TODO: from `to`
-    const action = on[message.type] || invalid
-    action(message)
-  }
-  // @TODO: how to disconnect channel
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
@@ -4199,10 +6498,16 @@ function navbar (opts = default_opts, protocol) {
     icon_arrow_up
   } = data.img_src
   // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = { 'theme': handle_active_change }
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
   // TEMPLATE
   // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode: 'closed' })
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `<div class="navbar_wrapper">
     <div class="navbar">
       <div class="nav_toggle_wrapper">
@@ -4214,92 +6519,111 @@ function navbar (opts = default_opts, protocol) {
       <div class="icon_btn_wrapper"></div>
     </div>
   </div>`
-  shadow.adoptedStyleSheets = [sheet]
   const navbar = shadow.querySelector('.navbar')
-  const info_sh = shadow.querySelector('.info_wrapper').attachShadow({ mode: 'closed' })
-  const logo_sh = shadow.querySelector('.logo_wrapper').attachShadow({ mode: 'closed' })
-  const nav_sh = shadow.querySelector('.nav_toggle').attachShadow({ mode: 'closed' })
   const text_wrapper = shadow.querySelector('.page_btns_wrapper')
   const icon_wrapper = shadow.querySelector('.icon_btn_wrapper')
   // ----------------------------------------
+  const info_sh = shadow.querySelector('.info_wrapper').attachShadow(shopts)
+  const logo_sh = shadow.querySelector('.logo_wrapper').attachShadow(shopts)
+  const nav_sh = shadow.querySelector('.nav_toggle').attachShadow(shopts)
+  // ----------------------------------------
   // ELEMENTS
   // ----------------------------------------
-  const consortium_btn = icon_button({ src: icon_consortium }, navigation_protocol('CONSORTIUM'))
-  const logo_btn = logo_button()
-  const nav_btn = icon_button({ src: icon_arrow_down, src_active: icon_arrow_up }, nav_protocol('navtoggle'))
-  const text_btns = [
-    text_button({ text: 'HOME' }, navigation_protocol('HOME')),
-    text_button({ text: 'PROJECTS' }, navigation_protocol('PROJECTS')),
-    text_button({ text: 'GROWTH PROGRAM' }, navigation_protocol('GROWTH PROGRAM')),
-    text_button({ text: 'TIMELINE' }, navigation_protocol('TIMELINE'))
-  ]
-  const icon_btns = [
-    icon_button({ src: icon_blogger }, socials_protocol('blog-button')),
-    icon_button({ src: icon_discord }, socials_protocol('discord-button')),
-    icon_button({ src: icon_twitter }, socials_protocol('twitter-button')),
-    icon_button({ src: icon_github }, socials_protocol('github-button')),
-    icon_button({ src: icon_terminal }, terminal_protocol('terminal-button')),
-    icon_button({ src: icon_theme }, theme_button_protocol('theme-button'))
-  ]
-  info_sh.append(consortium_btn)
-  logo_sh.append(logo_btn)
-  nav_sh.append(nav_btn)
-  text_wrapper.append(...text_btns.map(wrap('text_button_wrapper')))
-  icon_wrapper.append(...icon_btns.map(wrap('')))
-  // ----------------------------------------
-  // INIT
-  // ----------------------------------------
-  initialize(page)
-
-  return el
-
-  function wrap (className) {
-    return button => {
-      const el = Object.assign(document.createElement('div'), { className })
-      el.attachShadow({ mode: 'closed' }).append(button)
-      return el
+  { // consortium button
+    const petname = 'CONSORTIUM'
+    const on = { 'click': onclick }
+    const protocol = use_protocol(petname)({ state, on })
+    const opts = { src: icon_consortium }
+    const element = icon_button(opts, protocol)
+    const channel = state.net[state.aka.CONSORTIUM]
+    info_sh.append(element)
+    function onclick (message) { // receive click from a button -> that button will become active!
+      const active_id = state.status.active_button
+      const default_id = state.aka[page] // only exists because it got initialized first (timing issue?)
+      if (active_id === channel.send.id && active_id === default_id) return // means default is already active
+      // @TODO: maybe change logic to be able to toggle an "empty desktop" too?
+      const [
+        next_id, data
+      ] = active_id === channel.send.id ? [default_id, page] : [channel.send.id, petname]
+      const be_channel = state.net[next_id]
+      const ex_channel = state.net[active_id] // active button
+      const up_channel = state.net[state.aka.up] // parent element
+      do_page_change(data, message.head, { be_channel, ex_channel, up_channel })
     }
   }
-  function nav_protocol (petname) {
-    return send => {
-      const on = { 'click': onclick }
-      const channel = state.net[send.id] = { mid: 0, send, on }
-      state.aka[petname] = send.id
-      return Object.assign(listen, { id })
-      function invalid (message) { console.error('invalid type', message) }
-      function listen (message) {
-        console.log(`[${id}]\n${petname}:`, message)
-        const { on } = state.net[state.aka[petname]]
-        const action = on[message.type] || invalid
-        action(message)
-      }
-      function onclick (message){
-        state.status.dropdown_collapsed = !state.status.dropdown_collapsed
-        navbar.classList.toggle('active', state.status.dropdown_collapsed)
-        send({
-          head: [id, send.id, channel.mid++],
-          refs: { cause: message.head },
-          type: state.status.dropdown_collapsed ? 'activate' : 'inactivate',
-        })
-      }
+  { // logo button
+    const on = {}
+    const protocol = use_protocol('logo_button')({ state, on })
+    const element = logo_button(opts, protocol)
+    logo_sh.append(element)
+  }
+  { // nav toggle button
+    const on = { 'click': onclick }
+    const protocol = use_protocol('navtoggle')({ state, on })
+    const opts = { src: icon_arrow_down, src_active: icon_arrow_up }
+    const element = icon_button(opts, protocol)
+    const channel = state.net[state.aka.navtoggle]
+    nav_sh.append(element)
+    function onclick (message) {
+      state.status.dropdown_collapsed = !state.status.dropdown_collapsed
+      navbar.classList.toggle('active', state.status.dropdown_collapsed)
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        refs: { cause: message.head },
+        type: state.status.dropdown_collapsed ? 'activate' : 'inactivate',
+      })
     }
   }
-  function socials_protocol (petname) {
-    return function protocol (send) {
+  { // text buttons
+    const names = ['HOME', 'PROJECTS', 'GROWTH_PROGRAM', 'TIMELINE']
+    function make_button (text) {
+      const petname = text
       const on = { 'click': onclick }
-      state.net[send.id] = { mid: 0, send, on }
-      state.aka[petname] = send.id
-      return Object.assign(listen, { id })
-      function invalid (message) { console.error('invalid type', message) }
-      function listen (message) {
-        console.log(`[${id}]\n${petname}:`, message)
-        const { on } = state.net[state.aka[petname]]
-        const action = on[message.type] || invalid
-        action(message)
+      const protocol = use_protocol(petname)({ state, on })
+      const opts = { text }
+      const element = shadowfy({ className: 'text_button_wrapper' })(text_button(opts, protocol))
+      const channel = state.net[state.aka[petname]]
+      return element
+      function onclick (message) { // receive click from a button -> that button will become active!
+        const active_id = state.status.active_button
+        const default_id = state.aka[page] // only exists because it got initialized first (timing issue?)
+        if (active_id === channel.send.id && active_id === default_id) return // means default is already active
+        // @TODO: maybe change logic to be able to toggle an "empty desktop" too?
+        const [
+          next_id, data
+        ] = active_id === channel.send.id ? [default_id, page] : [channel.send.id, petname]
+        const be_channel = state.net[next_id]
+        const ex_channel = state.net[active_id] // active button
+        const up_channel = state.net[state.aka.up] // parent element
+        do_page_change(data, message.head, { be_channel, ex_channel, up_channel })
       }
+    }
+    const elements = names.map(make_button)
+    text_wrapper.append(...elements)
+  }
+  { // social buttons
+    const socials = [{
+      name: 'blog_button',
+      src: icon_blogger,
+    }, {
+      name: 'discord_button',
+      src: icon_discord,
+    }, {
+      name: 'twitter_button',
+      src: icon_twitter,
+    }, {
+      name: 'github_button',
+      src: icon_github,
+    }]
+    function make_button ({ name: petname, src }) {
+      const on = { 'click': onclick }
+      const protocol = use_protocol(petname)({ state, on })
+      const opts = { src }
+      const element = shadowfy({ className: '' })(icon_button(opts, protocol))
+      return element
       function onclick (message) {
         const up_channel = state.net[state.aka.up]
-        const [by, to, mid] = [id, petname, up_channel.mid++]
+        const [by, to, mid] = [id, up_channel.send.id, up_channel.mid++]
         up_channel.send({
           head: [by, to, mid],
           refs: { cause: message.head },
@@ -4308,68 +6632,65 @@ function navbar (opts = default_opts, protocol) {
         })
       }
     }
+    const elements = socials.map(make_button)
+    icon_wrapper.append(...elements)
   }
-  function terminal_protocol (petname) {
-    return function protocol (send) {
-      const on = { 'click': onclick }
-      const channel = state.net[send.id] = { mid: 0, send, on }
-      state.aka[petname] = send.id
-      return Object.assign(listen, { id })
-      function invalid (message) { console.error('invalid type', message) }
-      function listen (message) {
-        console.log(`[${id}]\n${petname}:`, message)
-        const { on } = state.net[state.aka[petname]]
-        const action = on[message.type] || invalid
-        action(message)
-      }
-      function onclick (message) {
-        state.status.terminal_collapsed = !state.status.terminal_collapsed
-        const up_channel = state.net[state.aka.up]
-        const [by, to, mid] = [id, petname, up_channel.mid++]
-        up_channel.send({
-          head: [by, to, mid],
-          refs: { cause: message.head },
-          type: 'toggle_terminal',
-        })
-        channel.send({
-          head: [id, send.id, channel.mid++],
-          refs: { cause: message.head },
-          type: state.status.terminal_collapsed ? 'activate' : 'inactivate',
-        })
-      }
+  { // terminal button
+    const petname = 'terminal_button'
+    const on = { 'click': onclick }
+    const protocol = use_protocol(petname)({ state, on })
+    const opts = { src: icon_terminal }
+    const element = icon_button(opts, protocol)
+    const channel = state.net[state.aka.terminal_button]
+    icon_wrapper.append(element)
+    function onclick (message) {
+      state.status.terminal_collapsed = !state.status.terminal_collapsed
+      const up_channel = state.net[state.aka.up]
+      const [by, to, mid] = [id, up_channel.send.id, up_channel.mid++]
+      up_channel.send({
+        head: [by, to, mid],
+        refs: { cause: message.head },
+        type: 'toggle_terminal',
+      })
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        refs: { cause: message.head },
+        type: state.status.terminal_collapsed ? 'activate' : 'inactivate',
+      })
     }
   }
-  function theme_button_protocol (petname) {
-    return function protocol (send) {
-      const on = { 'click': onclick }
-      const channel = state.net[send.id] = { mid: 0, send, on }
-      state.aka[petname] = send.id
-      return Object.assign(listen, { id })
-      function invalid (message) { console.error('invalid type', message) }
-      function listen (message) {
-        console.log(`[${id}]\n${petname}:`, message)
-        const { on } = state.net[state.aka[petname]]
-        const action = on[message.type] || invalid
-        action(message)
-      }
-      function onclick (message) {
-        state.status.theme_dark = !state.status.theme_dark
-        const up_channel = state.net[state.aka.up]
-        const [by, to, mid] = [id, petname, up_channel.mid++]
-        up_channel.send({
-          head: [by, to, mid],
-          refs: { cause: message.head },
-          type: 'handle_theme_change',
-          data: ''
-        })
-        channel.send({
-          head: [id, send.id, channel.mid++],
-          refs: { cause: message.head },
-          type: state.status.theme_dark ? 'activate' : 'inactivate',
-        })
-      }
+  { // theme button
+    const petname = 'theme_button'
+    const on = { 'click': onclick }
+    const protocol = use_protocol(petname)({ state, on })
+    const opts = { src: icon_theme }
+    const element = icon_button(opts, protocol)
+    const channel = state.net[state.aka.theme_button]
+    icon_wrapper.append(element)
+    function onclick (message) {
+      state.status.theme_dark = !state.status.theme_dark
+      const up_channel = state.net[state.aka.up]
+      const [by, to, mid] = [id, up_channel.send.id, up_channel.mid++]
+      up_channel.send({
+        head: [by, to, mid],
+        refs: { cause: message.head },
+        type: 'handle_theme_change',
+        data: ''
+      })
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        refs: { cause: message.head },
+        type: state.status.theme_dark ? 'activate' : 'inactivate',
+      })
     }
   }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+  initialize(page)
+
+  return el
+
   function initialize (page) {
     // SET DEFAULTS
     state.status.active_button = state.aka[page]
@@ -4380,7 +6701,7 @@ function navbar (opts = default_opts, protocol) {
     // APPLY OPTS (1):
     // @TODO: issue: how to submit an `onclick` event to trigger the initial change?
 
-    const [by, to, mid] = [id, id, 0]
+    const [by, to, mid] = [id, id, 0] // @TODO: improve self messaging
     let message = { head: [by, to, mid], type: 'init' }
     do_page_change(page, message.head, { be_channel, up_channel })
   }
@@ -4392,40 +6713,6 @@ function navbar (opts = default_opts, protocol) {
     state.status.active_button = state.aka[active_page]
     // APPLY OPTS (2):
     // @TODO: PROBLEM: this makes navbar know what is active, but it doesnt highlight it yet
-  }
-  function navigation_protocol (petname) {
-    return function protocol (send) {
-      const on = { 'click': onclick }
-      state.net[send.id] = { mid: 0, send, on }
-      state.aka[petname] = send.id
-      return Object.assign(listen, { id })
-      // APPLY OPTS (3):
-      // @INFO: onclick is for later
-      // @TODO: but init should set itself active -> apply OPTS
-      // => (e.g. page === petname): trigger active + trigger parent to show content
-      // ALSO: opts should be "asked for" instead
-      // ALSO: take care of problems of order in which things get applied synchronously... test for it!       
-      function invalid (message) { console.error('invalid type', message) }
-      function listen (message) {
-        console.log(`[${id}]\n${petname}:`, message)
-        const { on } = state.net[state.aka[petname]]
-        const action = on[message.type] || invalid
-        action(message)
-      }
-      function onclick (message) { // receive click from a button -> that button will become active!
-        const active_id = state.status.active_button
-        const default_id = state.aka[page] // only exists because it got initialized first (timing issue?)
-        if (active_id === send.id && active_id === default_id) return // means default is already active
-        // @TODO: maybe change logic to be able to toggle an "empty desktop" too?
-        const [
-          next_id, data
-        ] = active_id === send.id ? [default_id, page] : [send.id, petname]
-        const be_channel = state.net[next_id]
-        const ex_channel = state.net[active_id] // active button
-        const up_channel = state.net[state.aka.up] // parent element
-        do_page_change(data, message.head, { be_channel, ex_channel, up_channel })
-      }
-    }
   }
   function do_page_change (page, head, { be_channel, ex_channel, up_channel }) {
     if (be_channel) be_channel.send({ // new active nav button
@@ -4448,7 +6735,7 @@ function navbar (opts = default_opts, protocol) {
   }
 }
 function get_theme () {
-  return`
+  return `
     .navbar_wrapper {
       container-type: inline-size;
       width: 100%;
@@ -4521,89 +6808,160 @@ function get_theme () {
     }
   `
 }
-}).call(this)}).call(this,require('_process'),"/src/node_modules/navbar/index.js","/src/node_modules/navbar")
-},{"_process":2,"buttons/icon_button":15,"buttons/logo_button":16,"buttons/text_button":22,"path":1}],33:[function(require,module,exports){
-const window_bar = require('window_bar')
-
-// CSS Boiler Plat
-const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
-let id = 0
-
-module.exports = our_member
-
-function our_member (opts, protocol) {
-  const name = `our_member`
-  protocol({ from: name }, listen)
-  function listen () {
-    our_member_wrapper.style.display = 'inline'
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
   }
-  const { data } = opts
-  // Assigning all the icons
-  const {img_src} = data
-  const {
-      icon_pdf_reader
-  } = img_src
-  const el = document.createElement('div')
-  const shadow = el.attachShadow ({ mode : 'closed' })
-  shadow.innerHTML = `
-    <div class="our_member">
-      <div class="member_content">
-        <h2>## our members</h2>
-        <table>
-          <thead>
-            <tr>
-              <td> s.no </td><td> names </td><td> socials </td>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td> 01 </td><td> alexander </td><td> cabal  </td>
-            </tr>
-            <tr>
-              <td> 02 </td><td> alexander praetorius </td><td> geut/she </td>
-            </tr>
-          </tbody>
-        </table>  
-      </div>
-    </div>
-    <style> ${get_theme()} </style>
-  `
-  const window = window_bar({
-    name:'our_member.md', 
-    src: icon_pdf_reader,
-    data: data
-  }, our_member_protocol)
-  const our_member_wrapper = shadow.querySelector('.our_member')
-  our_member_wrapper.prepend(window)
-
-  shadow.adoptedStyleSheets = [sheet]
-  return el
-
-  // cover protocol
-  function our_member_protocol (message, send) {
-    return listen
-    // Listening to toggle event 
-    function listen (message) {
-      const { head, refs, type, data, meta } = message  
-      const PROTOCOL = {
-        'toggle_active_state': toggle_active_state
-      }
-      const action = PROTOCOL[type] || invalid      
-      action(message)
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
     }
-    function invalid (message) { console.error('invalid type', message) }
-    async function toggle_active_state (message) {
-      const { head, refs, type, data, meta } = message
-      const { active_state } = data
-      ;( active_state === 'active')?our_member_wrapper.style.display = 'none':''
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
     }
   }
 }
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/navbar/navbar.js")
+},{"_process":2,"buttons/icon-button":16,"buttons/logo-button":17,"buttons/text-button":23}],34:[function(require,module,exports){
+(function (process,__filename){(function (){
+const window_bar = require('window-bar')
+/******************************************************************************
+  OUR MEMBERS COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = our_member
+// ----------------------------------------
+function our_member (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { data } = opts
+  // Assigning all the icons
+  const { img_src } = data
+  const {
+    icon_pdf_reader
+  } = img_src
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = { 'show': on_show }
+  const channel = use_protocol('up')({ protocol, state, on })
+  function on_show (message) {
+    our_member_wrapper.style.display = 'inline'
+  }
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="our_member">
+    <div class="windowbar"></div>
+    <div class="member_content">
+      <h2>## our members</h2>
+      <table>
+        <thead>
+          <tr>
+            <td> s.no </td><td> names </td><td> socials </td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td> 01 </td><td> alexander </td><td> cabal  </td>
+          </tr>
+          <tr>
+            <td> 02 </td><td> alexander praetorius </td><td> geut/she </td>
+          </tr>
+        </tbody>
+      </table>  
+    </div>
+  </div>`
+  const our_member_wrapper = shadow.querySelector('.our_member')
+  // ----------------------------------------
+  const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // windowbar
+    const on = {
+      'toggle_active_state': toggle_active_state
+    }
+    const protocol = use_protocol('windowbar')({ state,  on })
+    const opts = {
+      name:'our_member.md', 
+      src: icon_pdf_reader,
+      data
+    }
+    const element = window_bar(opts, protocol)
+    windowbar_shadow.append(element)
+    async function toggle_active_state (message) {
+      const { active_state } = message.data
+      if (active_state === 'active') our_member_wrapper.style.display = 'none'
+    }
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+
+  return el
+}
 function get_theme () {
-  return`
+  return `
     * {
       box-sizing: border-box;
     }
@@ -4645,56 +7003,133 @@ function get_theme () {
     }
   `
 }
-},{"window_bar":48}],34:[function(require,module,exports){
-(function (process,__dirname){(function (){
-const path = require('path')
-const sm_icon_button = require('buttons/sm_icon_button')
-
-const cwd = process.cwd()
-const prefix = path.relative(cwd, __dirname)
-
-// CSS Boiler Plat
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/our-members/our-members.js")
+},{"_process":2,"window-bar":51}],35:[function(require,module,exports){
+(function (process,__filename){(function (){
+const sm_icon_button = require('buttons/sm-icon-button')
+/******************************************************************************
+  PROJECT CARD COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = project_card
-
-function project_card (opts) {
-  const { data } = opts
+// ----------------------------------------
+function project_card (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { data, socials, project_logo, desc, tags, project } = opts
   // Assigning all the icons
   const { img_src: { 
       icon_consortium = `${prefix}/icon_consortium_page.png`,
   } } = data
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  el.style.lineHeight = '0px'
-  const shadow = el.attachShadow({ mode : 'closed' })
-  const { socials, project_logo, desc, tags, project } = opts
-  shadow.innerHTML = `
-    <div class="project_card">
-      <div class="icon_wrapper">
-        <div class="project_title">
-          ${project}
-          <img src="${project_logo}">
-        </div>
-        <div class="socials_wrapper"><socials></socials></div>
-      </div>
-      <div class="content_wrapper">
-        <div class="desc"> ${desc}</div>
-      </div>
-      <div class="tags_wrapper">
-        ${tags.map(tag => `<div class="tag">${tag}</div>`).join('')}
-      </div>
-    </div>
-    <style>${get_theme()}</style>
-  `
-  shadow.querySelector('socials').replaceWith(...socials.map(x => sm_icon_button({ src: x })))
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="project_card">
+    <div class="icon_wrapper">
+      <div class="project_title">
+        ${project}
+        <img src="${project_logo}">
+      </div>
+      <div class="socials_wrapper"><socials></socials></div>
+    </div>
+    <div class="content_wrapper">
+      <div class="desc"> ${desc}</div>
+    </div>
+    <div class="tags_wrapper">
+      ${tags.map(tag => `<div class="tag">${tag}</div>`).join('')}
+    </div>
+  </div>`
+  const socials_wrapper = shadow.querySelector('socials')
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  socials_wrapper.replaceWith(...socials.map(x => sm_icon_button({ src: x })).map(shadowfy()))
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
   return el
+
 }
 function get_theme () {
-  return`
+  return `
     * {
       box-sizing: border-box;
     }
@@ -4746,61 +7181,146 @@ function get_theme () {
     }
   `
 }
-}).call(this)}).call(this,require('_process'),"/src/node_modules/project_card")
-},{"_process":2,"buttons/sm_icon_button":18,"path":1}],35:[function(require,module,exports){
-const search_input = require('search_input')
-const select_button = require('buttons/select_button')
-
-// CSS Boiler Plat
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/project-card/project-card.js")
+},{"_process":2,"buttons/sm-icon-button":20}],36:[function(require,module,exports){
+(function (process,__filename){(function (){
+const search_input = require('search-input')
+const select_button = require('buttons/select-button')
+/******************************************************************************
+  WINDOW BAR COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 const sheet = new CSSStyleSheet
 sheet.replaceSync(get_theme())
-
-var id = 0
-
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = project_filter
-
-function project_filter (opts, protocol) {
-  const name = 'project_filter-' + id++
-  const notify = protocol({ from: name }, listen)
-  const PROTOCOL = {}
+// ----------------------------------------
+function project_filter (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { tags, data } = opts
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const up_channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode:`closed` })
-  shadow.innerHTML = `
-    <div class="filter_wrapper">
-      <div class="project_filter"></div>
-    </div>
-    <style> ${get_theme()} </style>
-  `
-  const search_project = search_input(opts, project_filter_protocol)
-  const status_button = select_button({ data: opts.data, name: 'STATUS', choices: ['ACTIVE', 'UNACTIVE', 'PAUSED'] }, project_filter_protocol)
-  const tag_button = select_button({ data: opts.data, name: 'TAGS', choices: opts.tags }, project_filter_protocol)
-  const project_filter = shadow.querySelector('.project_filter')
-  project_filter.append(status_button, tag_button, search_project)
-  // shadow.append(project_filter)
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="filter_wrapper">
+    <div class="project_filter"></div>
+  </div>`
+  const project_filter = shadow.querySelector('.project_filter')
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // status button
+    const on = { 'value': on_value }
+    const protocol = use_protocol('status_button')({ state, on })
+    const opts = { data, name: 'STATUS', choices: ['ACTIVE', 'UNACTIVE', 'PAUSED'] }
+    const element = shadowfy()(select_button(opts, protocol))
+    project_filter.append(element)
+  }
+  { // tag button
+    const on = { 'value': on_value }
+    const protocol = use_protocol('tag_button')({ state, on })
+    const opts = { data, name: 'TAGS', choices: tags }
+    const element = shadowfy()(select_button(opts, protocol))
+    project_filter.append(element)
+  }
+  { // search project
+    const on = { 'value': on_value }
+    const protocol = use_protocol('search_project')({ state, on })
+    const search_opts = opts
+    const element = shadowfy()(search_input(search_opts, protocol))
+    project_filter.append(element)
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
   return el
 
-  function project_filter_protocol (handshake, send, mid = 0) {
-    if (send) return listen
-    function listen (message) {
-      const { head,  refs, type, data, meta } = message
-      const { by, to, id } = head
-      // if( to !== id) return console.error('address unknown', message)
-      message = {
-        head: { by:name, to: 'app_projects', mid: 0 },
-        type: type,
-        data: data
-      }
-      notify(message)
-    }
-  }
-  function listen (message) {
-    
+  function on_value (message) {
+    up_channel.send({
+      head: [id, up_channel.send.id, up_channel.mid++],
+      refs: { cause: message.head },
+      type: 'value',
+      data: message.data
+    })
   }
 }
 function get_theme () {
-  return`
+  return `
     .filter_wrapper {
       container-type: inline-size;
     }
@@ -4815,71 +7335,144 @@ function get_theme () {
       }
     }
   `
+} 
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
 }
-},{"buttons/select_button":17,"search_input":38}],36:[function(require,module,exports){
-const app_projects = require('app_projects')
-const the_dat = require('the_dat')
-const app_footer = require('app_footer')
-
-// CSS Boiler Plat
-const sheet = new CSSStyleSheet
-sheet.replaceSync(get_theme())
-
-module.exports = projects_page
-
-function projects_page (opts, protocol) {
-  const { data } = opts
-
-  const components = [
-    the_dat({ data }, projects_protocol),
-    app_projects({ data }),
-    app_footer({ data })
-  ]
-  const el = document.createElement('div')
-  const shadow = el.attachShadow({ mode: 'closed' })
-  // adding a `main-wrapper` 
-  shadow.innerHTML = `
-    <div class="main-wrapper">
-      <div class="main"></div>
-    </div>
-    <style>${get_theme()}</style>
-  `
-  const main = shadow.querySelector('.main')
-  main.append(...components)
-  shadow.adoptedStyleSheets = [sheet]
-
-  return el
-
-  // Placeholder code for learning purposes
-  // Will be removed
-  function projects_protocol (handshake, send){
-    if (send) return listen
-    const PROTOCOL = {
-      'toggle_display' : toggle_display
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
     }
-    send = handshake(null, listen)
-    function listen (message){
-      function format (new_message = {
-        head: [from = 'alice', to = 'bob', message_id = 1],
-        refs: { cause: message.head }, // reply to received message
-        type: 'change_theme',
-        data: `.foo { background-color: red; }`
-      }) { return new_message }
-      console.log(format())
-      // const { head, type, data } = message
-      // const [by, to, id] = head
-      // if (to !== id) return console.error('address unknown', message)
-      // const action = PROTOCOL[type] || invalid
-      // action(message)
-    }
-    function invalid (message) { console.error('invalid type', message) }
-    async function toggle_display ({ head: [to], data: theme }) {
-      // @TODO: apply theme to `sheet` and/or `style` and/or css `var(--property)`
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
     }
   }
 }
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/project-filter/project-filter.js")
+},{"_process":2,"buttons/select-button":18,"search-input":39}],37:[function(require,module,exports){
+(function (process,__filename){(function (){
+const app_projects = require('app-projects')
+const the_dat = require('the-dat')
+const app_footer = require('app-footer')
+/******************************************************************************
+  PROJECTS PAGE COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = projects_page
+// ----------------------------------------
+function projects_page (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { data } = opts
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {
+    '': msg => {
+      console.error('what')
+    }
+  }
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const shadow = el.attachShadow(shopts)
+  // adding a `main-wrapper` 
+  shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="main-wrapper">
+    <div class="main"></div>
+  </div>`
+  const main = shadow.querySelector('.main')
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // the dat
+    const on = {}
+    const protocol = use_protocol('the_dat')({ state, on })
+    const opts = { data }
+    const element = shadowfy()(the_dat(opts, protocol))
+    main.append(element)
+  }
+  { // projects
+    const on = {}
+    const protocol = use_protocol('app_projects')({ state, on })
+    const opts = { data }
+    const element = shadowfy()(app_projects(opts, protocol))
+    main.append(element)
+  }
+  { // footer
+    const on = {}
+    const protocol = use_protocol('app_footer')({ state, on })
+    const opts = { data }
+    const element = shadowfy()(app_footer(opts, protocol))
+    main.append(element)
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+
+  return el
+}
 function get_theme () {
-  return`
+  return `
     * {
       box-sizing: border-box;
     }
@@ -4889,7 +7482,6 @@ function get_theme () {
         margin: 0;
         padding: 30px 10px;
         opacity: 1;
-        background-image: radial-gradient(var(--primary_color) 2px, var(--bg_color) 2px);
         background-size: 16px 16px;
       }
     }
@@ -4900,38 +7492,96 @@ function get_theme () {
     }
   `
 }
-},{"app_footer":9,"app_projects":10,"the_dat":41}],37:[function(require,module,exports){
-(function (process,__dirname){(function (){
-const path = require('path')
-const sm_icon_button = require('buttons/sm_icon_button')
-
-const cwd = process.cwd()
-const prefix = path.relative(cwd, __dirname)
-
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/projects-page/projects-page.js")
+},{"_process":2,"app-footer":9,"app-projects":12,"the-dat":43}],38:[function(require,module,exports){
+(function (process,__filename){(function (){
+const sm_icon_button = require('buttons/sm-icon-button')
+/******************************************************************************
+  SCROLL COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
 const svgdot_datauri = `
 <svg width="16px" height="16px" viewBox="8 8 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path fill="#2ACA4B" d="M12 9.5C13.3807 9.5 14.5 10.6193 14.5 12C14.5 13.3807 13.3807 14.5 12 14.5C10.6193 14.5 9.5 13.3807 9.5 12C9.5 10.6193 10.6193 9.5 12 9.5Z"></path>
 </svg>
 `
-
-const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-/******************************************************************************
-  SCROLL COMPONENT
-******************************************************************************/
-
-let count = 0
-
+const default_opts = { svgdot_datauri }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = scrollbar
-
-function scrollbar (opts, protocol) {
-  const id = "scrollbar-" + count++
-  const state = {
+// ----------------------------------------
+function scrollbar (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  const size = {
     content_scrollSize: null,   // Width, Height
     content_clientSize: null,  // Width, Height
     content_scrollStart: null, // Left, Top
   }
+  let lastPage
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
@@ -4939,70 +7589,77 @@ function scrollbar (opts, protocol) {
     horizontal = false,
     data: {
       img_src: {
-        icon_arrow_start = svgdot_datauri,
-        icon_arrow_end = svgdot_datauri,
+        icon_arrow_start = default_opts.svgdot_datauri,
+        icon_arrow_end = default_opts.svgdot_datauri,
       }
     }
   } = opts
+  const direction = horizontal ? 'horizontal' : 'vertical'
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
-  const notify = scrollbar_protocol(protocol)
+  const on = { update_size, handle_scroll }
+  const up_channel= use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
   // TEMPLATE
   // ----------------------------------------
   const el = document.createElement('div')
-  el.classList.add('container')
-  const shadow = el.attachShadow({ mode: 'closed' })
-  shadow.innerHTML = `<div class="scrollbar_wrapper">
-    <div class="bar_wrapper">
-      <div class="bar"></div>
-    </div>
-  </div>`
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="scrollbar_wrapper ${direction}-wrapper">
+    <div class="bar_wrapper ${direction}-bar-wrapper">
+      <div class="bar ${direction}-bar"></div>
+    </div>
+    <div class="controls ${direction}-ctrls-wrapper"></div>
+  </div>`
   const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
-  const bar_wrapper = shadow.querySelector('.bar_wrapper')
   const bar = shadow.querySelector('.bar')
-
-  if (horizontal) {
-    scrollbar_wrapper.classList.add('horizontal-wrapper')
-    bar_wrapper.classList.add('horizontal-bar-wrapper')
-    bar.classList.add('horizontal-bar')
-  } else {
-    scrollbar_wrapper.classList.add('vertical-wrapper')
-    bar_wrapper.classList.add('vertical-bar-wrapper')
-    bar.classList.add('vertical-bar')
+  // ----------------------------------------
+  const controls_wrapper = shadow.querySelector('.controls')
+  const controls = controls_wrapper.attachShadow(shopts)
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // bar
+    bar.onmousedown = handle_mousedown
   }
-
-  let lastPage
-
-  bar.onmousedown = handle_mousedown
-  const arrow_end_btn = sm_icon_button({
-    src: icon_arrow_end, activate: false
-  })
-  arrow_end_btn.classList.add('arrow_end_btn')
-  arrow_end_btn.onclick = () => {
-    emit_status()
-    const ratio = state.content_clientSize / state.content_scrollSize
-    notify({
-      head: { by: id, to: 'app_projects', mid: 0 },
-      type: 'set_scroll_start',
-      data: state.content_scrollStart + 30 / ratio
-    })
+  { // arrow start
+    const on = { 'click': on_click }
+    const protocol = use_protocol('arrow_start')({ state, on })
+    const opts = { src: icon_arrow_start, activate: false }
+    const element = shadowfy()(sm_icon_button(opts, protocol))
+    controls.append(element)
+    function on_click (event) {
+      emit_status()
+      const ratio = size.content_clientSize / size.content_scrollSize
+      const data = size.content_scrollStart - 30 / ratio
+      up_channel.send({
+        head: [id, up_channel.send.id, up_channel.mid++],
+        type: 'set_scroll',
+        data
+      })
+    }
   }
-  const arrow_start_btn = sm_icon_button({
-    src: icon_arrow_start, activate: false
-  })
-  arrow_start_btn.classList.add('arrow_start_btn')
-  arrow_start_btn.onclick = () => {
-    emit_status()
-    const ratio = state.content_clientSize / state.content_scrollSize
-    notify({
-      head: { by: id, to: 'app_projects', mid: 0 },
-      type: 'set_scroll_start',
-      data: state.content_scrollStart - 30 / ratio
-    })
+  { // arrow end
+    const on = { 'click': on_click }
+    const protocol = use_protocol('arrow_end')({ state, on })
+    const opts = { src: icon_arrow_end, activate: false }
+    const element = shadowfy()(sm_icon_button(opts, protocol))
+    controls.append(element)
+    function on_click (event) {
+      emit_status()
+      const ratio = size.content_clientSize / size.content_scrollSize
+      const data = size.content_scrollStart + 30 / ratio
+      up_channel.send({
+        head: [id, up_channel.send.id, up_channel.mid++],
+        type: 'set_scroll',
+        data
+      })
+    }
   }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
   setTimeout(() => {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -5014,40 +7671,28 @@ function scrollbar (opts, protocol) {
     })
     observer.observe(scrollbar_wrapper)
   }, 2000)
-  scrollbar_wrapper.append(arrow_start_btn, arrow_end_btn)
 
   return el
 
-  function scrollbar_protocol (protocol) {
-    const on = { update_size, handle_scroll }
-    return protocol(Object.assign(listen, { id }))
-    function invalid (message) { console.error('invalid type', message) }
-    function listen (message) {
-      console.log(`[${id}]`, message)
-      // const { on } = state.net[state.aka.navbar]
-      const action = on[message.type] || invalid
-      action(message)
-    }
-  }
   function update_size ({ data }) {
     const { sh, ch, st } = data
-    state.content_clientSize = ch
-    state.content_scrollSize = sh
-    state.content_scrollStart = st
+    size.content_clientSize = ch
+    size.content_scrollSize = sh
+    size.content_scrollStart = st
   }
   function handle_scroll () {
     emit_status()
-    const ratio = state.content_clientSize / state.content_scrollSize
+    const ratio = size.content_clientSize / size.content_scrollSize
     if (ratio >= 1) el.style.cssText = 'display: none;'
     else el.style.cssText = 'display: inline;'
     const [prop1, prop2] = horizontal ? ['width', 'left'] : ['height', 'top']
     const percent1 = Math.max(ratio * 100, 10)
-    const percent2 = (state.content_scrollStart / state.content_scrollSize ) * 100
+    const percent2 = (size.content_scrollStart / size.content_scrollSize ) * 100
     bar.style.cssText = `${prop1}: ${percent1}%; ${prop2}: ${percent2}%;`
   }
   function emit_status () {
-    notify({
-      head: { by: id, to: 'app_projects', mid: 0 },
+    up_channel.send({
+      head: [id, up_channel.send.id, up_channel.mid++],
       type: 'status',
       data: null
     })
@@ -5069,11 +7714,12 @@ function scrollbar (opts, protocol) {
     const nextPage = horizontal ? e.pageX : e.pageY
     const delta = nextPage - lastPage
     lastPage = nextPage
-    const ratio = state.content_clientSize / state.content_scrollSize
-    notify({
-      head: { by: id, to: 'app_projects', mid: 0 },
-      type: 'set_scroll_start',
-      data: state.content_scrollStart + delta / ratio
+    const ratio = size.content_clientSize / size.content_scrollSize
+    const data = size.content_scrollStart + delta / ratio
+    up_channel.send({
+      head: [id, up_channel.send.id, up_channel.mid++],
+      type: 'set_scroll',
+      data
     })
   }
 }
@@ -5083,6 +7729,13 @@ function get_theme () {
       height: 30px;
       width: 100%;
       flex-direction: row;
+    }
+    .horizontal-ctrls-wrapper {
+      display: flex;
+    }
+    .vertical-ctrls-wrapper {
+      display: flex;
+      flex-direction: column;
     }
     .vertical-wrapper {
       width: 30px;
@@ -5098,6 +7751,9 @@ function get_theme () {
       }
       .horizontal-bar-wrapper {
         width: 100%;
+      }
+      .controls {
+        display: flex;
       }
       .bar_wrapper {
         display: flex;
@@ -5128,60 +7784,130 @@ function get_theme () {
     }
   `
 }
-}).call(this)}).call(this,require('_process'),"/src/node_modules/scrollbar")
-},{"_process":2,"buttons/sm_icon_button":18,"path":1}],38:[function(require,module,exports){
-(function (process,__dirname){(function (){
-const path = require('path')
-const cwd = process.cwd()   
-const prefix = path.relative(cwd, __dirname)
-
-// CSS Boiler Plat
-const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
-module.exports = input_search
-
-function input_search (opts, protocol) {
-  const notify = protocol(null, listen)
-  const { data } = opts
-  let message = {
-    head: ['input_search', 'project_filter', 'project_filter'],
-    type: 'setFilter',
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
   }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/scrollbar/scrollbar.js")
+},{"_process":2,"buttons/sm-icon-button":20}],39:[function(require,module,exports){
+(function (process,__filename){(function (){
+/******************************************************************************
+  SEARCH INPUT COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = input_search
+// ----------------------------------------
+function input_search (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { data } = opts
   // Assigning all the icons
   const { img_src: {
       icon_search = `${prefix}/icon_search.svg`,
   } } = data
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  // el.classList.add('input_wrapper')
-  const shadow = el.attachShadow({ mode:`closed` })
-  shadow.innerHTML = `
-    <div class="search_input">
-      <input class="input" type="text" placeholder="SEARCH...">
-        ${icon_search}
-      </input>
-    </div>
-    <style> ${get_theme()} </style>
-  `
-  const input = shadow.querySelector('.input')
-  input.oninput = (e) => {
-    message['data'] = { filter: 'SEARCH', value:e.target.value }
-    notify(message)
-  }
-  // shadow.append(main, navbar(opts, protocol))
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="search_input">
+    <input class="input" type="text" placeholder="SEARCH...">
+      ${icon_search}
+    </input>
+  </div>`
+  const input = shadow.querySelector('.input')
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  input.oninput = oninput
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
   return el
 
-  function listen (message) {
-    // const {head,  refs, type, data, meta} = message
-    // const [by, to, id] = head
-    // if( to !== id) return console.error('address unknown', message)
+  function oninput (e) {
+    const { value } = e.target
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'value',
+      data: { filter: 'SEARCH', value }
+    })
   }
 }
 function get_theme () {
-  return`
+  return `
     .search_input {
       width: 100%;
       min-width: 100% !important;
@@ -5214,66 +7940,324 @@ function get_theme () {
     }
   `
 }
-}).call(this)}).call(this,require('_process'),"/src/node_modules/search_input")
-},{"_process":2,"path":1}],39:[function(require,module,exports){
-const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/search-input/search-input.js")
+},{"_process":2}],40:[function(require,module,exports){
+(function (process,__filename){(function (){
+/******************************************************************************
+  WINDOW BAR COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
 var count = 0
-
-module.exports = tab_window
-
-function tab_window (opts, protocol) {
-  const id = count++
-  const send = protocol(Object.assign(listen, { id }))
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = svg_element
+// ----------------------------------------
+function svg_element (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { source } = opts
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow({mode: 'closed'})
-  shadow.innerHTML = `<div class="main-wrapper">${opts.text}</div>`
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = source
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  el.onclick = undefined
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
   return el
+}
+function get_theme () {
+  return `
+    svg {
+      height: 50px;
+      width: 50px;
+      margin: 5px 0;
+      padding: 3px;
+      background-color: white;
+    }
+    svg path {
+      fill: black;
+    }
+  `
+}
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/svg-element/svg-element.js")
+},{"_process":2}],41:[function(require,module,exports){
+(function (process,__filename){(function (){
+/******************************************************************************
+  TAB WINDOW COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = tab_window
+// ----------------------------------------
+function tab_window (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { text } = opts
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="main-wrapper">${text}</div>`
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
-  function listen (message) {}
+  return el
 }
 
 function get_theme() {
   return ``
 }
-},{}],40:[function(require,module,exports){
-(function (__filename){(function (){
-const tab_window = require('tab_window')
-const tab_button = require('buttons/tab_button')
-const sm_icon_button_alt = require('buttons/sm_icon_button_alt')
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/tab-window/tab-window.js")
+},{"_process":2}],42:[function(require,module,exports){
+(function (process,__filename){(function (){
+const tab_window = require('tab-window')
+const tab_button = require('buttons/tab-button')
+const sm_icon_button_alt = require('buttons/sm-icon-button-alt')
 const scrollbar = require('scrollbar')
-
-const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
 /******************************************************************************
   TERMINAL COMPONENT
 ******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
 var count = 0
-const ID = __filename
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
 const STATE = { ids: {}, net: {} } // all state of component module
 // ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
 const default_opts = { }
-
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = terminal
-
+// ----------------------------------------
 function terminal (opts = default_opts, protocol) {
   // ----------------------------------------
   // RESOURCE POOL (can't be serialized)
   // ----------------------------------------
   const viewports = {}
   const _ = { viewports }
+  const ro = new ResizeObserver(entries => {
+    console.log('ResizeObserver:terminal:resize')
+    const scroll_channel = state.net[state.aka.scrollbar]
+    scroll_channel.send({
+      head: [id, scroll_channel.send.id, scroll_channel.mid++],
+      refs: { },
+      type: 'handle_scroll',
+    })
+  })
   // ----------------------------------------
   // ID + JSON STATE
   // ----------------------------------------
   const id = `${ID}:${count++}` // assigns their own name
-  const status = { active_tab: null, tab_id: 0 }
-  const aka = { tab: {} }
-  const state = STATE.ids[id] = { id, status, _, wait: {}, net: {}, aka } // all state of component instance
+  const status = { active_tab: null, tab_id: 0, tab: {} }
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
@@ -5284,89 +8268,107 @@ function terminal (opts = default_opts, protocol) {
     icon_full_screen
   } = opts.data.img_src
   // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
   // TEMPLATE
   // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow ({ mode : 'closed' })
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `<div class="terminal_wrapper">
     <div class="terminal">
       <div class="header">${icon_terminal}Terminal</div>
       <div class="tab_display"></div>
       <div class="footer">
-        <div class="scrollbar_wrapper">
+        <div class="tabs_bar">
           <div class="tab_buttons"></div>
+          <div class="scrollbar-wrapper"></div>
         </div>
         <div class="buttons"></div>
       </div>
     </div>
   </div>`
-  shadow.adoptedStyleSheets = [sheet]
   const terminal_wrapper = shadow.querySelector('.terminal')
-  const tab_display = shadow.querySelector('.tab_display')
-  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
   const tab_buttons = shadow.querySelector('.tab_buttons')
-  const buttons = shadow.querySelector('.buttons')
+  // ----------------------------------------
+  const tab_buttons_shadow = tab_buttons.attachShadow(shopts)
+  const tab_display = shadow.querySelector('.tab_display').attachShadow(shopts)
+  const scrollbar_wrapper = shadow.querySelector('.scrollbar-wrapper').attachShadow(shopts)
+  const buttons = shadow.querySelector('.buttons').attachShadow(shopts)
   // ----------------------------------------
   // ELEMENTS
   // ----------------------------------------
-  buttons.append(sm_icon_button_alt({ src: icon_plus }, spawn_protocol))
-  if (screen.width > 510) buttons.append(sm_icon_button_alt({
-    src: icon_full_screen
-  }, fullscreen_protocol))
-  buttons.append(sm_icon_button_alt({ src: icon_close_light }, close_protocol))
-  opts.horizontal = true
-  opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_left
-  opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_right
-  scrollbar_wrapper.append(scrollbar(opts, scrollbar_protocol))
-  add_tab('Home')
-
-  return el
-
-  function add_tab (label) {
-    const petname_win = `win-${label}`
-    const petname_btn = `btn-${label}`
-    const protocol = shell_protocol({ petname_win, petname_btn })
-    const tab_win = tab_window({ data: opts.data, text: label }, protocol.tabwin)
-    const tab_btn = tab_button({ data: opts.data, name: label }, protocol.tabbtn)
-    if (state.status.active_tab) {
-      const active_channel = state.net[state.status.active_tab]
-      active_channel.send({ type: 'inactivate' })
-      const scroll_channel = state.net[state.aka.scrollbar]
-      const head = [id, scroll_channel.send.id, scroll_channel.mid++]
-      scroll_channel.send({ head, type: 'handle_scroll' })
-    }
-    const tab_id = state.aka.tab[petname_btn]
-    _.viewports[tab_id] = tab_win
-    state.status.active_tab = tab_id
-    tab_buttons.append(tab_btn)
-    tab_display.replaceChildren(tab_win)
+  { // plus button
+    const on = { 'click': on_spawn }
+    const protocol = use_protocol('plus_button')({ state, on })
+    const opts = { src: icon_plus }
+    const element = shadowfy()(sm_icon_button_alt(opts, protocol))
+    buttons.append(element)
+    function on_spawn (message) { add_tab('tab-' + state.status.tab_id++) }
   }
-  // ----------------------------------------
-  // PROTOCOLS
-  // ----------------------------------------
-  function scrollbar_protocol (send) {
-    const on = { 'set_scroll_start': on_set_scroll_start, 'status': on_update_size }
-    tab_buttons.onscroll = event => send({ type: 'handle_scroll' })
-    const ro = new ResizeObserver(entries => send({ type: 'handle_scroll' }))
-    ro.observe(tab_buttons)
-    const scroll_channel = state.net[send.id] = { mid: 0, send, on }
-    state.aka.scrollbar = send.id
-    return Object.assign(listen, { id })
-    function invalid (message) { console.error('invalid type', message) }
-    function listen (message) {
-      console.log(`[${id}]`, message)
-      const { on } = state.net[state.aka.scrollbar]
-      const action = on[message.type] || invalid
-      action(message)
+  { // fullscreen button
+    if (screen.width > 510) {
+      const on = { 'click': on_fullscreen }
+      const protocol = use_protocol('fullscreen')({ state, on })
+      const opts = { src: icon_full_screen }
+      const element = shadowfy()(sm_icon_button_alt(opts, protocol))
+      buttons.append(element)
+      status.fullscreen = terminal_wrapper.style.height === '100vh'
+      function on_fullscreen (message) {
+        const ismax = status.fullscreen
+        terminal_wrapper.style.height = ismax ? '100%' : '100vh'
+        terminal_wrapper.style.width = '100%'
+        terminal_wrapper.style.position = 'absolute'
+        terminal_wrapper.style.bottom = 0
+        status.fullscreen = !ismax
+      }
     }
-    function on_set_scroll_start (message) {
+  }
+  { // close button
+    const on = { 'click': on_close }
+    const protocol = use_protocol('close_button')({ state, on })
+    const opts = { src: icon_close_light }
+    const element = shadowfy()(sm_icon_button_alt(opts, protocol))
+    buttons.append(element)
+    function on_close (message) {
+      console.log('CLOSE')
+    }
+  }
+  { // scrollbar
+    const on = { 'set_scroll': on_set_scroll, 'status': on_update_size }
+    const protocol = use_protocol('scrollbar')({ state, on })
+    opts.horizontal = true
+    opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_left
+    opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_right
+    const scroll_opts = opts
+    const element = scrollbar(scroll_opts, protocol)
+
+    tab_buttons.onscroll = on_scroll
+    const scroll_channel = state.net[state.aka.scrollbar]
+    ro.observe(tab_buttons)
+
+    scrollbar_wrapper.append(element)
+
+    function on_scroll (event) {
+      console.log('tab_buttons:terminal:scroll')
+      scroll_channel.send({
+        head: [id, scroll_channel.send.id, scroll_channel.mid++],
+        refs: { },
+        type: 'handle_scroll',
+      })
+    }
+    function on_set_scroll (message) {
+      console.log('set_scroll', message) 
       setScrollLeft(message.data)
     }
     function on_update_size (message) {
       const head = [id, scroll_channel.send.id, scroll_channel.mid++]
       scroll_channel.send({
         head,
-        refs: { head: message.head },
+        refs: { cause: message.head },
         type: 'update_size',
         data: {
           sh: tab_buttons.scrollWidth,
@@ -5379,79 +8381,100 @@ function terminal (opts = default_opts, protocol) {
       tab_buttons.scrollLeft = value
     }
   }
-  function shell_protocol ({ petname_win, petname_btn }) {
-    return { tabbtn, tabwin }
-    function tabwin () {
-      return Object.assign(listen, { id })
-      function listen (message) {
-        console.log(`[${id}]\n${petname_win}:`, message)
-      }
-    }
-    function tabbtn (send) {
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+  add_tab('Home')
+
+  return el
+
+  function add_tab (label) {
+    const petname_win = `win-${label}`
+    const petname_btn = `btn-${label}`
+    { // tab button
       const on = { 'close': close_tab, 'click': switch_tab }
-      const channel = state.net[send.id] = { name: petname_btn, mid: 0, send, on }
-      state.aka.tab[petname_btn] = send.id
-      return Object.assign(listen, { id })
-      function invalid (message) { console.error('invalid type', message) }
-      function listen (message) {
-        console.log(`[${id}]\n${petname_btn}:`, message)
-        const { on } = channel
-        const action = on[message.type] || invalid
-        action(message)
-      }
-      async function switch_tab () {
-        const btn_id = send.id
-        if (state.status.active_tab === btn_id) return
+      const protocol = use_protocol(petname_btn)({ state, on })
+      const btn_opts = { data: opts.data, name: label }
+      const element = tab_button(btn_opts, protocol)
+      tab_buttons_shadow.append(element)
+
+      state.status.tab[petname_btn] = state.aka[petname_btn]
+
+      if (Object.keys(viewports).length < 1) ro.observe(tab_buttons)
+
+      if (state.status.active_tab) {
         const active_channel = state.net[state.status.active_tab]
-        active_channel.send({ type: 'inactivate' })
-        state.status.active_tab = btn_id // set tab as active one
-        channel.send({ type: 'activate' })
-        tab_display.replaceChildren(viewports[btn_id])
-      }
-      async function close_tab (message) {
-        const tab_id = send.id
-        if (Object.keys(viewports).length > 1) {
-          if (state.status.active_tab === tab_id) {
-            const ids = Object.keys(state.net)
-            const next_id = ids[(ids.indexOf(tab_id) || ids.length) - 1]
-            state.status.active_tab = next_id
-            const btn_channel = state.net[next_id]
-            btn_channel.send({ type: 'activate' })
-            const next_tab_win = viewports[next_id]
-            tab_display.replaceChildren(next_tab_win)
-          }
-        } else {
-          state.status.active_tab = undefined
-          tab_display.replaceChildren()
-        }
-        delete viewports[tab_id]
-        const { name } = state.net[tab_id]
-        delete state.net[tab_id]
-        delete state.aka.tab[name]
+        active_channel.send({
+          head: [id, active_channel.send.id, active_channel.mid++],
+          type: 'inactivate'
+        })
         const scroll_channel = state.net[state.aka.scrollbar]
         const head = [id, scroll_channel.send.id, scroll_channel.mid++]
-        scroll_channel.send({ head, refs: { head: message.head }, type: 'handle_scroll' })
+        scroll_channel.send({ head, type: 'handle_scroll' })
+      }
+    }
+    { // tab window
+      const on = {}
+      const protocol = use_protocol(petname_win)({ state, on })
+      const win_opts = { data: opts.data, text: label }
+      const element = tab_window(win_opts, protocol)
+      tab_display.replaceChildren(element)
+
+      const tab_id = state.status.tab[petname_btn]
+      _.viewports[tab_id] = element
+      state.status.active_tab = tab_id
+    }
+
+    async function switch_tab () {
+      const btn_id = state.status.tab[petname_btn]
+      if (state.status.active_tab === btn_id) return
+      const active_channel = state.net[state.status.active_tab]
+      active_channel.send({
+        head: [id, active_channel.send.id, active_channel.mid++],
+        type: 'inactivate'
+      })
+      state.status.active_tab = btn_id // set tab as active one
+      const channel = state.net[btn_id]
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'activate'
+      })
+      tab_display.replaceChildren(viewports[btn_id])
+    }
+    async function close_tab (message) {
+      const tab_id = state.status.tab[petname_btn]
+      if (Object.keys(viewports).length > 1) {
+        if (state.status.active_tab === tab_id) {
+          const ids = Object.values(status.tab)
+          const next_id = ids[(ids.indexOf(tab_id) || ids.length) - 1]
+          state.status.active_tab = next_id
+          const btn_channel = state.net[next_id]
+          btn_channel.send({
+            head: [id, btn_channel.send.id, btn_channel.mid++],
+            type: 'activate'
+          })
+          const next_tab_win = viewports[next_id]
+          tab_display.replaceChildren(next_tab_win)
+        }
+      } else {
+        state.status.active_tab = undefined
+        tab_display.replaceChildren()
+        ro.unobserve(tab_buttons)
+        return cleanup()
+      }
+      cleanup()
+      const scroll_channel = state.net[state.aka.scrollbar]
+      const head = [id, scroll_channel.send.id, scroll_channel.mid++]
+      scroll_channel.send({ head, refs: { cause: message.head }, type: 'handle_scroll' })
+      function cleanup () {
+        delete viewports[tab_id]
+        const { petname } = state.net[tab_id]
+        delete state.net[tab_id]
+        delete state.status.tab[petname]
+        delete state.aka[petname]  
       }
     }
   }
-  // ----------------------------------------
-  function spawn_protocol (msg, send) {
-    return msg => { add_tab('tab-' + state.status.tab_id++) }
-  }
-  function fullscreen_protocol (msg, send) {
-    status.fullscreen = terminal_wrapper.style.height === '100vh'
-    return message => onfullscreen()
-    function onfullscreen (e) {
-      const ismax = status.fullscreen
-      terminal_wrapper.style.height = ismax ? '100%' : '100vh'
-      terminal_wrapper.style.width = '100%'
-      terminal_wrapper.style.position = 'absolute'
-      terminal_wrapper.style.bottom = 0
-      status.fullscreen = !ismax
-    }
-  }
-  function close_protocol (msg, send) { return msg => { console.log('CLOSE') } }
-  // ----------------------------------------
 }
 function get_theme () {
   return `
@@ -5501,7 +8524,7 @@ function get_theme () {
           background-size: var(--s) var(--s);
           display: flex;
           justify-content: space-between;
-          .scrollbar_wrapper {
+          .tabs_bar {
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -5531,30 +8554,88 @@ function get_theme () {
     }
   `
 }
-}).call(this)}).call(this,"/src/node_modules/terminal/index.js")
-},{"buttons/sm_icon_button_alt":19,"buttons/tab_button":21,"scrollbar":37,"tab_window":39}],41:[function(require,module,exports){
-const window_bar = require('window_bar')
-
-// CSS Boiler Plat
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/terminal/terminal.js")
+},{"_process":2,"buttons/sm-icon-button-alt":19,"buttons/tab-button":22,"scrollbar":38,"tab-window":41}],43:[function(require,module,exports){
+(function (process,__filename){(function (){
+const window_bar = require('window-bar')
+/******************************************************************************
+  THE DAT COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
-let id = 0
-
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = the_dat
-
-function the_dat (opts, protocol) {
-  const name = `the_dat-${id++}`
-  const PROTOCOL = {
-    'toggle_fullscreen': toggle_fullscreen,
-    'toggle_VR': toggle_VR,
-    'toggle_active_state': toggle_active_state
-  }
-  protocol({ from: name }, listen)
-  function listen () {
-    the_dat_wrapper.style.display = 'inline'
-  }
+// ----------------------------------------
+function the_dat (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
   const { data } = opts
   // Assigning all the icons
   const { img_src } = data
@@ -5563,45 +8644,58 @@ function the_dat (opts, protocol) {
     icon_vr,
     icon_full_screen
   } = img_src
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow ({ mode : 'closed' })
-  shadow.innerHTML = `
-    <div class="the_dat">
-      <div class="dat_content">
-        <iframe style="background-color: black"></iframe>
-      </div>
-    </div>
-    <style> ${get_theme()} </style>
-  `
-  const window = window_bar({
-    name:'the_dat', 
-    src: icon_the_dat,
-    icon_buttons: [{icon: icon_vr, action: 'toggle_VR'}, {icon:icon_full_screen, action: 'toggle_fullscreen'}],
-    data: data
-  }, the_dat_protocol)
-  const the_dat_wrapper = shadow.querySelector('.the_dat')
-  the_dat_wrapper.prepend(window)
-  const dat_content = shadow.querySelector('.dat_content')
-
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="the_dat">
+    <div class="windowbar"></div>
+    <div class="dat_content">
+      <iframe class="visualization"></iframe>
+    </div>
+  </div>`
+  const the_dat_wrapper = shadow.querySelector('.the_dat')
+  const dat_content = shadow.querySelector('.dat_content')
+  // ----------------------------------------
+  const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // windowbar
+    const on = {
+    'toggle_fullscreen': toggle_fullscreen,
+    'toggle_VR': toggle_VR,
+    'toggle_active_state': toggle_active_state,
+    }
+    const protocol = use_protocol('windowbar')({ state, on })
+    const opts = {
+      name:'the_dat', 
+      src: icon_the_dat,
+      icon_buttons: [
+        { icon: icon_vr, action: 'toggle_VR' },
+        { icon: icon_full_screen, action: 'toggle_fullscreen' }
+      ],
+      data: data
+    }
+    const element = window_bar(opts, protocol)
+    windowbar_shadow.prepend(element)
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
   return el
 
-  // cover protocol
-  function the_dat_protocol (message, send) {
-    return listen
-    // Listening to toggle event 
-    function listen (message) {
-      const { head, refs, type, data, meta } = message  
-      const action = PROTOCOL[type] || invalid      
-      action(message)
-    }
-    function invalid (message) { console.error('invalid type', message) }
-  }
   async function toggle_active_state (message) {
-    const { head, refs, type, data, meta } = message
-    const { active_state } = data
-    ;( active_state === 'active')?the_dat_wrapper.style.display = 'none':''
+    const { active_state } = message.data
+    if (active_state === 'active') the_dat_wrapper.style.display = 'none'
     if (document.fullscreenElement) document.exitFullscreen()
   }
   async function toggle_fullscreen (message) {
@@ -5615,10 +8709,14 @@ function the_dat (opts, protocol) {
   }
 }
 function get_theme () {
-  return`
+  return `
     * {
       box-sizing: border-box;
       color: var(--primary_color);
+    }
+    .visualization {
+      background-color: black;
+      flex-grow: 1;
     }
     .the_dat {
       &.active {
@@ -5646,18 +8744,119 @@ function get_theme () {
     }
   `
 }
-},{"window_bar":48}],42:[function(require,module,exports){
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/the-dat/the-dat.js")
+},{"_process":2,"window-bar":51}],44:[function(require,module,exports){
+const white = {} // hsla(0, 0%, 100%, 1)
+white.hue = 0
+white.saturation = '0%'
+white.lightness = '100%'
+white.opacity = 1
+white.color = `hsla(${white.hue}, ${white.saturation}, ${white.lightness}, ${white.opacity})`
+const black = {} // hsla(0, 0%, 0%, 1)
+black.hue = 0
+black.saturation = '0%'
+black.lightness = '0%'
+black.opacity = 1
+black.color = `hsla(${black.hue}, ${black.saturation}, ${black.lightness}, ${black.opacity})`
+const darkblue = {} // hsla(215, 27%, 22%, 1)'
+darkblue.hue = 215
+darkblue.saturation = '27%'
+darkblue.lightness = '22%'
+darkblue.opacity = 1
+darkblue.color = `hsla(${darkblue.hue}, ${darkblue.saturation}, ${darkblue.lightness}, ${darkblue.opacity})`
+const green = {} // hsla(133, 57%, 45%, 1)
+green.hue = 133
+green.saturation = '57%'
+green.lightness = '45%'
+green.opacity = 1
+green.color = `hsla(${green.hue}, ${green.saturation}, ${green.lightness}, ${green.opacity})`
+const pink = {} // hsla(315, 88%, 81%, 1)
+pink.hue = 315
+pink.saturation = '88%'
+pink.lightness = '81%'
+pink.opacity = 1
+pink.color = `hsla(${pink.hue}, ${pink.saturation}, ${pink.lightness}, ${pink.opacity})`
+const purple = {} // hsla(282, 30%, 47%, 1)
+purple.hue = 282
+purple.saturation = '38%'
+purple.lightness = '47%'
+purple.opacity = 1
+purple.color = `hsla(${purple.hue}, ${purple.saturation}, ${purple.lightness}, ${purple.opacity})`
+
+module.exports = { white, black, darkblue, green, pink, purple }
+},{}],45:[function(require,module,exports){
 (function (process,__dirname){(function (){
+const brand = require('theme/brand')
 const path = require('path')
 const cwd = process.cwd()
 const prefix = path.relative(cwd, __dirname)
 
+const { black, green, pink, purple } = brand
+
+const bg_color = black.color
+const primary_color = green.color
+const ac_1 = green.color
+const ac_2 = pink.color
+const ac_3 = purple.color
+const highlight_color = `hsla(${green.hue}, ${green.saturation}, ${green.lightness}, 0.5)`
+
 const dark_theme = {
-  bg_color : '#000',
-  primary_color : '#2ACA4B',
-  ac_1 : '#2ACA4B',
-  ac_2 : '#F9A5E4',
-  ac_3 : '#88559D',
+  bg_color,
+  primary_color,
+  ac_1,
+  ac_2,
+  ac_3,
+  highlight_color,
 
   img_src:{
     // social icons
@@ -5706,19 +8905,30 @@ const dark_theme = {
 
 module.exports = dark_theme
 }).call(this)}).call(this,require('_process'),"/src/node_modules/theme/dark-theme")
-},{"_process":2,"path":1}],43:[function(require,module,exports){
+},{"_process":2,"path":1,"theme/brand":44}],46:[function(require,module,exports){
 (function (process,__dirname){(function (){
+const brand = require('theme/brand')
 const path = require('path')
 const cwd = process.cwd()
 const prefix = path.relative(cwd, __dirname)
 
-const light_theme = {
-  bg_color : '#fff',
-  primary_color : '#293648',
-  ac_1 : '#2ACA4B',
-  ac_2 : '#F9A5E4',
-  ac_3 : '#88559D',
+const { white, darkblue, green, pink, purple } = brand
 
+const bg_color = white.color
+const primary_color = darkblue.color
+const ac_1 = green.color
+const ac_2 = pink.color
+const ac_3 = purple.color
+const highlight_color = `hsla(${pink.hue}, ${pink.saturation}, ${pink.lightness}, 0.5)`
+
+const light_theme = {
+  bg_color,
+  primary_color,
+  ac_1,
+  ac_2,
+  ac_3,
+  highlight_color,
+  
   img_src:{
     // social icons
     icon_blogger: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1919)"><path d="M47.0588 26.4706V23.5294H44.1176V20.5882H38.2353V17.6471H35.2941V5.88235H32.3529V2.94118H29.4118V0H5.88235V2.94118H2.94118V5.88235H0V44.1176H2.94118V47.0588H5.88235V50H44.1176V47.0588H47.0588V44.1176H50V26.4706H47.0588ZM5.88235 35.2941H8.82353V32.3529H38.2353V35.2941H41.1765V38.2353H38.2353V41.1765H8.82353V38.2353H5.88235V35.2941ZM5.88235 14.7059H8.82353V11.7647H26.4706V14.7059H29.4118V17.6471H26.4706V20.5882H8.82353V17.6471H5.88235V14.7059Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1919"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
@@ -5766,58 +8976,77 @@ const light_theme = {
 
 module.exports = light_theme
 }).call(this)}).call(this,require('_process'),"/src/node_modules/theme/lite-theme")
-},{"_process":2,"path":1}],44:[function(require,module,exports){
-(function (process,__dirname){(function (){
-const path = require('path')
-const cwd = process.cwd()
-const prefix = path.relative(cwd, __dirname)
-
-// CSS Boiler Plat
+},{"_process":2,"path":1,"theme/brand":44}],47:[function(require,module,exports){
+(function (process,__filename){(function (){
+/******************************************************************************
+  TIMELINE CARD COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
-let id = 0
-
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = timeline_card
-
-function timeline_card (opts) {
-    const name = `timeline_card-${id++}`
-    const { data } = opts
-    // Assigning all the icons
-    const { img_src } = data
-    const {
-        icon_clock,
-        icon_link,
-        icon_calendar,
-    } = img_src
-    const el = document.createElement('div')
-    el.id = name;
-    el.style.lineHeight = '0px'
-    const shadow = el.attachShadow({ mode : 'closed' })
-    const { date, time, link, title, desc, tags} = opts
-    shadow.innerHTML = `
-      <div class="timeline_card">
-        <div class="content_wrapper">
-          <div class="icon_wrapper">
-            <div> ${icon_calendar} ${date} </div>
-            <div> ${icon_clock} ${time} </div>
-            <div> <a href="${link}">${icon_link}</a> </div>
-          </div>
-          <div class="title"> ${title} </div>
-          <div class="desc"> ${desc}</div>
-        </div>
-        <div class="tags_wrapper">
-          ${tags.map((tag) => `<div class="tag">${tag}</div>`).join('')}
-        </div>
+// ----------------------------------------
+function timeline_card (opts = default_opts) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { data, date, time, link, title, desc, tags} = opts
+  // Assigning all the icons
+  const { img_src } = data
+  const {
+    icon_clock,
+    icon_link,
+    icon_calendar,
+  } = img_src
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const channel = use_protocol('up')({ state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="timeline_card">
+    <div class="content_wrapper">
+      <div class="icon_wrapper">
+        <div> ${icon_calendar} ${date} </div>
+        <div> ${icon_clock} ${time} </div>
+        <div> <a href="${link}">${icon_link}</a> </div>
       </div>
-      <style>${get_theme()}</style>
-    `
-    shadow.adoptedStyleSheets = [sheet]
-    return el
+      <div class="title"> ${title} </div>
+      <div class="desc"> ${desc}</div>
+    </div>
+    <div class="tags_wrapper">
+      ${tags.map((tag) => `<div class="tag">${tag}</div>`).join('')}
+    </div>
+  </div>`
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+
+  return el
 }
 function get_theme () {
-  return`
+  return `
     * {
       box-sizing: border-box;
     }
@@ -5878,86 +9107,203 @@ function get_theme () {
     }
   `
 }
-}).call(this)}).call(this,require('_process'),"/src/node_modules/timeline_card")
-},{"_process":2,"path":1}],45:[function(require,module,exports){
-const search_input = require('search_input')
-const select_button = require('../buttons/select_button')
-const sm_icon_button = require('buttons/sm_icon_button')
-const year_button = require('buttons/year_button')
-
-const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/timeline-card/timeline-card.js")
+},{"_process":2}],48:[function(require,module,exports){
+(function (process,__filename){(function (){
+const search_input = require('search-input')
+const select_button = require('buttons/select-button')
+const sm_icon_button = require('buttons/sm-icon-button')
+const year_button = require('buttons/year-button')
 /******************************************************************************
   TIMELINE FILTER COMPONENT
 ******************************************************************************/
-var id = 0
-
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = timeline_filter
-
-function timeline_filter (opts, protocol) {
-  const name = 'timeline_filter-' + id++
-  const send = protocol({ from: name }, listen)
-  const PROTOCOL = {}
+// ----------------------------------------
+function timeline_filter (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
   const { img_src : { icon_arrow_up = `${prefix}/icon_arrow_up.svg` }} = opts.data
   // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = { update_timeline_filter }
+  const up_channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
   // TEMPLATE
   // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow( { mode:`closed` } )
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `<div class="filter_wrapper">
     <div class="timeline_filter">
       <div class="date_wrapper"></div>
     </div>
   </div>`
-  shadow.adoptedStyleSheets = [sheet]
   const timeline_filter = shadow.querySelector('.timeline_filter')
   const date_wrapper = shadow.querySelector('.date_wrapper')
   // ----------------------------------------
   // ELEMENTS
   // ----------------------------------------
-  const search_project = search_input(opts, timeline_filter_protocol)
-  const status_button = select_button({ data: opts.data, name: 'STATUS', choices: ['ACTIVE', 'UNACTIVE', 'PAUSED'] }, timeline_filter_protocol)
-  const tag_button = select_button({ data: opts.data, name: 'TAGS', choices: opts.tags }, timeline_filter_protocol)
-  const month_button = sm_icon_button({ src: icon_arrow_up, activate: true })
-  const year_btn = year_button({ data: opts.data, latest_date: opts.latest_date }, timeline_filter_protocol)
-  timeline_filter.prepend(status_button, tag_button, search_project)
-  date_wrapper.append(month_button, year_btn)
-
-  // @TODO: change to month_protocol and year_protocol
-  month_button.onclick = e => send({
-      head: {by:name, to:'app_timeline', mid:0},
-      type: 'toggle_month_filter',
-      data: null
-  })
-  year_btn.onclick = e => send({
-    head: { by: name, to: 'app_timeline', mid: 0 },
-    type: 'toggle_year_filter',
-    data: null
-  })
+  { // search project
+    const on = { 'value': on_value }
+    const protocol = use_protocol('search_project')({ state, on })
+    const search_opts = opts 
+    const element = shadowfy()(search_input(search_opts, protocol))
+    timeline_filter.prepend(element)
+    function on_value (message) {
+      up_channel.send({
+        head: [id, up_channel.send.id, up_channel.mid++],
+        refs: { cause: message.head },
+        type: 'value',
+        data: message.data
+      })
+    }
+  }
+  { // tag button
+    const on = { 'value': on_value }
+    const protocol = use_protocol('tag_button')({ state, on })
+    const tag_opts = { data: opts.data, name: 'TAGS', choices: opts.tags }
+    const element = shadowfy()(select_button(tag_opts, protocol))
+    timeline_filter.prepend(element)
+    function on_value (message) {
+      up_channel.send({
+        head: [id, up_channel.send.id, up_channel.mid++],
+        refs: { cause: message.head },
+        type: 'value',
+        data: message.data
+      })
+    }
+  }
+  { // status button
+    const on = { 'value': on_value }
+    const protocol = use_protocol('status_button')({ state, on })
+    const status_opts = { data: opts.data, name: 'STATUS', choices: ['ACTIVE', 'UNACTIVE', 'PAUSED'] }
+    const element = shadowfy()(select_button(status_opts, protocol))
+    timeline_filter.prepend(element)
+    function on_value (message) {
+      up_channel.send({
+        head: [id, up_channel.send.id, up_channel.mid++],
+        refs: { cause: message.head },
+        type: 'value',
+        data: message.data
+      })
+    }
+  }
+  { // month button
+    const on = { 'click': on_click }
+    const protocol = use_protocol('month_button')({ state, on })
+    const opts = { src: icon_arrow_up, activate: true }
+    const element = shadowfy()(sm_icon_button(opts, protocol))
+    date_wrapper.append(element)
+    function on_click (message) {
+      up_channel.send({
+        head: [id, up_channel.send.id, up_channel.mid++],
+        type: 'toggle_month_filter'
+      })
+    }
+  }
+  { // year button
+    const on = { 'click': on_click }
+    const protocol = use_protocol('year_button')({ state, on })
+    const year_opts = { data: opts.data, latest_date: opts.latest_date }
+    const element = shadowfy()(year_button(year_opts, protocol))
+    date_wrapper.append(element)
+    function on_click (message) {
+      up_channel.send({
+        head: [id, up_channel.send.id, up_channel.mid++],
+        refs: { cause: message.head },
+        type: 'toggle_year_filter'
+      })
+    }
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
   return el
 
-  function timeline_filter_protocol (handshake, send, mid = 0) {
-    if (handshake && handshake.from.includes('year_button')) PROTOCOL['get_date'] = send
-    return listen
-    function listen (message) {
-      const { head,  refs, type, data, meta } = message
-      const { by, to, id } = head
-      message = { head: { by: name, to: 'app_timeline', mid: 0 }, type, data }
-      send(message)
-    }
-  }
-  function listen (message) {
-    message.head.to = 'year_button'
-    PROTOCOL['get_date'](message)
+  function update_timeline_filter (message) {
+    const channel = state.net[state.aka.year_button]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      refs: { cause: message.head },
+      type: 'update_label',
+      data: message.data
+    })
   }
 }
 function get_theme () {
-  return`
+  return `
     .filter_wrapper {
       container-type: inline-size;
       .timeline_filter {
@@ -5979,70 +9325,130 @@ function get_theme () {
     }
   `
 }
-},{"../buttons/select_button":17,"buttons/sm_icon_button":18,"buttons/year_button":23,"search_input":38}],46:[function(require,module,exports){
-module.exports = timeline_page
-
-const app_timeline = require('app_timeline')
-const app_footer = require('app_footer')
-
-function timeline_page (opts, protocol) {
-  const { data } = opts
-
-  // CSS Boiler Plat
-  const sheet = new CSSStyleSheet
-  const theme = get_theme()
-
-  const components = [
-    app_timeline({data}),
-    app_footer({data}),
-  ]
-
-  const el = document.createElement('div')
-  const shadow = el.attachShadow({mode: 'closed'})
-
-  // adding a `main-wrapper` 
-  shadow.innerHTML = `
-    <div class="main-wrapper">
-      <div class="main"></div>
-    </div>
-    <style>${get_theme()}</style>
-  `
-  const main = shadow.querySelector('.main')
-  main.append(...components)
-  shadow.adoptedStyleSheets = [sheet]
-
-  return el
-
-  // Placeholder code for learning purposes
-  // Will be removed
-  function projects_protocol (handshake, send) {
-    if (send) return listen
-    const PROTOCOL = {
-      'toggle_display' : toggle_display
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
     }
-    send = handshake(null, listen)
-    function listen (message){
-      function format (new_message = {
-        head: [from = 'alice', to = 'bob', message_id = 1],
-        refs: { cause: message.head }, // reply to received message
-        type: 'change_theme',
-        data: `.foo { background-color: red; }`
-      }) { return new_message }
-      console.log(format())
-      // const { head, type, data } = message
-      // const [by, to, id] = head
-      // if (to !== id) return console.error('address unknown', message)
-      // const action = PROTOCOL[type] || invalid
-      // action(message)
-    }
-    function invalid (message) { console.error('invalid type', message) }
-    async function toggle_display ({ head: [to], data: theme }) {
-      // @TODO: apply theme to `sheet` and/or `style` and/or css `var(--property)`
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
     }
   }
 }
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/timeline-filter/timeline-filter.js")
+},{"_process":2,"buttons/select-button":18,"buttons/sm-icon-button":20,"buttons/year-button":24,"search-input":39}],49:[function(require,module,exports){
+(function (process,__filename){(function (){
+const app_timeline = require('app-timeline')
+const app_footer = require('app-footer')
+/******************************************************************************
+  TIMELINE PAGE COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = timeline_page
+// ----------------------------------------
+function timeline_page (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { data } = opts
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {}
+  const up_channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="main-wrapper">
+    <div class="main"></div>
+  </div>`
+  const main = shadow.querySelector('.main')
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // app timeline
+    const on = {}
+    const protocol = use_protocol('app_timeline')({ state, on })
+    const opts = { data }
+    const element = shadowfy()(app_timeline(opts, protocol))
+    main.append(element)
+  }
+  { // app footer
+    const on = {}
+    const protocol = use_protocol('app_footer')({ state, on })
+    const opts = { data }
+    const element = shadowfy()(app_footer(opts, protocol))
+    main.append(element)
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+
+  return el
+}
 function get_theme () {
-  return`
+  return `
     * {
       box-sizing: border-box;
     }
@@ -6052,7 +9458,6 @@ function get_theme () {
         margin: 0;
         padding: 30px 10px;
         opacity: 1;
-        background-image: radial-gradient(var(--primary_color) 2px, var(--bg_color) 2px);
         background-size: 16px 16px;
       }
     }
@@ -6063,24 +9468,88 @@ function get_theme () {
     }
   `
 }
-},{"app_footer":9,"app_timeline":12}],47:[function(require,module,exports){
-module.exports = tools
-
-const window_bar = require('window_bar')
-
-// CSS Boiler Plat
-const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
-let id = 0
-
-function tools (opts, protocol) {
-  const name = `tools`
-  protocol({ from: name }, listen)
-  function listen () {
-    tools_wrapper.style.display = 'inline'
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
   }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/timeline-page/timeline-page.js")
+},{"_process":2,"app-footer":9,"app-timeline":14}],50:[function(require,module,exports){
+(function (process,__filename){(function (){
+const window_bar = require('window-bar')
+/******************************************************************************
+  TOOLS COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = tools
+// ----------------------------------------
+function tools (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
   const { data } = opts
   // Assigning all the icons
   const { img_src } = data
@@ -6089,57 +9558,66 @@ function tools (opts, protocol) {
     icon_discord,
     icon_github,
   } = img_src
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = { 'show': on_show }
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
   const el = document.createElement('div')
-  const shadow = el.attachShadow ( { mode : 'closed' } )
-  shadow.innerHTML = `
-    <div class="tools">
-      <div class="tools_content">
-        <div class="icon">
-          ${icon_discord}
-          <span>discord link</span>
-        </div>
-        <div class="icon">
-          ${icon_github}
-          <span>github link</span>
-        </div>
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="tools">
+    <div class="windowbar"></div>
+    <div class="tools_content">
+      <div class="icon">
+        ${icon_discord}
+        <span>discord link</span>
+      </div>
+      <div class="icon">
+        ${icon_github}
+        <span>github link</span>
       </div>
     </div>
-    <style> ${get_theme()} </style>
-  `
-  const window = window_bar({
-    name:'tools.md', 
-    src: icon_folder,
-    data: data
-  }, tools_protocol)
+  </div>`
   const tools_wrapper = shadow.querySelector('.tools')
-  tools_wrapper.prepend(window)
+  // ----------------------------------------
+  const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // windowbar
+    const on = {
+      'toggle_active_state': toggle_active_state
+    }
+    const protocol = use_protocol('windowbar')({ state, on })
+    const opts = {
+      name: 'tools.md', 
+      src: icon_folder,
+      data: data
+    }
+    const element = window_bar(opts, protocol)
+    windowbar_shadow.append(element)
+    async function toggle_active_state (message) {
+      const { active_state } = message.data
+      if (active_state === 'active') tools_wrapper.style.display = 'none'
+    }
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 
-  shadow.adoptedStyleSheets = [sheet]
   return el
 
-  // cover protocol
-  function tools_protocol (message, send) {
-    return listen
-    // Listening to toggle event 
-    function listen (message) {
-      const { head, refs, type, data, meta } = message  
-      const PROTOCOL = {
-        'toggle_active_state': toggle_active_state
-      }
-      const action = PROTOCOL[type] || invalid      
-      action(message)
-    }
-    function invalid (message) { console.error('invalid type', message) }
-    async function toggle_active_state (message) {
-      const { head, refs, type, data, meta } = message
-      const {active_state} = data
-      ;(active_state === 'active') ? tools_wrapper.style.display = 'none' : ''
-    }
+  function on_show (event) {
+    tools_wrapper.style.display = 'inline'
   }
 }
 
 function get_theme () {
-  return`
+  return `
     * {
       box-sizing: border-box;
     }
@@ -6178,28 +9656,86 @@ function get_theme () {
     }
   `
 }
-},{"window_bar":48}],48:[function(require,module,exports){
-(function (process,__dirname){(function (){
-const path = require('path')
-const sm_icon_button_alt = require('buttons/sm_icon_button_alt')
-const sm_text_button = require('buttons/sm_text_button')
-
-const cwd = process.cwd()
-const prefix = path.relative(cwd, __dirname)
-
-const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/tools/tools.js")
+},{"_process":2,"window-bar":51}],51:[function(require,module,exports){
+(function (process,__filename){(function (){
+const sm_icon_button_alt = require('buttons/sm-icon-button-alt')
+const sm_text_button = require('buttons/sm-text-button')
 /******************************************************************************
   WINDOW BAR COMPONENT
 ******************************************************************************/
-var id = 0
-
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
 module.exports = window_bar
-
-function window_bar (opts, protocol) {
-  const name = `window_bar-${id++}`
-  const up_send = protocol({ from: name }, msg => {})
+// ----------------------------------------
+function window_bar (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
@@ -6209,104 +9745,116 @@ function window_bar (opts, protocol) {
     icon_arrow_up_light
   } = opts.data.img_src
   // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const up_channel = use_protocol('up')({ protocol, state })
+  // ----------------------------------------
   // TEMPLATE
   // ----------------------------------------
   const el = document.createElement('div')
-  el.style.lineHeight = '0px'
-  const shadow = el.attachShadow({ mode : 'closed' })
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `<div class="window_bar">
-    <div class="application_icon_wrapper"></div>
+    <div class="data_type_icon"></div>
     <div class="application_name"><span>${opts.name}</span></div>
     <div class="window_bar_actions">
     <div class="actions_wrapper"></div>
     <div class="actions_toggle_btn"></div>
     </div>
   </div>`
-  shadow.adoptedStyleSheets = [sheet]
-  const application_icon_wrapper = shadow.querySelector('.application_icon_wrapper')
   const window_bar_actions = shadow.querySelector('.window_bar_actions')
   const actions_wrapper = shadow.querySelector('.actions_wrapper')
-  const actions_toggle_btn = shadow.querySelector('.actions_toggle_btn')
+  // ----------------------------------------
+  const actions_toggle_btn_shadow = shadow.querySelector('.actions_toggle_btn').attachShadow(shopts)
+  const data_type_icon_shadow = shadow.querySelector('.data_type_icon').attachShadow(shopts)
   // ----------------------------------------
   // ELEMENTS
   // ----------------------------------------
-  application_icon_wrapper.append(sm_icon_button_alt({ src: opts.src }, app_icon_protocol))
-  if (opts.action_buttons) {
-    actions_wrapper.append(...opts.action_buttons.map(text => {
-      return sm_text_button({ toggle: true, text }, action_protocol(text))
-    }))
-    actions_toggle_btn.append(sm_icon_button_alt({
-      src: icon_arrow_down_light,
-      src_active: icon_arrow_up_light
-    }, window_bar_protoocol))
-  }
-  if (opts.icon_buttons) window_bar_actions.append(...opts.icon_buttons.map(({ icon, action: type }) => {
-    return sm_icon_button_alt({ src: icon }, type_protocol(type))
-  }))
-  window_bar_actions.append(sm_icon_button_alt({ src: icon_close_light }, close_window_protocol))
-
-  return el
-
-  function app_icon_protocol () { }
-  function action_protocol (text) { return send => { return msg => {} } }
-  function close_window_protocol (message, send) {
-    return listen
-    function listen (message) {
-      const { head, refs, type, data, meta } = message
-      const on = { 'click': onclose }
-      const action = on[type] || invalid
-      action(message)
+  { // data type icon
+    const on = { 'click': on_click }
+    const protocol = use_protocol('data_type_icon')({ state, on })
+    const data_type_opts = { src: opts.src }
+    const element = sm_icon_button_alt(data_type_opts, protocol)
+    data_type_icon_shadow.append(element)
+    function on_click (message) {
+      console.log('data program type:', null)
     }
+  }
+  if (opts.action_buttons) {
+    { // action buttons
+      const on = {}
+      function make_element (text, i) {
+        const protocol = use_protocol(text)({ state, on })
+        const opts = { toggle: true, text }
+        const element = shadowfy()(sm_text_button(opts, protocol))
+        return element
+      }
+      const elements = opts.action_buttons.map(make_element)
+      actions_wrapper.append(...elements)
+    }
+    { // responsive actions toggle
+      const on = {
+        'click': toggle_window_active_state
+      }
+      const protocol = use_protocol('windowbar')({ state, on })
+      const toggle_opts = {
+        src: icon_arrow_down_light,
+        src_active: icon_arrow_up_light
+      }
+      const element = sm_icon_button_alt(toggle_opts, protocol)
+      actions_toggle_btn_shadow.append(element)
+      async function toggle_window_active_state (message) {
+        const  { active_state } = message.data
+        actions_wrapper.style.display = active_state ? 'none' : 'flex'
+      }
+    }
+  }
+  { // icon buttons
+    if (opts.icon_buttons) {
+      function make_element ({ icon, action: type }, i) {
+        const on = { 'click': onclick }
+        const protocol = use_protocol(`${type}_${i}`)({ state, on })
+        const icon_opts = { src: icon }
+        const element = shadowfy()(sm_icon_button_alt(icon_opts, protocol))
+        return element
+        function onclick (message) {
+          up_channel.send({
+            head: [id, up_channel.send.id, up_channel.mid++],
+            type
+          })
+        }
+      }
+      const elements = opts.icon_buttons.map(make_element)
+      window_bar_actions.append(...elements)
+    }
+  }
+  { // close button
+    const on = { 'click': onclose }
+    const protocol = use_protocol('close_window')({ state, on })
+    const opts = { src: icon_close_light }
+    const element = shadowfy()(sm_icon_button_alt(opts, protocol))
+    window_bar_actions.append(element)
     function onclose (event) {
-      up_send({
-        head: { by: name, to: 'app_cover_0', mid: 0 },
+      up_channel.send({
+        head: [id, up_channel.send.id, up_channel.mid++],
         type: 'toggle_active_state',
         data: { active_state : 'active' }
       })
     }
   }
-  function type_protocol (type) {
-    return (message, send) => {
-      return listen
-      function listen (message) {
-        const { head, refs, type, data, meta } = message
-        const on = { 'click': onclick }
-        const action = on[type] || invalid
-        action(message)
-      }
-    }
-    function onclick (message) {
-      up_send({ head: {  by: name, to: 'app_cover_0', mid: 0 }, type })
-    }
-  }
-  function window_bar_protoocol (message, send) {
-    return listen
-    function listen (message) {
-      const { head, refs, type, data, meta } = message
-      const PROTOCOL = {
-        'click': toggle_window_active_state
-      }
-      const action = PROTOCOL[type] || invalid
-      action(message)
-      async function toggle_window_active_state (message) {
-        console.log('yo')
-        const { head, refs, type, data, meta } = message
-        const  { active_state } = data
-        console.log({active_state})
-        actions_wrapper.style.display = active_state ? 'none' : 'flex'
-      }
-    }
-  }
-  function invalid (message) { console.error('invalid type', message) }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+
+  return el
 }
 function get_theme () {
   return `
     .window_bar {
       position: relative;
       z-index: 2;
-      height: 30px;
       background-color: var(--primary_color);
-      display: inline-flex;
+      display: flex;
       width: 100%;
       justify-content: flex-start;
       background-size: 5px 5px;
@@ -6370,67 +9918,138 @@ function get_theme () {
     }
   `
 }
-}).call(this)}).call(this,require('_process'),"/src/node_modules/window_bar")
-},{"_process":2,"buttons/sm_icon_button_alt":19,"buttons/sm_text_button":20,"path":1}],49:[function(require,module,exports){
-const sheet = new CSSStyleSheet
-const theme = get_theme()
-sheet.replaceSync(theme)
-
-let id = 0
-
-module.exports = year_filter
-
-function year_filter (opts, protocol) {
-    const { latest_date } = opts
-    const name = 'year_filter-' + id++
-    const notify = protocol({ from: name }, listen)
-    const el = document.createElement('div')
-    const shadow = el.attachShadow({ mode: 'closed' })
-    shadow.innerHTML = `
-      <div class="year_wrapper"></div>
-      <style>${get_theme()}</style>
-    `
-    let active_state = ''
-    const year_buttons = {}
-    const year_wrapper = shadow.querySelector('.year_wrapper')
-    for (let i = 2013; i <= 2023; i++) {
-      const year_button = document.createElement('span')
-      year_button.classList.add('year_button')
-      year_button.innerHTML = i.toString()
-      year_button.onclick = toggle_active_state
-      year_buttons[i.toString()] = year_button
-      year_wrapper.append(year_button)
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
     }
-  const year = new Date(latest_date).getFullYear()
-  on_active_state(year)
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/window-bar/window-bar.js")
+},{"_process":2,"buttons/sm-icon-button-alt":19,"buttons/sm-text-button":21}],52:[function(require,module,exports){
+(function (process,__filename){(function (){
+/******************************************************************************
+  YEAR FILTER COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = year_filter
+// ----------------------------------------
+function year_filter (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  let active_state = ''
+  const year_buttons = {}
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { latest_date } = opts
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = { update_year_filter: on_active_state }
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="year_wrapper"></div>`
+  const year_wrapper = shadow.querySelector('.year_wrapper')
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  for (let i = 2013; i <= 2023; i++) {
+    const year_button = document.createElement('span')
+    year_button.classList.add('year_button')
+    year_button.innerHTML = i.toString()
+    year_button.onclick = toggle_active_state
+    year_buttons[i.toString()] = year_button
+    year_wrapper.append(year_button)
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+  const year = new Date(latest_date).getFullYear()
+  on_active_state({ data: year })
   
   return el
 
   function toggle_active_state (e) {
-    if (active_state)
-      year_buttons[active_state].classList.toggle('active')
-    if (active_state === e.target.innerHTML)
-      active_state = ''
-    else {
-      active_state = e.target.innerHTML
-      e.target.classList.toggle('active')
-    }
-    notify({
-      head: { by: name, to: 'app_timeline', mid: 0 },
-      type: 'setScroll',
+    const selected_year = e.target.innerHTML
+    if (active_state) year_buttons[active_state].classList.toggle('active')
+    active_state = selected_year
+    e.target.classList.toggle('active')
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'set_scroll',
       data: { value: active_state, filter: 'YEAR' }
     })
   }
-  function on_active_state (year_button) {
+  function on_active_state ({ data: year_button }) {
     if (active_state) year_buttons[active_state].classList.remove('active')
     year_buttons[year_button].classList.add('active')
     active_state = year_button
-  }
-  function listen (message) {
-    const { head,  refs, type, data, meta } = message
-    const { by, to, mid } = head
-    on_active_state(data)
   }
 }
 function get_theme () {
@@ -6465,4 +10084,55 @@ function get_theme () {
     }
   `
 }
-},{}]},{},[5]);
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/year-filter/year-filter.js")
+},{"_process":2}]},{},[5]);
