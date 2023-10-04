@@ -1,8 +1,8 @@
-const home_page = require('home_page')
-const growth_page = require('growth_page')
-const timeline_page = require('timeline_page')
-const projects_page = require('projects_page')
-const consortium_page = require('consortium_page')
+const home_page = require('home-page')
+const growth_page = require('dat-garden')
+const timeline_page = require('timeline-page')
+const projects_page = require('projects-page')
+const consortium_page = require('consortium-page')
 const terminal = require('terminal')
 const navbar = require('navbar')
 

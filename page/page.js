@@ -23,7 +23,7 @@ async function config () {
     font-style: normal;
     font-weight: 400;
     font-display: swap;
-    src: url(h${font1_url}) format('truetype');
+    src: url(${font1_url}) format('truetype');
     unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
   }
   /* latin */
@@ -63,15 +63,42 @@ async function config () {
 /******************************************************************************
   INITIALIZE PAGE
 ******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const ID = __filename
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 async function boot () {
   const desktop = require('..')
   const light_theme = require('theme/lite-theme')
   const dark_theme = require('theme/dark-theme')
-
+  // ----------------------------------------
+  // INSTANCE STATE & ID
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const state = STATE.ids[id] = { id, wait: {}, net: {}, aka: {} } // all state of component instance
+  // ----------------------------------------
   const shadow = document.body.attachShadow({ mode: 'closed' })
-  
   const opts = { page: 'CONSORTIUM', theme: 'dark_theme', themes: { light_theme, dark_theme } }
-  const el = await desktop(opts)
-
+  const el = await desktop(opts, desktop_protocol('page', state))
   shadow.append(el)
+}
+function desktop_protocol (petname, state) {
+  const { id } = state
+  return send => {
+    const on = {}
+    state.aka.desktop = send.id
+    const channel = state.net[send.id] = { mid: 0, send, on } // store channel
+    return Object.assign(listen, { id })
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function invalid (message) { console.error('invalid type', message) }
+    function listen (message) { // receive messages
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = channel
+      const action = on[message.type] || invalid
+      action(message, state)
+    }
+  }
 }
