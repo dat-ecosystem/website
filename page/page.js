@@ -1,3 +1,13 @@
+/******************************************************************************
+  INITIALIZE PAGE
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
 config().then(boot)
 /******************************************************************************
   CSS & HTML Defaults
@@ -61,28 +71,33 @@ async function config () {
   await document.fonts.ready
 }
 /******************************************************************************
-  INITIALIZE PAGE
+  PAGE BOOT
 ******************************************************************************/
-// ----------------------------------------
-// MODULE STATE & ID
-var count = 0
-const ID = __filename
-const STATE = { ids: {}, net: {} } // all state of component module
-// ----------------------------------------
 async function boot () {
   const desktop = require('..')
   const light_theme = require('theme/lite-theme')
   const dark_theme = require('theme/dark-theme')
   // ----------------------------------------
-  // INSTANCE STATE & ID
+  // ID + JSON STATE
   // ----------------------------------------
   const id = `${ID}:${count++}` // assigns their own name
   const state = STATE.ids[id] = { id, wait: {}, net: {}, aka: {} } // all state of component instance
   // ----------------------------------------
-  const shadow = document.body.attachShadow({ mode: 'closed' })
+  // OPTS
+  // ----------------------------------------
   const opts = { page: 'CONSORTIUM', theme: 'dark_theme', themes: { light_theme, dark_theme } }
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const shadow = document.body.attachShadow({ mode: 'closed' })
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
   const el = await desktop(opts, desktop_protocol('page', state))
   shadow.append(el)
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
 }
 function desktop_protocol (petname, state) {
   const { id } = state

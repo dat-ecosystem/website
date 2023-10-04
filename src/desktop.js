@@ -6,17 +6,20 @@ const consortium_page = require('consortium-page')
 const terminal = require('terminal')
 const navbar = require('navbar')
 
-const sheet = new CSSStyleSheet()
-
 const light_theme = require('theme/lite-theme')
 const dark_theme = require('theme/dark-theme')
 let current_theme = light_theme
+
+const sheet = new CSSStyleSheet()
 sheet.replaceSync(get_theme(current_theme))
 /******************************************************************************
   DESKTOP COMPONENT
 ******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
 var count = 0
-const ID = __filename
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
 const STATE = { ids: {}, net: {} } // all state of component module
 // ----------------------------------------
 const default_opts = { page: 'HOME' }
@@ -25,7 +28,7 @@ module.exports = desktop
 
 async function desktop (opts = default_opts, protocol) {
   // ----------------------------------------
-  // INSTANCE STATE & ID
+  // ID + JSON STATE
   // ----------------------------------------
   const id = `${ID}:${count++}` // assigns their own name
   const status = {}
@@ -47,7 +50,7 @@ async function desktop (opts = default_opts, protocol) {
   const content_sh = sh.querySelector('.content').attachShadow(shopts)
   const terminal_sh = sh.querySelector('.shell').attachShadow(shopts)
   // ----------------------------------------
-  // RESOURCES
+  // RESOURCE POOL (can't be serialized)
   // ----------------------------------------
   const cache = resources(pool)
   const navigation = cache({
@@ -61,10 +64,12 @@ async function desktop (opts = default_opts, protocol) {
     'terminal': () => terminal({ data: current_theme })
   })
   // ----------------------------------------
-  // NAVBAR
+  // ELEMENTS
   // ----------------------------------------
   const navbar_opts = { page: opts.page, data: current_theme } // @TODO: SET DEFAULTS -> but change to LOAD DEFAULTS
   navbar_sh.append(navbar(navbar_opts, navbar_protocol))
+  // ----------------------------------------
+  // INIT
   // ----------------------------------------
 
   return el
