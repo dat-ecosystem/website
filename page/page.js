@@ -1,3 +1,6 @@
+const desktop = require('..')
+const light_theme = require('theme/lite-theme')
+const dark_theme = require('theme/dark-theme')
 /******************************************************************************
   INITIALIZE PAGE
 ******************************************************************************/
@@ -8,7 +11,11 @@ const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').hr
 const ID = dir.slice(cwd.length)
 const STATE = { ids: {}, net: {} } // all state of component module
 // ----------------------------------------
-config().then(boot)
+let current_theme = light_theme
+const sheet = new CSSStyleSheet()
+sheet.replaceSync(get_theme(current_theme))
+// ----------------------------------------
+config().then(() => boot({ themes: { light_theme, dark_theme } }))
 /******************************************************************************
   CSS & HTML Defaults
 ******************************************************************************/
@@ -23,6 +30,7 @@ async function config () {
   meta.setAttribute('name', 'viewport')
   meta.setAttribute('content', 'width=device-width,initial-scale=1.0')
   const fonts = new CSSStyleSheet()
+  // @TODO: use font api and cache to avoid re-downloading the font data every time
   const path = path => new URL(`../src/node_modules/${path}`, `file://${__dirname}`).href.slice(8)
   const font1_url = path('theme/assets/fonts/Silkscreen-Regular.ttf')
   const font2_url = path('theme/assets/fonts/Silkscreen-Bold.ttf')
@@ -68,55 +76,111 @@ async function config () {
   sheet.replaceSync(`html, body { padding:0px; margin: 0px; }`)
   document.adoptedStyleSheets = [fonts, sheet]
   document.head.append(meta, favicon)
-  await document.fonts.ready
+  await document.fonts.ready // @TODO: investigate why there is a FOUC
 }
 /******************************************************************************
   PAGE BOOT
 ******************************************************************************/
-async function boot () {
-  const desktop = require('..')
-  const light_theme = require('theme/lite-theme')
-  const dark_theme = require('theme/dark-theme')
+async function boot (opts) {
   // ----------------------------------------
   // ID + JSON STATE
   // ----------------------------------------
   const id = `${ID}:${count++}` // assigns their own name
-  const state = STATE.ids[id] = { id, wait: {}, net: {}, aka: {} } // all state of component instance
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
-  const opts = { page: 'CONSORTIUM', theme: 'dark_theme', themes: { light_theme, dark_theme } }
+  const { page = 'CONSORTIUM', theme = 'dark_theme' } = opts
+  const { light_theme, dark_theme } = opts.themes
+  const themes = { light_theme, dark_theme }
   // ----------------------------------------
   // TEMPLATE
   // ----------------------------------------
   const el = document.body
   const shopts = { mode: 'closed' }
-  // ----------------------------------------
   const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
   // ----------------------------------------
   // ELEMENTS
   // ----------------------------------------
-  const page = await desktop(opts, desktop_protocol('page', state))
-  shadow.append(page)
+  { // desktop
+    const on = { 'theme_change': on_theme }
+    const protocol = use_protocol('desktop')({ state, on })
+    const opts = { page, theme, themes }
+    const element = await desktop(opts, protocol)
+    shadow.append(element)
+  }
   // ----------------------------------------
   // INIT
   // ----------------------------------------
+
+  return
+
+  function on_theme (message) {
+    ;current_theme = current_theme === light_theme ? dark_theme : light_theme
+    sheet.replaceSync(get_theme(current_theme))
+  }
 }
-function desktop_protocol (petname, state) {
-  const { id } = state
-  return send => {
-    const on = {}
-    state.aka.desktop = send.id
-    const channel = state.net[send.id] = { mid: 0, send, on } // store channel
-    return Object.assign(listen, { id })
+function get_theme (opts) {
+  return `
+  :host {
+    --bg_color: ${opts.bg_color};
+    --ac-1: ${opts.ac_1};
+    --ac-2: ${opts.ac_2};
+    --ac-3: ${opts.ac_3};
+    --primary_color: ${opts.primary_color};
+    --highlight_color: ${opts.highlight_color};
+  }`
+}
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
     // @TODO: how to disconnect channel
     // ----------------------------------------
-    function invalid (message) { console.error('invalid type', message) }
-    function listen (message) { // receive messages
-      console.log(`[${id}]:${petname}>`, message)
-      const { on } = channel
-      const action = on[message.type] || invalid
-      action(message, state)
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
     }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
   }
 }
