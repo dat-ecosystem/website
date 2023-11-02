@@ -158,12 +158,12 @@ function get_theme (opts) {
       flex-direction: column;
       font-family: Silkscreen;
       color: var(--primary_color);
-      background-image: radial-gradient(var(--primary_color) 2px, var(--bg_color) 2px);
-      background-size: 16px 16px;
+      background-image: radial-gradient(var(--bg_color_3) 1px, var(--bg_color_2) 2px);
+      background-size: 8px 8px;
       height: 100vh;
     }
     svg {
-      fill: var(--bg_color);
+      fill: var(--bg_color_2);
     }
     .desktop {
       display: flex;
