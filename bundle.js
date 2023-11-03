@@ -852,6 +852,11 @@ function get_theme (opts) {
   return `
   :host {
     --bg_color: ${opts.bg_color};
+    --bg_color_2: ${opts.bg_color_2};
+    --bg_color_3: ${opts.bg_color_3};
+    --alt_color: ${opts.alt_color};
+    --dark: #000;
+    --light:#fff;
     --ac-1: ${opts.ac_1};
     --ac-2: ${opts.ac_2};
     --ac-3: ${opts.ac_3};
@@ -1072,12 +1077,12 @@ function get_theme (opts) {
       flex-direction: column;
       font-family: Silkscreen;
       color: var(--primary_color);
-      background-image: radial-gradient(var(--primary_color) 2px, var(--bg_color) 2px);
-      background-size: 16px 16px;
+      background-image: radial-gradient(var(--bg_color_3) 1px, var(--bg_color_2) 2px);
+      background-size: 8px 8px;
       height: 100vh;
     }
     svg {
-      fill: var(--bg_color);
+      fill: var(--bg_color_2);
     }
     .desktop {
       display: flex;
@@ -1474,7 +1479,7 @@ function get_theme () {
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 150px 0px;
+      padding: 100px 0px;
       background-image: radial-gradient(var(--primary_color) 1px, var(--bg_color) 1px);
       background-size: 10px 10px;
       background-color: var(--bg_color);
@@ -1504,7 +1509,7 @@ function get_theme () {
         color: var(--primary_color);
         text-align: center;
         img {
-          width: 300px;
+          width: 400px;
           height: auto;
         }
       }
@@ -1846,7 +1851,7 @@ function get_theme () {
       width: 100%;
     }
     span {
-      background-color: var(--bg_color);
+      background-color: var(--bg_color_2);
       width: 150px;
       padding: 10px 0;
       text-align: center;
@@ -2049,12 +2054,12 @@ function get_theme () {
       }
 
       .project_wrapper {
-        --s: 20px; /* control the size */
-        --_g: var(--bg_color) /* first color */ 0 25%, #0000 0 50%;
+        --s: 15px; /* control the size */
+        --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
         background:
-          repeating-conic-gradient(at 66% 66%,var(--_g)),
           repeating-conic-gradient(at 33% 33%,var(--_g)),
-          var(--primary_color);  /* second color */ 
+          repeating-conic-gradient(at 66% 66%,var(--_g)),
+          var(--bg_color_3);  /* second color */ 
         background-size: var(--s) var(--s);  
         border: 1px solid var(--primary_color);
         width: 100%;
@@ -2429,12 +2434,12 @@ function get_theme () {
       }
     }
     .project_wrapper {
-      --s: 20px; /* control the size */
-      --_g: var(--bg_color) /* first color */ 0 25%, #0000 0 50%;
+      --s: 15px; /* control the size */
+      --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
       background:
-        repeating-conic-gradient(at 66% 66%,var(--_g)),
         repeating-conic-gradient(at 33% 33%,var(--_g)),
-        var(--primary_color);  /* second color */ 
+        repeating-conic-gradient(at 66% 66%,var(--_g)),
+        var(--bg_color_3);  /* second color */  
       background-size: var(--s) var(--s);  
       border: 1px solid var(--primary_color);
       width: 100%;
@@ -2600,7 +2605,7 @@ function app_timeline_mini (opts = default_opts, protocol) {
     <div class="windowbar"></div>
     <div class="main_wrapper">
       <div class="timeline_wrapper"></div>
-    </div>~
+    </div>
   </div>`
   const timeline_wrapper = shadow.querySelector('.timeline_wrapper')
   const main_wrapper = shadow.querySelector('.main_wrapper')
@@ -2699,12 +2704,12 @@ function get_theme () {
       border: 1px solid var(--primary_color);
       * { box-sizing: border-box; }
       .timeline_wrapper {
-        --s: 20px; /* control the size */
-        --_g: var(--bg_color) /* first color */ 0 25%, #0000 0 50%;
+        --s: 15px; /* control the size */
+        --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
         background:
-          repeating-conic-gradient(at 66% 66%,var(--_g)),
           repeating-conic-gradient(at 33% 33%,var(--_g)),
-          var(--primary_color);  /* second color */ 
+          repeating-conic-gradient(at 66% 66%,var(--_g)),
+          var(--bg_color_3);  /* second color */ 
         background-size: var(--s) var(--s);  
         overflow: scroll;
         scrollbar-width: none; /* For Firefox */
@@ -3180,12 +3185,12 @@ function get_theme () {
             width: 100%;
             height: 100%;
             .timeline_wrapper {
-              --s: 20px; /* control the size */
-              --_g: var(--bg_color) /* first color */ 0 25%, #0000 0 50%;
+              --s: 15px; /* control the size */
+              --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
               background:
-                repeating-conic-gradient(at 66% 66%,var(--_g)),
                 repeating-conic-gradient(at 33% 33%,var(--_g)),
-                var(--primary_color);  /* second color */ 
+                repeating-conic-gradient(at 66% 66%,var(--_g)),
+                var(--bg_color_3);  /* second color */  
               background-size: var(--s) var(--s);  
               border :1px solid var(--primary_color);
               display: flex;
@@ -3536,9 +3541,16 @@ function get_theme () {
       svg {
         height: 25px;
         width: 25px;
+        fill: var(--primary_color);
         pointer-events: none;
+        *{
+          fill: var(--primary_color);
+        }
       }
       &.active {
+        *{
+          fill: var(--dark);
+        }
         background-color: var(--ac-2)
       }
     }
@@ -3905,6 +3917,10 @@ function get_theme () {
           display: flex;
           align-items: center;
           margin-left: auto;
+
+          svg * {
+            fill: var(--primary_color);
+          }
         }
       }
     }
@@ -4047,7 +4063,8 @@ function get_theme () {
         background-color: var(--ac-2)
       }
       svg, svg * {
-        pointer-events:none !important;
+        fill: var(--bg_color);
+        pointer-events:none;
       }
     }
   `
@@ -4190,7 +4207,8 @@ function get_theme () {
         background-color: var(--ac-2)
       }
       svg, svg * {
-        pointer-events:none !important;
+        pointer-events:none;
+        fill: var(--primary_color);
       }
     }
   `
@@ -4636,7 +4654,7 @@ function get_theme () {
       color: var(--primary_color);
       &.active {
         background-color: var(--ac-1);
-        color: var(--bg_color);
+        color: var(--primary_color);
       }
     }
   `
@@ -4782,8 +4800,14 @@ function get_theme () {
       padding: 0 4px;
       height: 30px;
       width: 100%;
-      &.active svg {
-        rotate: 90deg;
+      svg *{
+        fill: var(--primary_color);
+      }
+      &.active{
+        background-color:var(--ac-1);
+        svg {
+          rotate: 90deg;
+        }
       }
       .text_wrapper {
         text-align: center;
@@ -5213,7 +5237,7 @@ function get_theme () {
         align-items: center;
         user-select: none;
         &:hover {
-          cursor: default;
+          cursor: pointer;
         }
       }
       .popup_wrapper {
@@ -6746,11 +6770,11 @@ function get_theme () {
         overflow: hidden;
         border-bottom: 1px solid var(--primary_color);
         --s: 15px; /* control the size */
-        --_g: var(--bg_color) /* first color */ 0 25%, #0000 0 50%;
+        --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
         background:
             repeating-conic-gradient(at 33% 33%,var(--_g)),
             repeating-conic-gradient(at 66% 66%,var(--_g)),
-            var(--primary_color);  /* second color */
+            var(--bg_color_3);  /* second color */
         background-size: var(--s) var(--s);
         &.active {
           height: max-content;
@@ -7919,12 +7943,14 @@ function get_theme () {
         box-sizing: border-box;
         width: 100%;
         height: 100%;
-        border: 3px solid var(--primary_color);
+        border: 2px solid var(--primary_color);
         padding: 10px 40px 10px 5px;
         outline: none;
         font-family: Silkscreen;
         font-size: 18px;
         letter-spacing: -1px;
+        background-color: var(--bg_color);
+        color: var(--primary-color);
         &:focus {
           border-color: var(--ac-1) !important;
         }
@@ -7936,6 +7962,9 @@ function get_theme () {
         translate: 0 -50%;
         width: 20px;
         height: auto;
+        *{
+          fill: var(--primary_color);
+        }
       }
     }
   `
@@ -8051,10 +8080,10 @@ function get_theme () {
       width: 50px;
       margin: 5px 0;
       padding: 3px;
-      background-color: white;
+      background-color: var(--bg_color_2);
     }
     svg path {
-      fill: black;
+      fill: var(--primary_color);
     }
   `
 }
@@ -8802,12 +8831,36 @@ white.saturation = '0%'
 white.lightness = '100%'
 white.opacity = 1
 white.color = `hsla(${white.hue}, ${white.saturation}, ${white.lightness}, ${white.opacity})`
+const isabelline = {} //hsla(36, 13%, 92%, 1)
+isabelline.hue = 36
+isabelline.saturation = '13%'
+isabelline.lightness = '92%'
+isabelline.opacity = 1
+isabelline.color = `hsla(${isabelline.hue}, ${isabelline.saturation}, ${isabelline.lightness}, ${isabelline.opacity})`
+const gray = {} // hsla(40, 1%, 46%, 1)
+gray.hue = 40
+gray.saturation = '1%'
+gray.lightness = '46%'
+gray.opacity = 1
+gray.color = `hsla(${gray.hue}, ${gray.saturation}, ${gray.lightness}, ${gray.opacity})`
 const black = {} // hsla(0, 0%, 0%, 1)
 black.hue = 0
 black.saturation = '0%'
 black.lightness = '0%'
 black.opacity = 1
 black.color = `hsla(${black.hue}, ${black.saturation}, ${black.lightness}, ${black.opacity})`
+const eerie_black = {} // hsla(0, 0%, 9%, 1)
+eerie_black.hue = 0
+eerie_black.saturation = '0%'
+eerie_black.lightness = '15%'
+eerie_black.opacity = 1
+eerie_black.color = `hsla(${eerie_black.hue}, ${eerie_black.saturation}, ${eerie_black.lightness}, ${eerie_black.opacity})`
+const night_black = {} // hsla(0, 0%, 9%, 1)
+night_black.hue = 0
+night_black.saturation = '0%'
+night_black.lightness = '5%'
+night_black.opacity = 1
+night_black.color = `hsla(${night_black.hue}, ${night_black.saturation}, ${night_black.lightness}, ${night_black.opacity})`
 const darkblue = {} // hsla(215, 27%, 22%, 1)'
 darkblue.hue = 215
 darkblue.saturation = '27%'
@@ -8833,7 +8886,7 @@ purple.lightness = '47%'
 purple.opacity = 1
 purple.color = `hsla(${purple.hue}, ${purple.saturation}, ${purple.lightness}, ${purple.opacity})`
 
-module.exports = { white, black, darkblue, green, pink, purple }
+module.exports = { white, isabelline, gray, black, eerie_black, night_black, darkblue, green, pink, purple }
 },{}],45:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const brand = require('theme/brand')
@@ -8841,17 +8894,22 @@ const path = require('path')
 const cwd = process.cwd()
 const prefix = path.relative(cwd, __dirname)
 
-const { black, green, pink, purple } = brand
-
-const bg_color = black.color
+const {white, black, eerie_black, night_black, darkblue, green, pink, purple } = brand
+const bg_color = night_black.color
+const bg_color_2 = black.color
+const bg_color_3 = eerie_black.color
+const alt_color = white.color
 const primary_color = green.color
-const ac_1 = green.color
+const ac_1 = darkblue.color
 const ac_2 = pink.color
 const ac_3 = purple.color
 const highlight_color = `hsla(${green.hue}, ${green.saturation}, ${green.lightness}, 0.5)`
 
 const dark_theme = {
   bg_color,
+  bg_color_2,
+  bg_color_3,
+  alt_color,
   primary_color,
   ac_1,
   ac_2,
@@ -8912,9 +8970,11 @@ const path = require('path')
 const cwd = process.cwd()
 const prefix = path.relative(cwd, __dirname)
 
-const { white, darkblue, green, pink, purple } = brand
-
+const { white, isabelline, gray, black, darkblue, green, pink, purple } = brand
 const bg_color = white.color
+const bg_color_2 = isabelline.color
+const bg_color_3 = gray.color
+const alt_color = black.color
 const primary_color = darkblue.color
 const ac_1 = green.color
 const ac_2 = pink.color
@@ -8923,6 +8983,9 @@ const highlight_color = `hsla(${pink.hue}, ${pink.saturation}, ${pink.lightness}
 
 const light_theme = {
   bg_color,
+  alt_color,
+  bg_color_2,
+  bg_color_3,
   primary_color,
   ac_1,
   ac_2,
@@ -9069,6 +9132,9 @@ function get_theme () {
             font-size: 16px;
             letter-spacing: -2px;
             align-items: center;
+          }
+          svg *{
+            fill: var(--primary_color);
           }
           img {
             width: 20px;
@@ -9858,7 +9924,9 @@ function get_theme () {
       width: 100%;
       justify-content: flex-start;
       background-size: 5px 5px;
-      background-image: repeating-linear-gradient(0deg, var(--bg_color), var(--bg_color) 2px, var(--primary_color) 2px, var(--primary_color));
+      
+      background-image: repeating-linear-gradient(0deg, var(--bg_color_2), var(--bg_color_2) 1px, var(--primary_color) 2px, var(--primary_color));
+
       container-type: inline-size;
       border: 1px solid var(--primary_color);
       box-sizing: border-box;

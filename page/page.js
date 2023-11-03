@@ -129,6 +129,9 @@ function get_theme (opts) {
     --bg_color: ${opts.bg_color};
     --bg_color_2: ${opts.bg_color_2};
     --bg_color_3: ${opts.bg_color_3};
+    --alt_color: ${opts.alt_color};
+    --dark: #000;
+    --light:#fff;
     --ac-1: ${opts.ac_1};
     --ac-2: ${opts.ac_2};
     --ac-3: ${opts.ac_3};
