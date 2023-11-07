@@ -172,6 +172,10 @@ function get_theme (opts) {
     }
     .content {
       overflow-x: scroll;
+      scrollbar-width: none;
+    }
+    ::-webkit-scrollbar {
+      display: none;
     }
     .shell {
       flex-grow: 1;
