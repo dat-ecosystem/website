@@ -1,5 +1,5 @@
 const home_page = require('home-page')
-const growth_page = require('dat-garden')
+const dat_garden_page = require('dat-garden')
 const timeline_page = require('timeline-page')
 const projects_page = require('projects-page')
 const consortium_page = require('consortium-page')
@@ -61,7 +61,7 @@ async function desktop (opts = default_opts, protocol) {
   // RESOURCE POOL (can't be serialized)
   // ----------------------------------------
   const navigate = cache({
-    HOME, PROJECTS, GROWTH_PROGRAM, TIMELINE, CONSORTIUM
+    HOME, PROJECTS, DAT_GARDEN, TIMELINE, CONSORTIUM
   })
   const widget = cache({ TERMINAL })
   // ----------------------------------------
@@ -121,11 +121,11 @@ async function desktop (opts = default_opts, protocol) {
     const element = projects_page(opts, protocol)
     return element
   } 
-  function GROWTH_PROGRAM () {
+  function DAT_GARDEN () {
     const on = {}
-    const protocol = use_protocol('growth_page')({ state, on })
+    const protocol = use_protocol('dat_garden_page')({ state, on })
     const opts = { data: current_theme }
-    const element = growth_page(opts, protocol)
+    const element = dat_garden_page(opts, protocol)
     return element
   }
   function TIMELINE () {
