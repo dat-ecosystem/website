@@ -171,6 +171,7 @@ function get_theme (opts) {
       height: 100%;
     }
     .content {
+      height:100%;
       overflow-x: scroll;
       scrollbar-width: none;
     }
