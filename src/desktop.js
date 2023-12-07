@@ -74,7 +74,7 @@ async function desktop (opts = default_opts, protocol) {
       'handle_theme_change': on_theme,
       'toggle_terminal': on_toggle,
     }
-    const protocol = use_protocol('scrollbar')({ state, on })
+    const protocol = use_protocol('navbar')({ state, on })
     const opts = { page, data: current_theme } // @TODO: SET DEFAULTS -> but change to LOAD DEFAULTS
     const element = navbar(opts, protocol)
     navbar_sh.append(element)
@@ -93,6 +93,19 @@ async function desktop (opts = default_opts, protocol) {
     const page = navigate(active_page)
     content_sh.replaceChildren(page)
   }
+  function on_navigate_page (msg) {
+    const { data: active_page } = msg
+    const page = navigate(active_page)
+    content_sh.replaceChildren(page)
+    const nav_channel = state.net[state.aka.navbar]
+    nav_channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'change_highlight',
+      data: active_page
+    })
+    const content = shadow.querySelector('.content')
+    content.scrollTop = 0
+  }
   function on_theme () {
     current_theme = current_theme === light_theme ? dark_theme : light_theme
     channel.send({
@@ -108,7 +121,9 @@ async function desktop (opts = default_opts, protocol) {
     terminal_sh.append(widget('TERMINAL'))
   }
   function HOME () {
-    const on = {}
+    const on = {
+      'navigate': on_navigate_page
+    }
     const protocol = use_protocol('home_page')({ state, on })
     const opts = { data: current_theme }
     const element = home_page(opts, protocol)
