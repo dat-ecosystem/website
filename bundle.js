@@ -719,9 +719,9 @@ process.umask = function() { return 0; };
 
 },{}],3:[function(require,module,exports){
 module.exports = require('../../../src/node_modules/theme/dark-theme')
-},{"../../../src/node_modules/theme/dark-theme":45}],4:[function(require,module,exports){
+},{"../../../src/node_modules/theme/dark-theme":46}],4:[function(require,module,exports){
 module.exports = require('../../../src/node_modules/theme/lite-theme')
-},{"../../../src/node_modules/theme/lite-theme":46}],5:[function(require,module,exports){
+},{"../../../src/node_modules/theme/lite-theme":47}],5:[function(require,module,exports){
 (function (process,__filename,__dirname){(function (){
 const desktop = require('..')
 const light_theme = require('theme/lite-theme')
@@ -918,7 +918,7 @@ function resources (pool) {
 },{"..":6,"_process":2,"theme/dark-theme":3,"theme/lite-theme":4}],6:[function(require,module,exports){
 (function (process,__filename){(function (){
 const home_page = require('home-page')
-const growth_page = require('dat-garden')
+const dat_garden_page = require('dat-garden')
 const timeline_page = require('timeline-page')
 const projects_page = require('projects-page')
 const consortium_page = require('consortium-page')
@@ -980,7 +980,7 @@ async function desktop (opts = default_opts, protocol) {
   // RESOURCE POOL (can't be serialized)
   // ----------------------------------------
   const navigate = cache({
-    HOME, PROJECTS, GROWTH_PROGRAM, TIMELINE, CONSORTIUM
+    HOME, PROJECTS, DAT_GARDEN, TIMELINE, CONSORTIUM
   })
   const widget = cache({ TERMINAL })
   // ----------------------------------------
@@ -993,7 +993,7 @@ async function desktop (opts = default_opts, protocol) {
       'handle_theme_change': on_theme,
       'toggle_terminal': on_toggle,
     }
-    const protocol = use_protocol('scrollbar')({ state, on })
+    const protocol = use_protocol('navbar')({ state, on })
     const opts = { page, data: current_theme } // @TODO: SET DEFAULTS -> but change to LOAD DEFAULTS
     const element = navbar(opts, protocol)
     navbar_sh.append(element)
@@ -1012,6 +1012,19 @@ async function desktop (opts = default_opts, protocol) {
     const page = navigate(active_page)
     content_sh.replaceChildren(page)
   }
+  function on_navigate_page (msg) {
+    const { data: active_page } = msg
+    const page = navigate(active_page)
+    content_sh.replaceChildren(page)
+    const nav_channel = state.net[state.aka.navbar]
+    nav_channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'change_highlight',
+      data: active_page
+    })
+    const content = shadow.querySelector('.content')
+    content.scrollTop = 0
+  }
   function on_theme () {
     current_theme = current_theme === light_theme ? dark_theme : light_theme
     channel.send({
@@ -1027,7 +1040,9 @@ async function desktop (opts = default_opts, protocol) {
     terminal_sh.append(widget('TERMINAL'))
   }
   function HOME () {
-    const on = {}
+    const on = {
+      'navigate': on_navigate_page
+    }
     const protocol = use_protocol('home_page')({ state, on })
     const opts = { data: current_theme }
     const element = home_page(opts, protocol)
@@ -1040,11 +1055,11 @@ async function desktop (opts = default_opts, protocol) {
     const element = projects_page(opts, protocol)
     return element
   } 
-  function GROWTH_PROGRAM () {
+  function DAT_GARDEN () {
     const on = {}
-    const protocol = use_protocol('growth_page')({ state, on })
+    const protocol = use_protocol('dat_garden_page')({ state, on })
     const opts = { data: current_theme }
-    const element = growth_page(opts, protocol)
+    const element = dat_garden_page(opts, protocol)
     return element
   }
   function TIMELINE () {
@@ -1090,7 +1105,12 @@ function get_theme (opts) {
       height: 100%;
     }
     .content {
+      height:100%;
       overflow-x: scroll;
+      scrollbar-width: none;
+    }
+    ::-webkit-scrollbar {
+      display: none;
     }
     .shell {
       flex-grow: 1;
@@ -1148,7 +1168,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/desktop.js")
-},{"_process":2,"consortium-page":26,"dat-garden":27,"home-page":28,"navbar":33,"projects-page":37,"terminal":42,"timeline-page":49}],7:[function(require,module,exports){
+},{"_process":2,"consortium-page":26,"dat-garden":27,"home-page":28,"navbar":33,"projects-page":38,"terminal":43,"timeline-page":50}],7:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 /******************************************************************************
@@ -1184,7 +1204,7 @@ function app_about_us (opts = default_opts, protocol) {
   const { img_src: { 
     about_us_cover = `${prefix}/about_us_cover.png`,
     img_robot_1 = `${prefix}/img_robot_1.svg`,
-    icon_pdf_reader = `${prefix}/icon_pdf_reader.svg`,
+    icon_pdf_reader_solid = `${prefix}/icon_pdf_reader_solid.svg`,
   } } = data
   // ----------------------------------------
   // PROTOCOL
@@ -1220,107 +1240,112 @@ function app_about_us (opts = default_opts, protocol) {
   // ----------------------------------------
   { // windowbar
     const on = {
-      'toggle_active_state': toggle_active_state
+      'toggle_active_state': toggle_active_state,
+      'open_consortium_page': open_consortium_page
     }
     const protocol = use_protocol('windobar')({ state, on })
     const opts = {
       name:'Learn_about_us.pdf', 
-      src: icon_pdf_reader,
-      action_buttons: ['IMPORTANT DOCUMENTS', 'TELL ME MORE'],
+      src: icon_pdf_reader_solid,
+      action_buttons: [
+        {text: 'IMPORTANT DOCUMENTS', action: 'open_consortium_page', toggle_able: false}
+      ],
       data
     }
     const element = window_bar(opts, protocol)
     windowbar_shadow.append(element)
+    async function toggle_active_state ({ data }) {
+      const { active_state } = data
+      if (active_state === 'active') el.style.display = 'none'
+    }
+    async function open_consortium_page (message){
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'navigate',
+        data: 'CONSORTIUM'
+      })
+    }
   }
   // ----------------------------------------
   // INIT
   // ----------------------------------------
 
   return el
-
-  async function toggle_active_state ({ data }) {
-    const { active_state } = data
-    if (active_state === 'active') el.style.display = 'none'
-  }
 }
 function get_theme () {
   return `
-    * {
-      box-sizing: border-box;
-    }
-    .about_us_window {
-      display: flex;
-      flex-direction: column;
-    }
-    .about_us_wrapper {
-      position:r elative;
-      height: max-content;
+  * {
+    box-sizing: border-box;
+  }
+  .about_us_window {
+    display: flex;
+    flex-direction: column;
+  }
+  .about_us_wrapper {
+    position: relative;
+    height: max-content;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 150px 0px;
+    background-image: radial-gradient(var(--primary_color) 1px, var(--bg_color) 1px);
+    background-size: 10px 10px;
+    background-color: red;
+    border: 1px solid var(--primary_color);
+    box-sizing: border-box;
+    container-type: inline-size;
+  }
+  .about_us_wrapper .about_us_cover_image {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  .about_us_wrapper .about_us_cover_image img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: auto;
+    height: 80%;
+    transform: translate(-50%, -50%);
+  }
+  .about_us_wrapper .content_wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    z-index: 1;
+    color: var(--primary_color);
+    text-align: center;
+  }
+  .about_us_wrapper .content_wrapper img {
+    width: 100px;
+    height: auto;
+  }
+  .about_us_wrapper .content_wrapper .title {
+    font-size: 40px;
+  }
+  .about_us_desc {
+    width: 100% !important;
+    background-color: var(--bg_color);
+    color: var(--primary_color);
+    border: 1px solid var(--primary_color);
+    padding: 10px;
+    letter-spacing: -2px;
+    line-height: 18px;
+    font-size: 16px;
+    margin-bottom: 30px;
+  }
+  @container (min-width: 856px) {
+    .about_us_wrapper .about_us_cover_image img {
       width: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 150px 0px;
-      background-image: radial-gradient(var(--primary_color) 1px, var(--bg_color) 1px);
-      background-size: 10px 10px;
-      background-color: red;
-      border: 1px solid var(--primary_color);
-      box-sizing: border-box;
-      container-type: inline-size;
-      /* This covers background-image will change to an image */
-      .about_us_cover_image {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        img {
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          width: auto;
-          height: 80%;
-          transform: translate(-50%, -50%);
-        }
-      }
-      /* Cover image alignment */
-      .content_wrapper {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 20px;
-        position: relative;
-        z-index: 1;
-        color: var(--primary_color);
-        text-align: center;
-        img {
-          width: 100px;
-          height: auto;
-        }
-        .title{ 
-          font-size: 40px;
-        }
-      }
+      height: auto;
     }
-    .about_us_desc {
-      width: 100% !important;
-      background-color: var(--bg_color);
-      color: var(--primary_color);
-      border: 1px solid var(--primary_color);
-      padding: 10px;
-      letter-spacing: -2px;
-      line-height: 18px;
-      font-size: 16px;
-      margin-bottom: 30px;
-      box-sizing: border-box;
-    }
-    @container (min-width: 856px) {
-      .about_us_cover_image {
-        img {
-          width: 100%;
-          height: auto;
-        }
-      }
-    }
+  }
+
   `
 }
 // ----------------------------------------------------------------------------
@@ -1374,7 +1399,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-about-us/app-about-us.js")
-},{"_process":2,"window-bar":51}],8:[function(require,module,exports){
+},{"_process":2,"window-bar":52}],8:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 /******************************************************************************
@@ -1411,12 +1436,13 @@ function cover_app (opts = default_opts, protocol) {
   const {
     banner_cover = `${prefix}/banner_cover.svg`,
     tree_character = `${prefix}/tree_character.png`,
-    icon_pdf_reader
+    icon_pdf_reader_solid = `${prefix}/icon_pdf_reader_solid.svg`,
   } = img_src
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
-  const on = {}
+  const on = {
+  }
   const channel = use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
   // TEMPLATE
@@ -1436,8 +1462,13 @@ function cover_app (opts = default_opts, protocol) {
         ALL UNDER ONE TREE
       </div>
     </div>
+    <div class="cover_desc">
+      Dat ecosystem garden supports open source projects that strengthen P2P foundations, with a focus on builder tools, infrastructure, research, and community resources.
+    </div>
   </div>`
   const cover_wrapper = shadow.querySelector('.cover_wrapper')
+  // ----------------------------------------
+  const cover_desc = shadow.querySelector('.cover_desc')
   // ----------------------------------------
   const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
   // ----------------------------------------
@@ -1445,13 +1476,16 @@ function cover_app (opts = default_opts, protocol) {
   // ----------------------------------------
   {
     const on = {
-      'toggle_active_state': toggle_active_state
+      'toggle_active_state': toggle_active_state,
+      'toggle_desc': toggle_desc
     }
     const protocol = use_protocol('windowbar')({ state, on })
     const opts = {
       name: 'Cover.pdf',
-      src: icon_pdf_reader,
-      action_buttons: ['View more (20)', 'TELL ME MORE'],
+      src: icon_pdf_reader_solid,
+      action_buttons: [
+        {text: 'TELL ME MORE', action: 'toggle_desc', toggle_able: true}
+      ],
       data
     }
     const element = window_bar(opts, protocol)
@@ -1460,12 +1494,16 @@ function cover_app (opts = default_opts, protocol) {
       const { active_state } = message.data
       if (active_state === 'active') el.style.display = 'none'
     }
+    async function toggle_desc (message){
+      cover_desc.classList.toggle('active')
+    }
   }
   // ----------------------------------------
   // INIT
   // ----------------------------------------
 
   return el
+
 }
 function get_theme () {
   return `
@@ -1484,35 +1522,50 @@ function get_theme () {
       background-size: 10px 10px;
       background-color: var(--bg_color);
       border: 1px solid var(--primary_color);
+    }
+    .cover_content .cover_image {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    .cover_content .cover_image img {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: auto;
+      height: 100%;
+      transform: translate(-50%, -50%);
+    }
+    .content_wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      position: relative;
+      z-index: 1;
+      color: var(--primary_color);
+      text-align: center;
+    }
+    .cover_content .content_wrapper img {
+      width: 400px;
+      height: auto;
+    }
+    .cover_desc{
       margin-bottom: 30px;
-      .cover_image {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        img {
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          width: auto;
-          height: 100%;
-          transform: translate(-50%, -50%);
-        }
-      }
-      .content_wrapper {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-        position: relative;
-        z-index: 1;
-        color: var(--primary_color);
-        text-align: center;
-        img {
-          width: 400px;
-          height: auto;
-        }
-      }
+      height: 0;
+      overflow: hidden;
+    }
+    .cover_desc.active{
+      height: auto;
+      padding: 10px;
+      width: 100% !important;
+      background-color: var(--bg_color);
+      color: var(--primary_color);
+      border: 1px solid var(--primary_color);
+      letter-spacing: -2px;
+      line-height: 18px;
+      font-size: 16px;
     }
   `
 }
@@ -1567,7 +1620,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-cover/app-cover.js")
-},{"_process":2,"window-bar":51}],9:[function(require,module,exports){
+},{"_process":2,"window-bar":52}],9:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const sm_text_button = require('buttons/sm-text-button')
@@ -1602,7 +1655,7 @@ function app_footer (opts = default_opts, protocol) {
   const { data } = opts
   // Assigning all the icons
   const { img_src: {
-    icon_pdf_reader = `${prefix}/icon_pdf_reader.svg`,
+    icon_pdf_reader_solid = `${prefix}/icon_pdf_reader_solid.svg`,
     img_robot_2 = `${prefix}/img_robot_2.png`,
     pattern_img_1 = `${prefix}/pattern_img_1.png`,
   } } = data
@@ -1639,7 +1692,7 @@ function app_footer (opts = default_opts, protocol) {
   { // join_program_button
     const on = {}
     const protocol = use_protocol('join_button')({ state, on })
-    const opts = { text: 'JOIN OUR GROWTH PROGRAME' }
+    const opts = { text: 'JOIN OUR GROWTH PROGRAME'}
     const element = sm_text_button(opts, protocol)
     apply_button_shadow.append(element)
   }
@@ -1648,7 +1701,7 @@ function app_footer (opts = default_opts, protocol) {
       'toggle_active_state': toggle_active_state
     }
     const protocol = use_protocol('footer')({ state, on })
-    const opts = { name: 'FOOTER.pdf', src: icon_pdf_reader, data }
+    const opts = { name: 'FOOTER.pdf', src: icon_pdf_reader_solid, data }
     const element = window_bar(opts, protocol)
     windowbar_shadow.append(element)
   }
@@ -1673,37 +1726,37 @@ function get_theme () {
       background-color: var(--bg_color);
       border: 1px solid var(--primary_color);
       margin-bottom: 30px;
-      .footer_wrapper {
-        display: flex;
-        flex-direction: column-reverse;
-        align-items: flex-start;
-        padding: 20px;
-        padding-bottom: 0px !important;
-        .robot_img_2 img {
-          width: 150px;
-        }
-        .footer_info_wrappe r{
-          margin-bottom: 30px;
-          .title {
-            font-size: 40px;
-            color: var(--primary_color);
-            font-weight: 700;
-            line-height: 36px;
-            letter-spacing: -5px;
-            margin-bottom: 10px;
-          }
-          .desc {
-            font-size: 16px;
-            color: var(--primary_color);
-            line-height: 14px;
-            letter-spacing: -2px;
-            margin-bottom: 30px;
-          }
-        }
-      }
-      .pattern_img {
-        display:none;
-      }
+    }
+    .main_wrapper .footer_wrapper {
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: flex-start;
+      padding: 20px;
+      padding-bottom: 0px !important;
+    }
+    .main_wrapper .footer_wrapper .robot_img_2 img {
+      width: 150px;
+    }
+    .main_wrapper .footer_wrapper .footer_info_wrapper{
+      margin-bottom: 30px;
+    }
+    .main_wrapper .footer_wrapper .footer_info_wrapper .title {
+      font-size: 40px;
+      color: var(--primary_color);
+      font-weight: 700;
+      line-height: 36px;
+      letter-spacing: -5px;
+      margin-bottom: 10px;
+    }
+    .main_wrapper .footer_wrapper .footer_info_wrapper .desc {
+      font-size: 16px;
+      color: var(--primary_color);
+      line-height: 14px;
+      letter-spacing: -2px;
+      margin-bottom: 30px;
+    }
+    .main_wrapper .pattern_img {
+      display:none;
     }
     @container (min-width: 856px) {
       .main_wrapper {
@@ -1713,16 +1766,16 @@ function get_theme () {
           align-items: flex-end;
           width: 70%;
         }
-        .pattern_img {
-          display: block;
-          position: absolute;
-          top: 0;
-          right: 0;
-          & img {
-            width: 300px;
-            height: auto;
-          }
-        }
+      }
+      .main_wrapper .pattern_img {
+        display: block;
+        position: absolute;
+        top: 0;
+        right: 0;
+      }
+      .main_wrapper .pattern_img img {
+        width: 300px;
+        height: auto;
       }
     }
   `
@@ -1778,7 +1831,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-footer/app-footer.js")
-},{"_process":2,"buttons/sm-text-button":21,"window-bar":51}],10:[function(require,module,exports){
+},{"_process":2,"buttons/sm-text-button":21,"window-bar":52}],10:[function(require,module,exports){
 (function (process,__filename){(function (){
 const svg_element = require('svg-element')
 /******************************************************************************
@@ -1910,7 +1963,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-icon/app-icon.js")
-},{"_process":2,"svg-element":40}],11:[function(require,module,exports){
+},{"_process":2,"svg-element":41}],11:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const project_card = require('project-card')
@@ -1948,38 +2001,46 @@ function app_projects_mini (opts = default_opts, protocol) {
     icon_discord = `${prefix}/icon_discord.png`,
     icon_twitter = `${prefix}/icon_twitter.png`,
     icon_github = `${prefix}/icon_github.png`,
-    icon_folder = `${prefix}/icon_folder.svg`,
+    icon_folder_solid = `${prefix}/icon_folder_solid.svg`,
     project_logo_1 = `${prefix}/project_logo_1.png`,
   } } = data
 
-  const cards_data = [{ 
-    title: 'Official starting of the web course.',
-    project_logo: project_logo_1,
-    data: data,
-    project: 'Agregore', 
-    link: '/',
-    socials: [icon_github, icon_twitter, icon_discord],
-    desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-    tags: ['Hypercore', 'Hypercore', 'Hypercore'],
-  },{ 
-    title: 'Official starting of the web course.',
-    project_logo: project_logo_1,
-    data: data,
-    project: 'Agregore', 
-    link: '/',
-    socials: [icon_github, icon_twitter, icon_discord],
-    desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-    tags: ['Hypercore', 'Hypercore', 'Hypercore'],
-  },{ 
-    title: 'Official starting of the web course.',
-    project_logo: project_logo_1,
-    data: data,
-    project: 'Agregore', 
-    link: '/',
-    socials: [icon_github, icon_twitter, icon_discord],
-    desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-    tags: ['Hypercore', 'Hypercore', 'Hypercore'],
-  }]
+  const cards_data = [
+    { 
+      project_name: 'Agregore', 
+      project_desc: 'Agregore, a browser for the distributed web, facilitates peer-to-peer data sharing without central servers, supporting protocols like BitTorrent and IPFS for direct loading and sharing of content.', 
+      project_logo: project_logo_1,
+      project_website: "https://agregore.mauve.moe/",
+      project_socials: [
+        {github: 'https://github.com/RangerMauve/agregore-browser'}, 
+        {discord: 'https://discord.com/invite/QMthd4Y'},
+      ],
+      project_tags: ['Hypercore'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'ahau',
+      project_desc: 'Āhau is a Whānau Data Platform that helps whānau-based communities (whānau, hapū, Iwi) capture, preserve, and share important information and histories into secure, whānau managed databases and servers.', 
+      project_logo: project_logo_1,
+      project_website: 'https://www.ahau.io/',
+      project_socials: [
+        {github: 'https://www.hypercore.com/ahau'}, 
+        {discord: 'https://chat.ahau.io/'},
+      ],
+      project_tags: ['Hypercore'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'ara', 
+      project_desc: "Ara represents a new era for content on the internet. Where we get our voices back. Where what's ours is ours. All content, decentralized, secure, owned, distributed, paid for, and rewarded between peers.", 
+      project_logo: project_logo_1,
+      project_website: 'https://ara.one/',
+      project_socials: [
+        {github: 'https://github.com/AraBlocks'}, 
+        {discord: 'https://discord.gg/eUMzA4Y'},
+      ],
+      project_tags: ['Hypercore'],
+      project_active_state: 'ACTIVE',
+    }
+  ]
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
@@ -2006,12 +2067,17 @@ function app_projects_mini (opts = default_opts, protocol) {
   // ELEMENTS
   // ----------------------------------------
   { // windowbar
-    const on = { 'toggle_active_state': toggle_active_state }
+    const on = { 
+      'toggle_active_state': toggle_active_state,
+      'open_project_page': open_project_page
+    }
     const protocol = use_protocol('windowbar')({ state, on })
     const opts = {
       name:'OUR PROJECTS', 
-      src: icon_folder,
-      action_buttons: ['View more (12)'],
+      src: icon_folder_solid,
+      action_buttons: [
+        {text:'View more (12)', action: 'open_project_page', toggle_able: false}
+      ],
       data
     }
     const element = window_bar(opts, protocol)
@@ -2020,12 +2086,19 @@ function app_projects_mini (opts = default_opts, protocol) {
       const { active_state } = message.data
       if (active_state === 'active') el.style.display = 'none'
     }
+    async function open_project_page (message){
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'navigate',
+        data: 'PROJECTS'
+      })
+    }
   }
   { // project cards
     const on = {}
     function make_card (card_data, i) {
       const protocol = use_protocol(`project_${i}`)({ state, on })
-      const opts = card_data
+      const opts = {project_data: card_data, data}
       const element = shadowfy()(project_card(opts, protocol))
       return element
     }
@@ -2049,41 +2122,37 @@ function get_theme () {
       container-type: inline-size;
       width: 100%;
       height: 100%;
-      * {
-        box-sizing: border-box;
-      }
+    }
+    .main_wrapper * {
+      box-sizing: border-box;
+    }
 
-      .project_wrapper {
-        --s: 15px; /* control the size */
-        --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
-        background:
-          repeating-conic-gradient(at 33% 33%,var(--_g)),
-          repeating-conic-gradient(at 66% 66%,var(--_g)),
-          var(--bg_color_3);  /* second color */ 
-        background-size: var(--s) var(--s);  
-        border: 1px solid var(--primary_color);
-        width: 100%;
-        height: 100%;
-        padding: 0px;
-        display: grid;
-        gap: 20px;
-        grid-template-columns: 12fr;
-        margin-bottom: 30px;
-        box-sizing: border-box;
-      }
+    .main_wrapper .project_wrapper {
+      --s: 15px; /* control the size */
+      --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
+      background:
+        repeating-conic-gradient(at 33% 33%,var(--_g)),
+        repeating-conic-gradient(at 66% 66%,var(--_g)),
+        var(--bg_color_3);  /* second color */ 
+      background-size: var(--s) var(--s);  
+      border: 1px solid var(--primary_color);
+      width: 100%;
+      height: 100%;
+      padding: 0px;
+      display: grid;
+      gap: 20px;
+      grid-template-columns: 12fr;
+      margin-bottom: 30px;
+      box-sizing: border-box;
     }
     @container (min-width: 768px) {
-      .main_wrapper {
-        .project_wrapper {
-          grid-template-columns: repeat(2, 6fr);
-        }
+      .main_wrapper .project_wrapper {
+        grid-template-columns: repeat(2, 6fr);
       }
     }
     @container (min-width: 1200px) {
-      .main_wrapper {
-        .project_wrapper {
-          grid-template-columns: repeat(3, 4fr);
-        }
+      .main_wrapper .project_wrapper {
+        grid-template-columns: repeat(3, 4fr);
       }
     }
   `
@@ -2139,7 +2208,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-projects-mini/app-projects-mini.js")
-},{"_process":2,"project-card":35,"window-bar":51}],12:[function(require,module,exports){
+},{"_process":2,"project-card":36,"window-bar":52}],12:[function(require,module,exports){
 (function (process,__filename){(function (){
 const project_card = require('project-card')
 const window_bar = require('window-bar')
@@ -2191,82 +2260,232 @@ function app_projects (opts = default_opts, protocol) {
     icon_discord = `${prefix}/icon_discord.png`,
     icon_twitter = `${prefix}/icon_twitter.png`,
     icon_github = `${prefix}/icon_github.png`,
-    icon_folder = `${prefix}/icon_folder.svg`,
+    icon_folder_solid = `${prefix}/icon_folder_solid.svg`,
     project_logo_1 = `${prefix}/project_logo_1.png`,
   } } = data
 
-  const cards_data = [{ 
-    title: 'Official starting of the web course.',
-    project_logo: project_logo_1,
-    project: 'Agregore', 
-    link: '/',
-    socials: [icon_github, icon_twitter, icon_discord],
-    desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-    tags: ['Hypercore', 'Hyperplane', 'Hypertension'],
-    active_state: 'ACTIVE',
-    data,
-  },{
-    title: 'Official starting of the web course.',
-    project_logo: project_logo_1,
-    project: 'Ogre', 
-    link: '/',
-    socials: [icon_github, icon_twitter, icon_discord],
-    desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-    tags: ['Dag', 'tag', 'Decentralized'],
-    active_state: 'ACTIVE',
-    data,
-  },{
-    title: 'Official starting of the web course.',
-    project_logo: project_logo_1,
-    project: 'Gerger', 
-    link: '/',
-    socials: [icon_github, icon_twitter, icon_discord],
-    desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-    tags: ['Dag', 'Hyperplane', 'Hypercore'],
-    active_state: 'UNACTIVE',
-    data
-  },{ 
-    title: 'Official starting of the web course.',
-    project_logo: project_logo_1,
-    project: 'Agregored', 
-    link: '/',
-    socials: [icon_github, icon_twitter, icon_discord],
-    desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-    tags: ['Daff', 'Dep1', 'Hypertension'],
-    active_state: 'PAUSED',
-    data
-  },{
-    title: 'Official starting of the web course.',
-    project_logo: project_logo_1,
-    project: 'Ogred', 
-    link: '/',
-    socials: [icon_github, icon_twitter, icon_discord],
-    desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-    tags: ['Decentralized', 'tag', 'Hypercore'],
-    active_state: 'UNACTIVE',
-    data
-  },{
-    title: 'Official starting of the web course.',
-    project_logo: project_logo_1,
-    project: 'Ragregore', 
-    link: '/',
-    socials: [icon_github, icon_twitter, icon_discord],
-    desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-    tags: ['Hypertension', 'Hypercore', 'Decentralized'],
-    active_state: 'PAUSED',
-    data
-  },{
-    title: 'Official starting of the web course.',
-    project_logo: project_logo_1,
-    project: 'Agregorey',
-    link: '/',
-    socials: [icon_github, icon_twitter, icon_discord],
-    desc: 'Keep track of whānau whakapapa information, preserve and share cultural records and narratives, own and control whānau data and servers, and build a stronger sense of whānau, community and identity.', 
-    tags: ['Daff', 'Hyperplane', 'Dep1'],
-    active_state: 'ACTIVE',
-    data
-  }]
-  const tags = new Set(cards_data.flatMap(card => card.tags))
+  const cards_data = [
+    { 
+      project_name: 'Agregore', 
+      project_desc: 'Agregore, a browser for the distributed web, facilitates peer-to-peer data sharing without central servers, supporting protocols like BitTorrent and IPFS for direct loading and sharing of content.', 
+      project_logo: project_logo_1,
+      project_website: "https://agregore.mauve.moe/",
+      project_socials: [
+        {github: 'https://github.com/RangerMauve/agregore-browser'}, 
+        {discord: 'https://discord.com/invite/QMthd4Y'},
+      ],
+      project_tags: ['Hypercore', 'Hypercore', 'Hypercore', 'Hypercore'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'ahau',
+      project_desc: 'Āhau is a Whānau Data Platform that helps whānau-based communities (whānau, hapū, Iwi) capture, preserve, and share important information and histories into secure, whānau managed databases and servers.', 
+      project_logo: project_logo_1,
+      project_website: 'https://www.ahau.io/',
+      project_socials: [
+        {github: 'https://www.hypercore.com/ahau'}, 
+        {discord: 'https://chat.ahau.io/'},
+      ],
+      project_tags: ['Hypercore'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'ara', 
+      project_desc: "Ara represents a new era for content on the internet. Where we get our voices back. Where what's ours is ours. All content, decentralized, secure, owned, distributed, paid for, and rewarded between peers.", 
+      project_logo: project_logo_1,
+      project_website: 'https://ara.one/',
+      project_socials: [
+        {github: 'https://github.com/AraBlocks'}, 
+        {discord: 'https://discord.gg/eUMzA4Y'},
+      ],
+      project_tags: ['Hypercore'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'cabal', 
+      project_desc: 'Cabal is an experimental P2P community chat platform where servers are unnecessary, everything runs locally, and each community is identified by a secret key, offering both internet and local network connectivity.', 
+      project_logo: project_logo_1,
+      project_website: 'https://cabal.chat/',
+      project_socials: [
+        {github: 'https://github.com/cabal-club'},
+      ],
+      project_tags: ['Hypercore'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'datdot', 
+      project_desc: 'DatDot enables peer-to-peer sharing of storage space and data seeding to make data sovereignity and portability more accessible and reliable for users.', 
+      project_logo: project_logo_1,
+      project_website: 'https://datdot.org/',
+      project_socials: [
+        {github: 'https://github.com/datdotorg'},
+        {twitter: 'https://twitter.com/datdotorg'}, 
+        {discord: 'https://discord.com/invite/3CJuGxkyyE'},
+      ],
+      project_tags: ['Hypercore'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'dxos', 
+      project_desc: 'DXOS provides developers with everything they need to build real-time, collaborative apps which run entirely on the client, and communicate peer-to-peer, without servers.', 
+      project_logo: project_logo_1,
+      project_website: 'https://dxos.org/',
+      project_socials: [
+        {github: 'https://github.com/dxos/dxos'}, 
+        {discord: 'https://discord.gg/eXVfryv3sW'},
+      ],
+      project_tags: ['Hypercore'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'earthstar', 
+      project_desc: 'Earthstar is a small and resilient distributed storage protocol designed with a strong focus on simplicity and versatility, with the social realities of peer-to-peer computing kept in mind.', 
+      project_logo: project_logo_1,
+      project_website: 'https://github.com/earthstar-project/earthstar',
+      project_socials: [
+        {github: 'https://github.com/earthstar-project/earthstar'}, 
+        {discord: 'https://discord.gg/5b8q7VtunU'},
+      ],
+      project_tags: ['Hypercore'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'gatewaybrowser', 
+      project_desc: 'An experimental mobile browser that aims to help build a sustainable community-owned P2P web.', 
+      project_logo: project_logo_1,
+      project_website: 'https://twitter.com/GatewayBrowser',
+      project_socials: [
+        {github: 'https://hypercore.com/gateway-browser/gateway'},
+        {twitter: 'https://twitter.com/GatewayBrowser'},
+      ],
+      project_tags: ['Hypercore'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'hop', 
+      project_desc: 'We are building a choherence protocol based on peer to peer open source software and toolkit that empower everyone to have sovereignity over data that shapes the health of the world. ', 
+      project_logo: project_logo_1,
+      project_website: 'https://www.healthscience.network/',
+      project_socials: [
+        {github: 'https://github.com/healthscience'}, 
+        {discord: 'https://discord.gg/UZWgrjZZXK'},
+      ],
+      project_tags: ['Hypercore'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'hyper-nostr', 
+      project_desc: 'The goal of this tool is to behave as a public relay; think of the chosen topic as a public relay, where you can send and receive notes from your peers!', 
+      project_logo: project_logo_1,
+      project_website: 'https://github.com/Ruulul/hyper-nostr',
+      project_socials: [
+        {github: 'https://github.com/Ruulul/hyper-nostr'}, 
+        {discord: 'https://discord.gg/8jvhQYKnwQ'},
+      ],
+      project_tags: ['Hypercore'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'hypercore-protocol', 
+      project_desc: 'Holepunch equips developers with a powerful suite of independent components to effortlessly construct peer-to-peer applications.', 
+      project_logo: project_logo_1,
+      project_website: 'https://hypercore-protocol.org/',
+      project_socials: [
+        {github: 'https://github.com/hypercore-protocol'}, 
+        {discord: 'https://discord.gg/qkV4YMwHgZ'},
+      ],
+      project_tags: ['Hypercore'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'keet-holepunch', 
+      project_desc: 'Keet only shares end-to-end encrypted data between the participants in every call. Without middlemen, third-parties, or servers, there’s nobody left who can snoop on calls, leak or collect data.', 
+      project_logo: project_logo_1,
+      project_website: 'https://keet.io/',
+      project_socials: [
+        {twitter: 'https://twitter.com/keet_io'}, 
+        {discord: 'https://discord.gg/znw6KfTyw8'},
+      ],
+      project_tags: ['Hypercore'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'peermaps', 
+      project_desc: 'Peermaps is a distributed, offline-friendly alternative to commercial map providers such as google maps. Instead of fetching data from a centralized tile service, your computer fetches map data from other peers across the network.', 
+      project_logo: project_logo_1,
+      project_website: 'https://peermaps.org/',
+      project_socials: [
+        {github: 'https://github.com/peermaps'},
+      ],
+      project_tags: ['Hypercore'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'peershare',
+      project_desc: 'PeerShare enables you to share files to your friends, family, colleagues etc, using peer-to-peer technology. With a clean, easy to read interface, you can share your files right away.',
+      project_logo: project_logo_1,
+      project_website: 'https://peershare.lone-wolf.software/',
+      project_socials: [
+        {github: 'https://github.com/connor-davis/peershare'},
+        {twitter: 'https://twitter.com/PeerShareApp'}, 
+        {discord: 'https://discord.gg/U8sYVMts4W'},
+      ],
+      project_tags: ['Hypercore'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'picostack', 
+      project_desc: "We are an independent consultancy agency. And we're kinda nerdy about building a new internet.", 
+      project_logo: project_logo_1,
+      project_website: 'https://decentlabs.se/',
+      project_socials: [
+        {github: 'https://github.com/telamon/picostack'}, 
+        {discord: 'https://discord.com/invite/8RMRUPZ9RS'},
+      ],
+      project_tags: ['Hypercore'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'sher', 
+      project_desc: "It's simple. You create your show and share the link with your audience.", 
+      project_logo: project_logo_1,
+      project_website: 'https://sher.geutstudio.com/',
+      project_socials: [
+        {twitter: 'https://twitter.com/the_sher_app'},
+      ],
+      project_tags: ['Hypercore_2'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'socketsupply', 
+      project_desc: 'Build mobile and destkop apps for any OS using HTML, CSS, and JavaScript. Connect users with modern P2P that can make the cloud entirely optional.', 
+      project_logo: project_logo_1,
+      project_website: 'https://socketsupply.co/',
+      project_socials: [
+        {github: 'https://github.com/socketsupply'},
+        {twitter: 'https://twitter.com/socketsupply'}, 
+        {discord: 'https://discord.gg/YPV32gKCsH'},
+      ],
+      project_tags: ['Hypercore'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'sonar', 
+      project_desc: 'Sonar is based on the Hypercore Protocol and part of the Dat ecosystem of peer-to-peer tools.', 
+      project_logo: project_logo_1,
+      project_website: 'https://sonar.dev.arso.xyz/',
+      project_socials: [
+        {github: 'https://github.com/arso-project'},
+      ],
+      project_tags: ['Hypercore_2'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'webscape-wanderer', 
+      project_desc: '', 
+      project_logo: project_logo_1,
+      project_website: 'https://micahscopes.github.io/webscape-wanderer/',
+      project_socials: [
+        {github: 'https://github.com/micahscopes/webscape-wanderer/'}, 
+        {twitter: 'https://twitter.com/micahscopes'},
+      ],
+      project_tags: ['Hypercore_2'],
+      project_active_state: 'ACTIVE',
+    },{ 
+      project_name: 'wizardamigos',
+      project_desc: 'Wizard Amigos is a global community of self-employed nomadic developers, technologists, creators, problem solvers, thinkers, activists, researchers, artists, and individuals from diverse backgrounds who share a common passion for technology and open collaboration.',
+      project_logo: project_logo_1,
+      project_website: 'https://wizardamigos.com/',
+      project_socials: [
+        {twitter: 'https://twitter.com/wizardamigos'},
+        {discord: ''},
+      ],
+      project_tags: ['Hypercore_2'],
+      project_active_state: 'ACTIVE',
+    },]
+  const tags = new Set(cards_data.flatMap(card => card.project_tags))
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
@@ -2302,14 +2521,14 @@ function app_projects (opts = default_opts, protocol) {
     const protocol = use_protocol('windowbar')({ state, on })
     const opts = {
       name: 'OUR_PROJECTS',
-      src: icon_folder,
+      src: icon_folder_solid,
       data,
     }
     const element = window_bar(opts, protocol)
     windowbar_shadow.append(element)
     async function toggle_active_state (message) {
-      const { active_state } = message.data
-      if (active_state === 'active') el.style.display = 'none'
+      const { project_active_state } = message.data
+      if (project_active_state === 'active') el.style.display = 'none'
     }
   }
   { // project cards
@@ -2317,7 +2536,7 @@ function app_projects (opts = default_opts, protocol) {
     function make_card ({ on, state }) {
       return (card_data, i) => {
         const protocol = use_protocol(`card_${i}`)({ state, on })
-        const opts = card_data
+        const opts = {project_data: card_data, data}
         const element = shadowfy()(project_card(opts, protocol))
         card_data.element = element
         return element
@@ -2390,17 +2609,17 @@ function app_projects (opts = default_opts, protocol) {
     let cardfilter = [...cards_data]
     if (status.SEARCH) {
       cardfilter = cardfilter.filter((card_data) => {
-        return card_data.project.toLowerCase().match(status.SEARCH.toLowerCase())
+        return card_data.project_name.toLowerCase().match(status.SEARCH.toLowerCase())
       })
     }
-    if (status.STATUS && status.STATUS !== 'NULL') {
+    if (status.STATUS && status.STATUS !== 'ALL') {
       cardfilter = cardfilter.filter((card_data) => {
-        return card_data.active_state === status.STATUS && card_data
+        return card_data.project_active_state === status.STATUS && card_data
       })
     }
-    if (status.TAGS && status.TAGS !== 'NULL') {
+    if (status.TAGS && status.TAGS !== 'ALL') {
       cardfilter = cardfilter.filter((card_data) => {
-        return card_data.tags.includes(status.TAGS) && card_data
+        return card_data.project_tags.includes(status.TAGS) && card_data
       })
     }
     project_wrapper.replaceChildren(...cardfilter.map(({ element }) => element))
@@ -2425,13 +2644,13 @@ function get_theme () {
       height: 100%;
       margin-bottom: 30px;
       border: 1px solid var(--primary_color);
-      * {
-        box-sizing: border-box;
-      }
-      .filter_wrapper {
-        width: 100%;
-        height: 100%;
-      }
+    }
+    .main_wrapper * {
+      box-sizing: border-box;
+    }
+    .main_wrapper .filter_wrapper {
+      width: 100%;
+      height: 100%;
     }
     .project_wrapper {
       --s: 15px; /* control the size */
@@ -2451,9 +2670,9 @@ function get_theme () {
       box-sizing: border-box;
       overflow: scroll;
       scrollbar-width: none; /* For Firefox */
-      &::-webkit-scrollbar {
-        display: none;
-      }
+    }
+    .project_wrapper::-webkit-scrollbar {
+      display: none;
     }
     @container (min-width: 768px) {
       .project_wrapper {
@@ -2518,7 +2737,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-projects/app-projects.js")
-},{"_process":2,"project-card":35,"project-filter":36,"scrollbar":38,"window-bar":51}],13:[function(require,module,exports){
+},{"_process":2,"project-card":36,"project-filter":37,"scrollbar":39,"window-bar":52}],13:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const timeline_card = require('timeline-card')
@@ -2566,29 +2785,64 @@ function app_timeline_mini (opts = default_opts, protocol) {
   const { data } = opts
   // Assigning all the icons
   const { img_src: {
-    icon_folder= `${prefix}/icon_folder.svg`,
+    icon_folder_solid= `${prefix}/icon_folder_solid.svg`,
   } } = data
-    const cards_data = [{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data,
-  }]
+    const cards_data = [
+    {
+      title: 'socket sdk',
+      date: 'June 07, 2022',
+      time: '',
+      link: 'https://socketsupply.co/download/',
+      desc: 'socket sdk early access is available',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'peershare',
+      date: 'June 16, 2022',
+      time: '',
+      link: 'https://peershare.lone-wolf.software/#/',
+      desc: 'peershare, a peer-to-peer file sharing over an encrypted noise connection joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'void',
+      date: 'July 08, 2022',
+      time: '',
+      link: 'https://screamingvoid.me/',
+      desc: 'functional prototype of messenger app, built with hypercore, hyperswarm, and react-native joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'keet',
+      date: 'July 25, 2022',
+      time: '',
+      link: 'https://keet.io/',
+      desc: 'hypercore protocol team releases Keet',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'hyperpubee',
+      date: 'August 20, 2022',
+      time: '',
+      link: 'https://www.hyperpubee.org/#/read',
+      desc: 'hyperpubee, a platform for decentralised publishing joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'wizard amigos',
+      date: 'August 27, 2022',
+      time: '',
+      link: 'https://wizardamigos.com',
+      desc: 'wizard amigos join the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    }]
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
@@ -2615,19 +2869,31 @@ function app_timeline_mini (opts = default_opts, protocol) {
   // ELEMENTS
   // ----------------------------------------
   { // windowbar
-    const on = { 'toggle_active_state': toggle_active_state }
+    const on = { 
+      'toggle_active_state': toggle_active_state,
+      'open_timeline_page': open_timeline_page
+    }
     const protocol = use_protocol('windowbar')({ state, on })
     const opts = {
       name:'TIMELINE', 
-      src: icon_folder,
-      action_buttons: ['View more (12)'],
+      src: icon_folder_solid,
+      action_buttons: [
+        {text: 'View more (12)', action: 'open_timeline_page', toggle_able: false}
+      ],
       data
     }
     const element = window_bar(opts, protocol)
     windowbar_shadow.append(element)
-    function toggle_active_state (message) {
+    async function toggle_active_state (message) {
       const { active_state } = message.data
       if (active_state === 'active') el.style.display = 'none'
+    }
+    async function open_timeline_page (message){
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'navigate',
+        data: 'TIMELINE'
+      })
     }
   }
   { // timeline cards
@@ -2702,41 +2968,37 @@ function get_theme () {
       height: 100%;
       margin-bottom: 30px;
       border: 1px solid var(--primary_color);
-      * { box-sizing: border-box; }
-      .timeline_wrapper {
-        --s: 15px; /* control the size */
-        --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
-        background:
-          repeating-conic-gradient(at 33% 33%,var(--_g)),
-          repeating-conic-gradient(at 66% 66%,var(--_g)),
-          var(--bg_color_3);  /* second color */ 
-        background-size: var(--s) var(--s);  
-        overflow: scroll;
-        scrollbar-width: none; /* For Firefox */
-        border: 1px solid var(--primary_color);
-        width: 100%;
-        height: 400px;
-        padding: 0px;
-        display: grid;
-        gap: 20px;
-        grid-template-columns: 12fr;
-        &::-webkit-scrollbar {
-          display: none;
-        }
-      }
+    }
+    .main_wrapper * { box-sizing: border-box; }
+    .main_wrapper .timeline_wrapper {
+      --s: 15px; /* control the size */
+      --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
+      background:
+        repeating-conic-gradient(at 33% 33%,var(--_g)),
+        repeating-conic-gradient(at 66% 66%,var(--_g)),
+        var(--bg_color_3);  /* second color */ 
+      background-size: var(--s) var(--s);  
+      overflow: scroll;
+      scrollbar-width: none; /* For Firefox */
+      border: 1px solid var(--primary_color);
+      width: 100%;
+      height: 400px;
+      padding: 0px;
+      display: grid;
+      gap: 20px;
+      grid-template-columns: 12fr;
+    }
+    .timeline_wrapper::-webkit-scrollbar {
+      display: none;
     }
     @container (min-width: 768px) {
-      .main_wrapper {
-        .timeline_wrapper {
-          grid-template-columns: repeat(2, 6fr);
-        }
+      .main_wrapper .timeline_wrapper {
+        grid-template-columns: repeat(2, 6fr);
       }
     }
     @container (min-width: 1200px) {
-      .main_wrapper {
-        .timeline_wrapper {
-          grid-template-columns: repeat(3, 4fr);
-        }
+      .main_wrapper .timeline_wrapper {
+        grid-template-columns: repeat(3, 4fr);
       }
     }
   `
@@ -2792,7 +3054,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-timeline-mini/app-timeline-mini.js")
-},{"_process":2,"scrollbar":38,"timeline-card":47,"window-bar":51}],14:[function(require,module,exports){
+},{"_process":2,"scrollbar":39,"timeline-card":48,"window-bar":52}],14:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const timeline_card = require('timeline-card')
@@ -2840,42 +3102,664 @@ function app_timeline (opts = default_opts, protocol) {
   status.YEAR = ''
   status.MONTH = ''
   status.DATE = ''
+  status.card = ''
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
   const { data } = opts
   // Assigning all the icons
   const { img_src: {
-      icon_folder= `${prefix}/icon_folder.svg`,
+      icon_folder_solid= `${prefix}/icon_folder_solid.svg`,
   } } = data
-  const cards_data = [{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data, active_state: 'ACTIVE'
-  },{
-    title: 'Official starting of the web course.', date: 'May 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data, active_state: 'ACTIVE'
-  },{
-    title: 'Official starting of the web course.', date: 'March 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data, active_state: 'ACTIVE'
-  },{
-    title: 'Official starting of the web course.', date: 'March 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data, active_state: 'UNACTIVE'
-  },{
-    title: 'Official starting of the web course.', date: 'March 11, 2021', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data, active_state: 'UNACTIVE'
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2021', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data, active_state: 'UNACTIVE'
-  },{
-    title: 'Official starting of the web course.', date: 'April 11, 2021', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data, active_state: 'UNACTIVE'
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2022', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data, active_state: 'PAUSED'
-  },{
-    title: 'Official starting of the web course.', date: 'April 11, 2023', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data, active_state: 'PAUSED'
-  },{
-    title: 'Official starting of the web course.', date: 'July 11, 2023', time: '07:05AM', link: '/', desc: 'The course is called - vanilla.js hyper modular web component building course and it will last approximately 4-8 weeks.. ', tags: ['Hypercore', 'Hypercore', 'Hypercore'], data, active_state: 'PAUSED'
-  }].map(card => {
-    const date = new Date(card.date + ' ' + convert_time_format(card.time))
-    card.date_raw = date.getTime()
-    return card
-  }).sort(function (a, b) { return  b.date_raw - a.date_raw })
+  const cards_data = [
+    {
+      title: 'dat - brainstorming an idea', 
+      date: 'October 12, 2011', 
+      time: '', 
+      link: 'https://rufuspollock.com/2011/10/17/weekly-update-rufus-pollock-2/', 
+      desc: 'Max Ogden chats with Rufus Pollock about a changes protocol for data to allow diffing/merging and supports micro-schemas at the Open Government Data Camp', 
+      tags: ['article'], 
+      data, 
+      active_state: 'ACTIVE'
+    },{
+      title: 'Knight Foundation Funding ($50.000)',
+      date: 'June 23, 2013',
+      time: '',
+      link: 'https://web.archive.org/web/20130810075932/http://www.knightfoundation.org/grants/201346305/',
+      desc: 'Brings dat (as http://dat-data.com) from an idea to the pre-alpha stage',
+      tags: ['grant'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'dat - initial readme',
+      date: 'June 27, 2013',
+      time: '',
+      link: 'https://github.com/dat-ecosystem/dat/tree/464679267049899eafa345125a0f2212f91be456',
+      desc: 'Dat is created by Max Ogden in 2013 to standardize the way data analysts collaborate on the changes they make to data sets. Rufus Pollock from the Open Knowledge Foundation describes it as git (and github) for data',
+      tags: ['milestone'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'dat-data website',
+      date: 'October 12, 2023',
+      time: '',
+      link: 'https://dat-ecosystem-archive.github.io/dat-data.com/',
+      desc: 'First website is released',
+      tags: ['website'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'twitter account',
+      date: 'November 01, 2013',
+      time: '',
+      link: 'https://twitter.com/dat_ecosystem',
+      desc: '@dat_protocol twitter account is created (later renamed to @dat_ecosystem)',
+      tags: ['asset'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'introducing dat',
+      date: 'November 11, 2013',
+      time: '',
+      link: 'https://www.youtube.com/watch?v=FX7qSwz3SCk',
+      desc: 'Max Ogden presents Dat at the Strata Conference in London',
+      tags: ['talk'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'Alfred P. Sloan Foundation Funding ($260.000)',
+      date: 'April 02, 2014',
+      time: '',
+      link: '',
+      desc: 'Helps dat to become an US ODI (Open Data Institute) project',
+      tags: ['OpenData'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'peermaps',
+      date: 'May 22, 2014',
+      time: '',
+      link: 'https://peermaps.org/',
+      desc: 'Peermaps is born (peer to peer cartography)',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'dat - alpha',
+      date: 'August 19, 2014',
+      time: '',
+      link: 'https://usopendata.org/2014/08/19/dat-alpha/',
+      desc: 'Dat Alpha version is released',
+      tags: ['milestone'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'Alfred P. Sloan',
+      date: 'April 03, 2015',
+      time: '',
+      link: 'https://donations.vipulnaik.com/donor.php?donor=Sloan+Foundation',
+      desc: 'Alfred P. Sloan Foundation Funding ($640.000)',
+      tags: ['grant'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'dat - beta',
+      date: 'July 29, 2015',
+      time: '',
+      link: 'https://usopendata.org/2015/07/29/dat-beta/',
+      desc: 'Dat Beta version is released -  the version focused on tabular datasets. It turns out to be too complex for typical use cases',
+      tags: ['milestone'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'designing dat 1.0',
+      date: 'December 04, 2015',
+      time: '',
+      link: 'https://vimeo.com/147914258',
+      desc: 'Designing dat 1.0, rOpenSci Community Call v8',
+      tags: ['presentation'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'hyperdrive release',
+      date: 'December 02, 2015',
+      time: '',
+      link: 'https://github.com/hypercore-protocol/hyperdrive/releases/tag/v1.0.1',
+      desc: 'Hyperdrive v1.0.0 is released',
+      tags: ['milestone'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'hypercore release',
+      date: 'December 20, 2015',
+      time: '',
+      link: 'https://github.com/hypercore-protocol/hypercore/releases/tag/v1.0.0',
+      desc: 'Hypercore v1.0.0 is released',
+      tags: ['milestone'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'alpha testing',
+      date: 'December 21, 2015',
+      time: '',
+      link: '/',
+      desc: 'Alpha testing with pilot projects in science, including Sloan Digital Sky Survey (Astronomy), iRNA-Seq (Bioinformatics – RNA), and Bionode (Bioinformatics – DNA)Hypercore v1.0.0 is released',
+      tags: ['milestone'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'dat 1.0.',
+      date: 'February 01, 2016',
+      time: '',
+      link: 'https://blog.dat-ecosystem.org/dat-1-0-is-ready/',
+      desc: 'Dat 1.0. is ready',
+      tags: ['milestone'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'Knight Foundation Funding ($420.000)',
+      date: 'February 01, 2016',
+      time: '',
+      link: 'https://blog.dat-ecosystem.org/announcing-publicbits-org/',
+      desc: 'Knight Foundation Grant ($420.000) for Publicbeats project',
+      tags: ['grant'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'Code for Science and Society',
+      date: 'September 01, 2016',
+      time: '',
+      link: 'https://codeforscience.org/about/',
+      desc: 'Code for Science and Society is founded - to support the Dat Project as a fiscal sponsor bundled with strategic project support',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'first meetups',
+      date: 'December 01, 2016',
+      time: '',
+      link: 'https://blog.datproject.org/tag/community/',
+      desc: 'The first meetups for ‘Coding for Science & Society’ are held in Berlin, Oakland, and Portland; organized by the Dat team',
+      tags: ['community'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'cli tool',
+      date: 'January 09, 2017',
+      time: '',
+      link: 'https://blog.dat-ecosystem.org/preview-the-new-dat-cli/',
+      desc: 'New Dat CLI is released',
+      tags: ['milestone'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'beaker browser',
+      date: 'February 07, 2017',
+      time: '',
+      link: 'https://www.electronjs.org/blog/beaker-browser',
+      desc: 'Beaker browser pre-release',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'dat desktop',
+      date: 'February 12, 2017',
+      time: '',
+      link: 'https://blog.dat-ecosystem.org/dat-desktop-is-here/',
+      desc: 'Dat desktop is released',
+      tags: ['milestone'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'dat 2.0',
+      date: 'June 01, 2017',
+      time: '',
+      link: 'https://blog.dat-ecosystem.org/dat-sleep-release/',
+      desc: 'Dat 2.0 is released',
+      tags: ['milestone'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'dat whitepaper',
+      date: 'June 01, 2017',
+      time: '',
+      link: 'https://github.com/dat-ecosystem-archive/whitepaper/blob/master/dat-paper.pdf',
+      desc: 'Dat whitepaper is released',
+      tags: ['whitepaper'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'Moore Foundation Grant ($110.000)',
+      date: 'September 14, 2017',
+      time: '',
+      link: 'https://blog.dat-ecosystem.org/dat-in-the-lab/',
+      desc: 'Moore Foundation grant for collaboration of dat and California Digital Library (CDL)',
+      tags: ['grant'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'organizational changes',
+      date: 'December 20, 2017',
+      time: '',
+      link: 'https://blog.datproject.org/2017/12/20/organization-changes-dat-css/',
+      desc: 'Organizational Changes for Dat and Code for Science & Society',
+      tags: ['organization'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'arso',
+      date: 'March 02, 2018',
+      time: '',
+      link: 'https://arso.xyz/',
+      desc: 'arso joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'multifeed',
+      date: 'April 12, 2018',
+      time: '',
+      link: 'https://github.com/kappa-db/multifeed/releases/tag/v1.0.0',
+      desc: 'Multi-writer hypercore (multifeed) is released',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'Beaker browser and the Dat protocol analysis',
+      date: 'May 01, 2018',
+      time: '',
+      link: 'https://bernsteinbear.com/dat-paper/',
+      desc: 'Beaker browser and the Dat protocol: An analysis for COMP 117: Internet-scale Distributed Systems is released',
+      tags: ['scientific article'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'kappa core',
+      date: 'May 13, 2018',
+      time: '',
+      link: 'https://github.com/kappa-db/kappa-core/releases/tag/v1.0.0',
+      desc: 'Kappa Core 1.0 is released (minimal append only DB)',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'cabal',
+      date: 'May 13, 2018',
+      time: '',
+      link: 'https://github.com/cabal-club/cabal-core/releases/tag/v1.0.0',
+      desc: 'Cabal core 1.0 is release',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'Mozila Open Source Support Grant ($34,000)',
+      date: 'September 05, 2018',
+      time: '',
+      link: 'https://blog.dat-ecosystem.org/moss-2019-summary/',
+      desc: 'Dat Project Receives Mozilla Open Source Support Grant',
+      tags: ['grant'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'dat open collective',
+      date: 'October 05, 2018',
+      time: '',
+      link: 'https://opencollective.com/dat',
+      desc: 'Dat Open Collective page is set up for recurring donations',
+      tags: ['donations'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'how dat works',
+      date: 'November 01, 2018',
+      time: '',
+      link: 'https://dat-ecosystem-archive.github.io/how-dat-works/',
+      desc: 'How dat works visualization project is started',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'Handshake Grant ($100.000)',
+      date: 'December 01, 2018',
+      time: '',
+      link: 'https://blog.dat-ecosystem.org/dat-receives-two-new-grants/',
+      desc: 'Handshake Grant is received',
+      tags: ['grant'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'Samsung NEXT Stack Zero Grant ($63.000)',
+      date: 'December 02, 2018',
+      time: '',
+      link: 'https://blog.dat-ecosystem.org/dat-receives-two-new-grants/',
+      desc: 'Samsung NEXT Stack Zero grant is received',
+      tags: ['grant'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'dat hack unconference',
+      date: 'May 19, 2019',
+      time: '',
+      link: 'https://events.dat.foundation/2019/',
+      desc: 'Dat Hack Unconference in Berlin',
+      tags: ['event'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'Wireline Donation ($50,000)',
+      date: 'June 01, 2019',
+      time: '',
+      link: 'https://github.com/datproject/organization#2019',
+      desc: 'Dat Project receives donation from Wireline',
+      tags: ['donation'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'dat consortium',
+      date: 'December 01, 2019',
+      time: '',
+      link: 'https://hackmd.io/@T6Wf5EsOQKe-6wyPjJPtuw/Hycn0F63r/%2FHbu0ffkwQS6KIO_97fH-Mw',
+      desc: 'Dat consortium is formed',
+      tags: ['organization'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'ara',
+      date: 'December 01, 2019',
+      time: '',
+      link: 'https://ara.one/',
+      desc: 'Ara joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'consento',
+      date: 'December 01, 2019',
+      time: '',
+      link: 'https://consento.org/',
+      desc: 'Consento joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'datdot',
+      date: 'December 01, 2019',
+      time: '',
+      link: 'https://datdot.org/',
+      desc: 'DatDot joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'decentlabs',
+      date: 'December 01, 2019',
+      time: '',
+      link: 'https://decentlabs.se/',
+      desc: 'Decentlabs joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'geut',
+      date: 'December 01, 2019',
+      time: '',
+      link: 'https://www.geutstudio.com/',
+      desc: 'Geut joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'digital democracy',
+      date: 'December 01, 2019',
+      time: '',
+      link: 'https://www.digital-democracy.org/',
+      desc: 'Digital Democracy joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'arso - sonar release',
+      date: 'December 17, 2019',
+      time: '',
+      link: 'https://arso.xyz/blog/2019-12-17-introducing-sonar',
+      desc: 'Arso introduces Sonar',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'Hypercore protocol graduates from Dat Ecosystem',
+      date: 'May 15, 2020',
+      time: '',
+      link: 'https://blog.dat-ecosystem.org/dat-protocol-renamed-hypercore-protocol/',
+      desc: 'Dat protocol is renamed to Hypercore protocol',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'NLnet grant ($50.000)',
+      date: 'July 01, 2020',
+      time: '',
+      link: 'https://github.com/datproject/organization#2020',
+      desc: 'NLnet grant is recieved for a Rust port',
+      tags: ['grant'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'agregore',
+      date: 'June 19, 2020',
+      time: '',
+      link: 'https://github.com/AgregoreWeb/agregore-browser/releases/tag/v1.0.1-0',
+      desc: 'Agregore browser is pre-released',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'dat conference',
+      date: 'July 30, 2020',
+      time: '',
+      link: 'https://www.youtube.com/channel/UCbLY5Qg3t3OJbxZZUioqMOQ',
+      desc: 'Dat online conference is organized',
+      tags: ['event'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'agregore',
+      date: 'October 14, 2020',
+      time: '',
+      link: 'https://agregore.mauve.moe/',
+      desc: 'Agregore joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'tradle',
+      date: 'November 09, 2020',
+      time: '',
+      link: 'https://tradle.io/',
+      desc: 'Tradle joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'gateway browser',
+      date: 'January 11, 2020',
+      time: '',
+      link: 'https://gitlab.com/gateway-browser/gateway',
+      desc: 'Gateway browser joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'hyperbee',
+      date: 'December 03, 2020',
+      time: '',
+      link: 'https://github.com/hypercore-protocol/hyperbee/releases/tag/v1.0.0',
+      desc: 'Hyperbee 1.0 is released',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'earthstar',
+      date: 'January 10, 2021',
+      time: '',
+      link: 'https://github.com/earthstar-project/earthstar',
+      desc: 'Earthstar joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'dat manifesto',
+      date: 'March 09, 2021',
+      time: '',
+      link: 'https://github.com/dat-ecosystem/organization/blob/main/MANIFESTO.md',
+      desc: 'Dat consortium forms Dat Ecosystem and consoritum members sign a manifesto',
+      tags: ['organization'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'socket supply',
+      date: 'April 15, 2022',
+      time: '',
+      link: 'https://socketsupply.co/',
+      desc: 'Socket Supply joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'hyperswarm',
+      date: 'July 02, 2021',
+      time: '',
+      link: 'https://github.com/hyperswarm/hyperswarm/releases/tag/v3.0.0-beta2',
+      desc: 'Hyperswarm v3.0.0-beta is released',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'autobase',
+      date: 'July 02, 2021',
+      time: '',
+      link: 'https://github.com/hypercore-protocol/autobase/releases/tag/v1.0.0-alpha.0',
+      desc: 'Autobase v3.0.0-beta is released',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'dat ecosystem archive',
+      date: 'August 01, 2021',
+      time: '',
+      link: 'https://github.com/dat-ecosystem-archive',
+      desc: 'Dat ecosystem archive is created to archive all the historic repositories',
+      tags: ['organization'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'geut - sher',
+      date: 'October 08, 2021',
+      time: '',
+      link: 'https://sher.geutstudio.com/',
+      desc: 'Geut studio introduces new project Sher',
+      tags: ['organization'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'telios',
+      date: 'November 01, 2021',
+      time: '',
+      link: 'https://www.telios.io/#/',
+      desc: 'telios joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'telios - email desktop client',
+      date: 'March 14, 2022',
+      time: '',
+      link: 'https://www.telios.io/#/',
+      desc: 'telios releases their email desktop client',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'ahau',
+      date: 'April 30, 2022',
+      time: '',
+      link: 'https://ahau.io/',
+      desc: 'ahau joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'socket sdk',
+      date: 'June 07, 2022',
+      time: '',
+      link: 'https://socketsupply.co/download/',
+      desc: 'socket sdk early access is available',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'peershare',
+      date: 'June 16, 2022',
+      time: '',
+      link: 'https://peershare.lone-wolf.software/#/',
+      desc: 'peershare, a peer-to-peer file sharing over an encrypted noise connection joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'void',
+      date: 'July 08, 2022',
+      time: '',
+      link: 'https://screamingvoid.me/',
+      desc: 'functional prototype of messenger app, built with hypercore, hyperswarm, and react-native joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'keet',
+      date: 'July 25, 2022',
+      time: '',
+      link: 'https://keet.io/',
+      desc: 'hypercore protocol team releases Keet',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'hyperpubee',
+      date: 'August 20, 2022',
+      time: '',
+      link: 'https://www.hyperpubee.org/#/read',
+      desc: 'hyperpubee, a platform for decentralised publishing joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'wizard amigos',
+      date: 'August 27, 2022',
+      time: '',
+      link: 'https://wizardamigos.com',
+      desc: 'wizard amigos join the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    }].map(card => {
+      const date = new Date(card.date + ' ' + convert_time_format(card.time))
+      card.date_raw = date.getTime()
+      return card
+    }).sort(function (a, b) {
+      const dateA = new Date(a.date_raw);
+      const dateB = new Date(b.date_raw);
+      // Compare years in ascending order
+      if (dateA.getFullYear() !== dateB.getFullYear()) {
+        return dateB.getFullYear() - dateA.getFullYear();
+      }
+      // If years are the same, compare months in descending order
+      return dateA.getMonth() - dateB.getMonth();
+    })
+
   const tags = new Set(cards_data.flatMap(card => card.tags))
   const card_groups = []
-  let year_cache, card_group
+  let year_cache, card_group, prev_year
   status.YEAR = new Date(cards_data[0].date_raw).getFullYear()
   // ----------------------------------------
   // PROTOCOL
@@ -2896,7 +3780,9 @@ function app_timeline (opts = default_opts, protocol) {
       <div class="filter_wrapper">
         <div class="month_wrapper">
           <div class="scrollbar_wrapper">
-            <div class="timeline_wrapper"></div>
+            <div class="timeline_wrapper">
+              <div class="filter_container"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -2907,6 +3793,12 @@ function app_timeline (opts = default_opts, protocol) {
   const filter_wrapper = shadow.querySelector('.filter_wrapper')
   const month_wrapper = shadow.querySelector('.month_wrapper')
   const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
+  
+  // const filter_container = shadow.querySelector('.filter_container')
+  const filter_container = document.createElement('div')
+  filter_container.classList.add('filter_container')
+  timeline_wrapper.append(filter_container);
+
   // ----------------------------------------
   const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
   // ----------------------------------------
@@ -2917,7 +3809,7 @@ function app_timeline (opts = default_opts, protocol) {
     const protocol = use_protocol('windowbar')({ state, on })
     const opts = {
       name: 'TIMELINE', 
-      src: icon_folder,
+      src: icon_folder_solid,
       data: data
     }
     const element = window_bar(opts, protocol)
@@ -2965,9 +3857,9 @@ function app_timeline (opts = default_opts, protocol) {
     main_wrapper.append(element)
     function on_value (message) { setFilter(message.data) }
     async function toggle_month_filter (message) {
-      if (month_wrapper.contains(month_filter_wrapper)) {
-        month_wrapper.removeChild(month_filter_wrapper)
-      } else month_wrapper.append(month_filter_wrapper)
+      if (filter_container.contains(month_filter_wrapper)) {
+        filter_container.removeChild(month_filter_wrapper)
+      } else filter_container.append(month_filter_wrapper)
     }
     async function toggle_year_filter (message) {
       if (filter_wrapper.contains(year_filter_wrapper)) {
@@ -2980,7 +3872,7 @@ function app_timeline (opts = default_opts, protocol) {
     const on = { 'set_scroll': on_set_scroll }
     const protocol =  use_protocol('year_filter')({ state, on })
     const opts = {
-      data, latest_date: cards_data[0].date_raw
+      data, latest_date: cards_data[0].date_raw, oldest_date: cards_data.slice(-1)[0].date_raw
     }
     year_filter_wrapper = shadowfy()(year_filter(opts, protocol))
     function on_set_scroll ({ data }) {
@@ -2988,6 +3880,7 @@ function app_timeline (opts = default_opts, protocol) {
       updateCalendar()
     }
   }
+  year_filter_wrapper.classList.add('year_filter_wrapper')
   var month_filter_wrapper
   { // month filter
     const on = { 'set_scroll': on_set_scroll, 'set_filter': setFilter }
@@ -3068,11 +3961,17 @@ function app_timeline (opts = default_opts, protocol) {
   }
   async function set_scroll (data) {
     status[data.filter] = data.value
+    
     timeline_cards.some(card => {
       const { idx } = card
       const card_date = cards_data[idx].date
+
       if (card_date.includes(data.value) && card_date.includes(status.YEAR)) {
         setScrollTop(card.getBoundingClientRect().top - timeline_wrapper.getBoundingClientRect().top + timeline_wrapper.scrollTop)
+        if(status.card)
+          status.card.classList.remove('active')
+        card.classList.add('active')
+        status.card = card
         return true
       }
     })
@@ -3100,10 +3999,10 @@ function app_timeline (opts = default_opts, protocol) {
       if (status.SEARCH) cardfilter = cardfilter.filter((card_data) => {
         return card_data.title.toLowerCase().match(status.SEARCH.toLowerCase())
       })
-      if (status.STATUS && status.STATUS !== 'NULL') cardfilter = cardfilter.filter((card_data) => {
+      if (status.STATUS && status.STATUS !== 'ALL') cardfilter = cardfilter.filter((card_data) => {
         return card_data.active_state === status.STATUS && card_data
       })
-      if (status.TAGS && status.TAGS !== 'NULL') {
+      if (status.TAGS && status.TAGS !== 'ALL') {
         cardfilter = cardfilter.filter((card_data) => {
           return card_data.tags.includes(status.TAGS) && card_data
         })
@@ -3139,6 +4038,7 @@ function app_timeline (opts = default_opts, protocol) {
       filter: 'YEAR',
       value: String(new Date(cardfilter[0].date_raw).getFullYear())
     })
+    timeline_wrapper.append(filter_container)
   }
   async function updateCalendar () {
     let dates = []
@@ -3146,11 +4046,17 @@ function app_timeline (opts = default_opts, protocol) {
       if (card_data.date.includes(status.YEAR)) dates.push(card_data.date)
     })
     const channel = state.net[state.aka.month_filter]
-    channel.send({
-      head: [id, channel.send.id, channel.mid++],
-      type: 'update_calendar',
-      data: dates
-    })
+    if(prev_year !== String(status.YEAR)){
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'update_calendar',
+        data: dates
+      })
+      prev_year = String(status.YEAR).slice(0)
+      if(status.card)
+          status.card.classList.remove('active')
+    }
+    
   }
 }
 function get_theme () {
@@ -3167,82 +4073,102 @@ function get_theme () {
       width: 100%;
       height: 100%;
       margin-bottom: 30px;
+    }
+    .main_wrapper * {
+      box-sizing: border-box;
+    }
+    .main_wrapper .filter_wrapper {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      position:relative;
+    }
+    .main_wrapper .filter_wrapper .month_wrapper {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      border: 1px solid var(--primary_color);
+    }
+    .filter_container{
+      width:auto;
+      height:max-content;
+      position: fixed;
+      left:0;
+      right:31px;
+      bottom: 30px;
+      z-index:1;
+      --s: 15px; /* control the size */
+      --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
+      background:
+        repeating-conic-gradient(at 33% 33%,var(--_g)),
+        repeating-conic-gradient(at 66% 66%,var(--_g)),
+        var(--bg_color_3);  /* second color */  
+      background-size: var(--s) var(--s);  
+      border: 1px solid var(--primary_color);
+    }
+    .main_wrapper .filter_wrapper .scrollbar_wrapper {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      position:relative;
+      z-index:3;
+    }
 
-      * {
-        box-sizing: border-box;
-      }
-      .filter_wrapper {
-        display: flex;
-        width: 100%;
-        height: 100%;
-        .month_wrapper {
-          width: 100%;
-          height: 100%;
-          overflow: hidden;
-          border: 1px solid var(--primary_color);
-          .scrollbar_wrapper {
-            display: flex;
-            width: 100%;
-            height: 100%;
-            .timeline_wrapper {
-              --s: 15px; /* control the size */
-              --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
-              background:
-                repeating-conic-gradient(at 33% 33%,var(--_g)),
-                repeating-conic-gradient(at 66% 66%,var(--_g)),
-                var(--bg_color_3);  /* second color */  
-              background-size: var(--s) var(--s);  
-              border :1px solid var(--primary_color);
-              display: flex;
-              flex-direction: column;
-              width: 100%;
-              height: 400px;
-              overflow: scroll;
-              gap: 20px;
-              scrollbar-width: none; /* For Firefox */
-              .card_group {
-                width: 100%;
-                padding: 0px;
-                display: grid;
-                gap: 20px;
-                grid-template-columns: 12fr;
-              }
-              &::-webkit-scrollbar {
-                display: none;
-              }
-            }
-          }
-        }
+    .main_wrapper .filter_wrapper .scrollbar_wrapper .timeline_wrapper {
+      --s: 15px; /* control the size */
+      --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
+      background:
+        repeating-conic-gradient(at 33% 33%,var(--_g)),
+        repeating-conic-gradient(at 66% 66%,var(--_g)),
+        var(--bg_color_3);  /* second color */  
+      background-size: var(--s) var(--s);  
+      border :1px solid var(--primary_color);
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 500px;
+      overflow: scroll;
+      gap: 20px;
+      scrollbar-width: none; /* For Firefox */
+      position:relative;
+    }
+    .main_wrapper .filter_wrapper .scrollbar_wrapper .timeline_wrapper .card_group {
+      width: 100%;
+      padding: 0px;
+      display: grid;
+      gap: 20px;
+      grid-template-columns: 12fr;
+    }
+
+    .main_wrapper .filter_wrapper .scrollbar_wrapper .timeline_wrapper .card_group > .active{
+      border: 4px solid var(--ac-2);
+    }
+    .main_wrapper .filter_wrapper .scrollbar_wrapper .timeline_wrapper::-webkit-scrollbar {
+      display: none;
+    }
+    .main_wrapper .filter_wrapper .year_filter_wrapper{
+      --s: 15px; /* control the size */
+      --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
+      background:
+        repeating-conic-gradient(at 33% 33%,var(--_g)),
+        repeating-conic-gradient(at 66% 66%,var(--_g)),
+        var(--bg_color_3);  /* second color */  
+      background-size: var(--s) var(--s);  
+      border :1px solid var(--primary_color);
+    }
+    @container(min-width: 400px) {
+      .main_wrapper .filter_wrapper .scrollbar_wrapper .timeline_wrapper .card_group:last-child{
+        margin-bottom: 180px;
       }
     }
     @container(min-width: 768px) {
-      .main_wrapper {
-        .filter_wrapper {
-          .month_wrapper {
-            .scrollbar_wrapper {
-              .timeline_wrapper {
-                .card_group {
-                  grid-template-columns: repeat(2, 6fr);
-                }
-              }
-            }
-          }
-        }
+      .main_wrapper .filter_wrapper .month_wrapper .scrollbar_wrapper .timeline_wrapper .card_group {
+        grid-template-columns: repeat(2, 6fr);
       }
     }
     @container(min-width: 1200px) {
-      .main_wrapper {
-        .filter_wrapper {
-          .month_wrapper {
-            .scrollbar_wrapper {
-              .timeline_wrapper {
-                .card_group {
-                  grid-template-columns: repeat(3, 4fr);
-                }
-              }
-            }
-          }
-        }
+      .main_wrapper .filter_wrapper .month_wrapper .scrollbar_wrapper .timeline_wrapper .card_group {
+        grid-template-columns: repeat(3, 4fr);
       }
     }
   `
@@ -3298,7 +4224,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-timeline/app-timeline.js")
-},{"_process":2,"month-filter":32,"scrollbar":38,"timeline-card":47,"timeline-filter":48,"window-bar":51,"year-filter":52}],15:[function(require,module,exports){
+},{"_process":2,"month-filter":32,"scrollbar":39,"timeline-card":48,"timeline-filter":49,"window-bar":52,"year-filter":53}],15:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   DAY BUTTON COMPONENT
@@ -3336,7 +4262,8 @@ function day_button (opts = default_opts, protocol) {
   const on = {
     toggle_active,
     add_highlight,
-    remove_highlight
+    remove_highlight,
+    toggle_visibility,
   }
   const up_channel = use_protocol('up')({ protocol, state, on })
   // const notify = protocol({ from: id }, listen)
@@ -3375,6 +4302,9 @@ function day_button (opts = default_opts, protocol) {
   function remove_highlight () {
     day_button.classList.remove('highlight')
   }
+  function toggle_visibility ({ data }) {
+    ; data ? day_button.classList.remove('hide') : day_button.classList.add('hide')
+  }
 }
 function get_theme () {
   return `
@@ -3386,14 +4316,18 @@ function get_theme () {
       box-sizing: border-box;
       aspect-ratio: 1/1;
       cursor: pointer;
-      border: 1px solid var(--primary_color);
+      border: 0px solid var(--primary_color);
+      border-width: 0px 1px 1px 0px;
       background-color: var(--bg_color);
-      &.active {
-        background-color: var(--ac-1) !important;
-      }
-      &.highlight {
-        background-color: var(--ac-2)
-      }
+    }
+    .day_button.highlight {
+      background-color: var(--ac-2)
+    }
+    .day_button.active {
+      background-color: var(--ac-1);
+    }
+    .day_button.hide{
+      display: none;
     }
   `
 }
@@ -3538,21 +4472,21 @@ function get_theme () {
       cursor: pointer;
       border: 1px solid var(--primary_color);
       background-color: var(--bg_color);
-      svg {
-        height: 25px;
-        width: 25px;
-        fill: var(--primary_color);
-        pointer-events: none;
-        *{
-          fill: var(--primary_color);
-        }
-      }
-      &.active {
-        *{
-          fill: var(--dark);
-        }
-        background-color: var(--ac-2)
-      }
+    }
+    .icon_btn svg {
+      height: 25px;
+      width: 25px;
+      fill: var(--primary_color);
+      pointer-events: none;
+    }
+    .icon_btn *{
+      fill: var(--primary_color);
+    }
+    .icon_btn.active {
+      background-color: var(--ac-2)
+    }
+    .icon_btn.active *{
+      fill: var(--dark);
     }
   `
 }
@@ -3729,6 +4663,7 @@ function resources (pool) {
 }).call(this)}).call(this,require('_process'),"/src/node_modules/buttons/logo-button.js")
 },{"_process":2}],18:[function(require,module,exports){
 (function (process,__filename){(function (){
+const scrollbar = require('scrollbar')
 /******************************************************************************
   SELECT BUTTON COMPONENT
 ******************************************************************************/
@@ -3747,6 +4682,18 @@ const shopts = { mode: 'closed' }
 module.exports = select_button
 // ----------------------------------------
 function select_button (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // RESOURCE POOL (can't be serialized)
+  // ----------------------------------------
+  const ro = new ResizeObserver(entries => {
+    console.log('ResizeObserver:terminal:resize')
+    const scroll_channel = state.net[state.aka.scrollbar]
+    scroll_channel.send({
+      head: [id, scroll_channel.send.id, scroll_channel.mid++],
+      refs: { },
+      type: 'handle_scroll',
+    })
+  })
   // ----------------------------------------
   // ID + JSON STATE
   // ----------------------------------------
@@ -3777,13 +4724,16 @@ function select_button (opts = default_opts, protocol) {
   const el = document.createElement('div')
   const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
-  shadow.innerHTML = `<div class="select_button_wrapper bottom">
+  shadow.innerHTML = `<div tabindex="0" class="select_button_wrapper bottom">
     <div class="option_wrapper">
-      ${opts.choices.map(choice => `<div class="option">${choice}</div>`).join('')}
+      <div class="option_scrollbar_wrapper">
+        <div class="option active">ALL</div>
+        ${opts.choices.map(choice => `<div class="option">${choice}</div>`).join('')}
+      </div>
     </div>
     <div class="button_wrapper">
       <span class="button_name">${opts.name}: </span>
-      <span class="selected_option">${'NULL'}</span>
+      <span class="selected_option">${'ALL'}</span>
       <span class="arrow_icon">
         ${icon_arrow_up}
       </span>
@@ -3793,6 +4743,8 @@ function select_button (opts = default_opts, protocol) {
   const select_toggle_btn = shadow.querySelector('.button_wrapper')
   const options = shadow.querySelectorAll('.option')
   const selected_option = shadow.querySelector('.selected_option')
+  const option_wrapper = shadow.querySelector('.option_wrapper')
+  const option_scrollbar_wrapper = shadow.querySelector('.option_scrollbar_wrapper')
   // ----------------------------------------
   // ELEMENTS
   // ----------------------------------------
@@ -3800,6 +4752,23 @@ function select_button (opts = default_opts, protocol) {
     select_button_wrapper.classList.toggle('active')
     shadow.querySelector('.arrow_icon').innerHTML = active_state ? icon_arrow_down : icon_arrow_up
     active_state = !active_state
+  }
+  select_button_wrapper.onblur = (e) => {
+    setTimeout(() => {
+      select_button_wrapper.classList.remove('active')
+      shadow.querySelector('.arrow_icon').innerHTML = active_state ? icon_arrow_down : icon_arrow_up
+      active_state = !active_state
+    }, 200);
+  }
+  { // scrollbar
+    const on = { 'set_scroll': on_set_scroll, status: onstatus }
+    const protocol = use_protocol('scrollbar')({ state, on })
+    opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_up
+    opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_down
+    const opts1 = { data }
+    const element = shadowfy()(scrollbar(opts1, protocol))
+    option_wrapper.append(element)
+    option_scrollbar_wrapper.onscroll = on_scroll
   }
   // select_toggle_btn.addEventListener('click', function() {
   //   shadow.querySelector('.select_button_wrapper').classList.toggle('active')
@@ -3814,8 +4783,9 @@ function select_button (opts = default_opts, protocol) {
     option.addEventListener('click', () => {
       if (active_option) active_option.classList.remove('active')
       if (active_option === option) {
-        selected_option.innerHTML = 'NULL'
-        active_option = ''
+        selected_option.innerHTML = 'ALL'
+        active_option = options[0]
+        options[0].classList.add('active')
       }
       else {
         option.classList.add('active')
@@ -3833,8 +4803,43 @@ function select_button (opts = default_opts, protocol) {
   // ----------------------------------------
   // INIT
   // ----------------------------------------
+  active_option = options[0]
+  watch_scrollbar()
 
   return el
+
+  function watch_scrollbar () {
+    const channel = state.net[state.aka.scrollbar]
+    ro.observe(option_scrollbar_wrapper)
+  }
+  function on_scroll (message) {
+    const channel = state.net[state.aka.scrollbar]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      refs: { },
+      type: 'handle_scroll',
+    })
+  }
+  function on_set_scroll (message) {
+    console.log('set_scroll', message) 
+    setScrollTop(message.data)
+  }
+  function onstatus (message) {
+    const channel = state.net[state.aka.scrollbar]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      refs: { cause: message.head },
+      type: 'update_size',
+      data: {
+        sh: option_scrollbar_wrapper.scrollHeight,
+        ch: option_scrollbar_wrapper.clientHeight,
+        st: option_scrollbar_wrapper.scrollTop
+      }
+    })
+  }
+  async function setScrollTop (value) {
+    option_scrollbar_wrapper.scrollTop = value
+  }
 }
 function get_theme () {
   return `
@@ -3843,86 +4848,99 @@ function get_theme () {
       position: relative;
       z-index: 100;
       width: 100%;
+      min-width:150px;
       height: 30px;
       font-size: 0.875em;
       line-height: 1.5em;
       background-color: var(--bg_color);
-      &.bottom {
-        .option_wrapper {
-          bottom: 30px;
-          left: 0px;
-        }
-      }
-      &top {
-        .option_wrapper {
-          /* top: 40px; */
-          left: 0px;
-        }
-      }
-      &.active {
-        .option_wrapper{ display: block !important; }
-        .button_wrapper{ border: 2px solid var(--ac-1); }
-      }
-      .option_wrapper {
-        position: absolute;
-        display: none;
-        box-sizing: border-box;
-        height: max-content;
-        max-height: 400px;
-        width: 100%;
-        background-color: var(--bg_color);
-        border: 1px solid var(--primary_color);
-        .option {
-          box-sizing: border-box;
-          display: flex;
-          gap: 5px;
-          align-items: center;
-          padding: 10px 5px;
-          cursor: pointer;
-          background-color: var(--bg_color);
-          &.active {
-            background-color: var(--ac-1);
-            color: var(--primary_color);
-          }
-          &:hover {
-            filter: brightness(0.8);
-          }
-        }
-      }
-      .button_wrapper {
-        box-sizing: border-box;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        padding: 5px 5px;
-        cursor: pointer;
-        height: 30px;
-        background-color: var(--bg_color);
-        border: 1px solid var(--primary_color);
-        .button_name { 
-          display: flex;
-          vertical-align: middle;
-          font-weight: 700;
-          line-height: 15px;
-          letter-spacing: -1px;
-        }
-        .selected_option { 
-          display: flex;
-          vertical-align: middle;
-          font-weight: 300;
-          line-height: 15px;
-          letter-spacing: -1px;
-        }
-        .arrow_icon {
-          display: flex;
-          align-items: center;
-          margin-left: auto;
-
-          svg * {
-            fill: var(--primary_color);
-          }
-        }
-      }
+    }
+    .select_button_wrapper.bottom .option_wrapper {
+      bottom: 30px;
+      left: 0px;
+    }
+    .select_button_wrapper.top .option_wrapper {
+      /* top: 40px; */
+      left: 0px;
+    }
+    .select_button_wrapper.active .option_wrapper{ display: flex !important; }
+    .select_button_wrapper.active .option_wrapper .button_wrapper{ border: 2px solid var(--ac-1); }
+    .select_button_wrapper .option_wrapper {
+      position: absolute;
+      display: none;
+      box-sizing: border-box;
+      height: max-content;
+      max-height: 400px;
+      width: 100%;
+      background-color: var(--bg_color);
+      border: 1px solid var(--primary_color);
+      word-break: break-all;
+    }
+    .select_button_wrapper .option_wrapper .option {
+      box-sizing: border-box;
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      padding: 10px 5px;
+      cursor: pointer;
+      word-break: break-all;
+      background-color: var(--bg_color);
+    }
+    .select_button_wrapper .option_wrapper .option.active {
+      background-color: var(--ac-1);
+      color: var(--primary_color);
+    }
+    .select_button_wrapper .option_wrapper .option:hover {
+      filter: brightness(0.8);
+    }
+    .select_button_wrapper .button_wrapper {
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 5px;
+      cursor: pointer;
+      height: 30px;
+      background-color: var(--bg_color);
+      border: 1px solid var(--primary_color);
+    }
+    .select_button_wrapper .button_wrapper .button_name { 
+      display: flex;
+      vertical-align: middle;
+      font-weight: 700;
+      line-height: 15px;
+      letter-spacing: -1px;
+    }
+    .select_button_wrapper .button_wrapper .selected_option { 
+      display: flex;
+      vertical-align: middle;
+      font-weight: 300;
+      line-height: 15px;
+      letter-spacing: -1px;
+      word-break: normal;
+    }
+    .select_button_wrapper .button_wrapper .arrow_icon {
+      display: flex;
+      align-items: center;
+      margin-left: auto;
+    }
+    .select_button_wrapper .button_wrapper .arrow_icon svg * {
+      fill: var(--primary_color);
+    }
+    .option_scrollbar_wrapper{
+      height: max-content;
+      max-height: 200px;
+      min-height: 100px;
+      overflow-y: scroll;
+      scrollbar-width: none;
+      width: 100%;
+      background-color: var(--bg_color);
+      border: 1px solid var(--primary_color);
+    }
+    .option_scrollbar_wrapper::-webkit-scrollbar {
+      display: none;
+    }
+    .select_button_wrapper .option_scrollbar_wrapper::-webkit-scrollbar {
+      display: none;
     }
   `
 }
@@ -3977,7 +4995,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/buttons/select-button.js")
-},{"_process":2}],19:[function(require,module,exports){
+},{"_process":2,"scrollbar":39}],19:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   SM ICON BUTTON ALT COMPONENT
@@ -4056,16 +5074,13 @@ function get_theme () {
       cursor: pointer;
       border: 1px solid var(--bg_color);
       background-color: var(--primary_color);
-      &:active {
-        background-color: var(--ac-2)
-      }
-      &.active {
-        background-color: var(--ac-2)
-      }
-      svg, svg * {
-        fill: var(--bg_color);
-        pointer-events:none;
-      }
+    }
+    .sm_icon_button_alt.active {
+      background-color: var(--ac-2)
+    }
+    .sm_icon_button_alt svg, .sm_icon_button_alt svg * {
+      fill: var(--bg_color);
+      pointer-events:none;
     }
   `
 }
@@ -4123,146 +5138,148 @@ function resources (pool) {
 },{"_process":2}],20:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
-  SM ICON BUTTON COMPONENT
-******************************************************************************/
-// ----------------------------------------
-// MODULE STATE & ID
-var count = 0
-const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
-const ID = dir.slice(cwd.length)
-const STATE = { ids: {}, net: {} } // all state of component module
-// ----------------------------------------
-const sheet = new CSSStyleSheet
-sheet.replaceSync(get_theme())
-const default_opts = { }
-const shopts = { mode: 'closed' }
-// ----------------------------------------
-module.exports = sm_icon_button
-// ----------------------------------------
-function sm_icon_button (opts = default_opts, protocol) {
-  // ----------------------------------------
-  // ID + JSON STATE
-  // ----------------------------------------
-  const id = `${ID}:${count++}` // assigns their own name
-  const status = {}
-  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
-  const cache = resources({})
-  let activeState = true
-  // ----------------------------------------
-  // OPTS
-  // ----------------------------------------
-  let { src, src_active, activate } = opts
-  // ----------------------------------------
-  // PROTOCOL
-  // ----------------------------------------
-  const on = {}
-  const channel = use_protocol('up')({ protocol, state , on })
-  // ----------------------------------------
-  // TEMPLATE
-  // ----------------------------------------
-  const el = document.createElement('div')
-  const shadow = el.attachShadow(shopts)
-  shadow.adoptedStyleSheets = [sheet]
-  shadow.innerHTML = `<div class="sm_icon_button">${src}</div>`
-  const sm_icon_button = shadow.querySelector(".sm_icon_button")
-  // ----------------------------------------
-  // ELEMENTS
-  // ----------------------------------------
-  sm_icon_button.onclick = toggle_class
-  // ----------------------------------------
-  // INIT
-  // ----------------------------------------
-
-  return el
-
-  function toggle_class (e) {
-    if (activate) {
-      if (src_active) {
-        sm_icon_button.innerHTML = activeState ? src_active: src
-        activeState = !activeState
-      }
-      let selector = e.target.classList
-      selector.toggle('active', !selector.contains('active'))  
-    }
-    channel.send({
-      head: [id, channel.send.id, channel.mid++],
-      type: 'click'
-    })
-  }
-}
-function get_theme () {
-  return `
-    .sm_icon_button {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 30px;
-      box-sizing: border-box;
-      aspect-ratio: 1/1;
-      cursor: pointer;
-      border: 1px solid var(--primary_color);
-      // border-left: var(--bg_color);
-      background-color: var(--bg_color);
-      &.active {
-        background-color: var(--ac-2)
-      }
-      svg, svg * {
-        pointer-events:none;
-        fill: var(--primary_color);
-      }
-    }
-  `
-}
-// ----------------------------------------------------------------------------
-function shadowfy (props = {}, sheets = []) {
-  return element => {
-    const el = Object.assign(document.createElement('div'), { ...props })
-    const sh = el.attachShadow(shopts)
-    sh.adoptedStyleSheets = sheets
-    sh.append(element)
-    return el
-  }
-}
-function use_protocol (petname) {
-  return ({ protocol, state, on = { } }) => {
-    if (petname in state.aka) throw new Error('petname already initialized')
-    const { id } = state
-    const invalid = on[''] || (message => console.error('invalid type', message))
-    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
-    else return handshake
-    // ----------------------------------------
-    // @TODO: how to disconnect channel
-    // ----------------------------------------
-    function handshake (send) {
-      state.aka[petname] = send.id
-      const channel = state.net[send.id] = { petname, mid: 0, send, on }
-      return protocol ? channel : Object.assign(listen, { id })
-    }
-    function listen (message) {
-      const [from] = message.head
-      const by = state.aka[petname]
-      if (from !== by) return invalid(message) // @TODO: maybe forward
-      console.log(`[${id}]:${petname}>`, message)
-      const { on } = state.net[by]
-      const action = on[message.type] || invalid
-      action(message)
-    }
-  }
-}
-// ----------------------------------------------------------------------------
-function resources (pool) {
-  var num = 0
-  return factory => {
-    const prefix = num++
-    const get = name => {
-      const id = prefix + name
-      if (pool[id]) return pool[id]
-      const type = factory[name]
-      return pool[id] = type()
-    }
-    return Object.assign(get, factory)
-  }
-}
+ SM ICON BUTTON COMPONENT
+ ******************************************************************************/
+ // ----------------------------------------
+ // MODULE STATE & ID
+ var count = 0
+ const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+ const ID = dir.slice(cwd.length)
+ const STATE = { ids: {}, net: {} } // all state of component module
+ // ----------------------------------------
+ const sheet = new CSSStyleSheet
+ sheet.replaceSync(get_theme())
+ const default_opts = { }
+ const shopts = { mode: 'closed' }
+ // ----------------------------------------
+ module.exports = sm_icon_button
+ // ----------------------------------------
+ function sm_icon_button (opts = default_opts, protocol) {
+   // ----------------------------------------
+   // ID + JSON STATE
+   // ----------------------------------------
+   const id = `${ID}:${count++}` // assigns their own name
+   const status = {}
+   const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+   const cache = resources({})
+   let activeState = true
+   // ----------------------------------------
+   // OPTS
+   // ----------------------------------------
+   let { src, src_active, activate, link } = opts
+   // ----------------------------------------
+   // PROTOCOL
+   // ----------------------------------------
+   const on = {}
+   const channel = use_protocol('up')({ protocol, state , on })
+   // ----------------------------------------
+   // TEMPLATE
+   // ----------------------------------------
+   const el = document.createElement('div')
+   const shadow = el.attachShadow(shopts)
+   shadow.adoptedStyleSheets = [sheet]
+   ; link ? shadow.innerHTML = `<div class="sm_icon_button">
+     <a target="_blank" href=${link}>${src}</a>
+   </div>` :
+    shadow.innerHTML = `<div class="sm_icon_button">${src}</div>` 
+   const sm_icon_button = shadow.querySelector(".sm_icon_button")
+   // ----------------------------------------
+   // ELEMENTS
+   // ----------------------------------------
+   sm_icon_button.onclick = toggle_class
+   // ----------------------------------------
+   // INIT
+   // ----------------------------------------
+ 
+   return el
+ 
+   function toggle_class (e) {
+     if (activate) {
+       if (src_active) {
+         sm_icon_button.innerHTML = activeState ? src_active: src
+         activeState = !activeState
+       }
+       let selector = e.target.classList
+       selector.toggle('active', !selector.contains('active'))  
+     }
+     channel.send({
+       head: [id, channel.send.id, channel.mid++],
+       type: 'click'
+     })
+   }
+ }
+ function get_theme () {
+   return `
+     .sm_icon_button {
+       display: flex;
+       justify-content: center;
+       align-items: center;
+       height: 30px;
+       box-sizing: border-box;
+       aspect-ratio: 1/1;
+       cursor: pointer;
+       border: 1px solid var(--primary_color);
+       background-color: var(--bg_color);
+     }
+     .sm_icon_button.active {
+       background-color: var(--ac-2)
+     }
+     .sm_icon_button svg, .sm_icon_button svg * {
+       pointer-events:none;
+       fill: var(--primary_color);
+     }
+   `
+ }
+ // ----------------------------------------------------------------------------
+ function shadowfy (props = {}, sheets = []) {
+   return element => {
+     const el = Object.assign(document.createElement('div'), { ...props })
+     const sh = el.attachShadow(shopts)
+     sh.adoptedStyleSheets = sheets
+     sh.append(element)
+     return el
+   }
+ }
+ function use_protocol (petname) {
+   return ({ protocol, state, on = { } }) => {
+     if (petname in state.aka) throw new Error('petname already initialized')
+     const { id } = state
+     const invalid = on[''] || (message => console.error('invalid type', message))
+     if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+     else return handshake
+     // ----------------------------------------
+     // @TODO: how to disconnect channel
+     // ----------------------------------------
+     function handshake (send) {
+       state.aka[petname] = send.id
+       const channel = state.net[send.id] = { petname, mid: 0, send, on }
+       return protocol ? channel : Object.assign(listen, { id })
+     }
+     function listen (message) {
+       const [from] = message.head
+       const by = state.aka[petname]
+       if (from !== by) return invalid(message) // @TODO: maybe forward
+       console.log(`[${id}]:${petname}>`, message)
+       const { on } = state.net[by]
+       const action = on[message.type] || invalid
+       action(message)
+     }
+   }
+ }
+ // ----------------------------------------------------------------------------
+ function resources (pool) {
+   var num = 0
+   return factory => {
+     const prefix = num++
+     const get = name => {
+       const id = prefix + name
+       if (pool[id]) return pool[id]
+       const type = factory[name]
+       return pool[id] = type()
+     }
+     return Object.assign(get, factory)
+   }
+ }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/buttons/sm-icon-button.js")
 },{"_process":2}],21:[function(require,module,exports){
 (function (process,__filename){(function (){
@@ -4283,7 +5300,7 @@ const shopts = { mode: 'closed' }
 // ----------------------------------------
 module.exports = sm_text_button
 // ----------------------------------------
-function sm_text_button (opts = default_opts) {
+function sm_text_button (opts = default_opts, protocol) {
   // ----------------------------------------
   // ID + JSON STATE
   // ----------------------------------------
@@ -4299,14 +5316,14 @@ function sm_text_button (opts = default_opts) {
   // PROTOCOL
   // ----------------------------------------
   const on = {}
-  const channel = use_protocol('up')({ state , on })
+  const channel = use_protocol('up')({ protocol, state , on })
   // ----------------------------------------
   // TEMPLATE
   // ----------------------------------------
   const el = document.createElement('div')
   const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
-  shadow.innerHTML = `<div class="sm_text_button"> 
+  shadow.innerHTML = `<div class="sm_text_button" data-toggle_able="${opts.toggle_able}" > 
     ${opts.text}
   </div>`
   let sm_text_button = shadow.querySelector('.sm_text_button')
@@ -4321,8 +5338,18 @@ function sm_text_button (opts = default_opts) {
   return el
 
   function toggle_class (e) {
-    let selector = e.target.classList
-    selector.toggle('active', !selector.contains('active'))
+    let sm_text_button = e.target;
+    let toggle_able = sm_text_button.getAttribute('data-toggle_able');
+    console.log(toggle_able)
+    if (toggle_able === 'true') {
+      let selector = sm_text_button.classList;
+      selector.toggle('active', !selector.contains('active'));
+    }
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'click',
+      data: ''
+    });
   }
 }
 function get_theme () {
@@ -4339,10 +5366,10 @@ function get_theme () {
       border: 1px solid var(--primary_color);
       background-color: var(--bg_color);
       color: var(--primary_color);
-      &.active{
-        background-color: var(--ac-1);
-        color: var(--primary_color);
-      }
+    }
+    .sm_text_button.active{
+      background-color: var(--ac-1);
+      color: var(--primary_color);
     }
   `
 }
@@ -4492,27 +5519,27 @@ function get_theme () {
       padding: 0 5px;
       height: 30px;
       width: 100%;
-      .text_wrapper {
-        text-align: center;
-        font-size: 0.875em;
-        line-height: .5em;
-        padding: 12px 0;
-        height :30px;
-        box-sizing: border-box;
-        width: 90px;
-      }
-      .close_button {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-      &.active {
-        background-color: var(--primary_color);
-        color: var(--bg_color);
-        svg path {
-          fill: var(--bg_color)
-        }
-      }
+    }
+    .tab_button .text_wrapper {
+      text-align: center;
+      font-size: 0.875em;
+      line-height: .5em;
+      padding: 12px 0;
+      height :30px;
+      box-sizing: border-box;
+      width: 90px;
+    }
+    .tab_button .close_button {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .tab_button.active {
+      background-color: var(--primary_color);
+      color: var(--bg_color);
+    }
+    .tab_button.active svg path {
+      fill: var(--bg_color)
     }
   `
 }
@@ -4652,10 +5679,10 @@ function get_theme () {
       border: 1px solid var(--primary_color);
       background-color: var(--bg_color);
       color: var(--primary_color);
-      &.active {
-        background-color: var(--ac-1);
-        color: var(--primary_color);
-      }
+    }
+    .text_button.active {
+      background-color: var(--ac-1);
+      color: var(--primary_color);
     }
   `
 }
@@ -4782,8 +5809,9 @@ function year_button (opts = default_opts, protocol) {
   }
   function on_update_label (message) {
     const { data } = message
-    if (data.month || data.year) text_wrapper.innerHTML = `<b>${data.month.slice(0,3)}</b>${data.month && data.year && '/'}${data.year}`
-    else text_wrapper.innerHTML = 'Select date'
+    // if (data.month || data.year) text_wrapper.innerHTML = `<b>${data.month.slice(0,3)}</b>${data.month && data.year && '/'}${data.year}`
+    // else text_wrapper.innerHTML = 'Select date'
+    text_wrapper.innerHTML = data.year
   }
 }
 function get_theme () {
@@ -4800,25 +5828,25 @@ function get_theme () {
       padding: 0 4px;
       height: 30px;
       width: 100%;
-      svg *{
-        fill: var(--primary_color);
-      }
-      &.active{
-        background-color:var(--ac-1);
-        svg {
-          rotate: 90deg;
-        }
-      }
-      .text_wrapper {
-        text-align: center;
-        font-size: 0.875em;
-        line-height: .5em;
-        padding: 11px 0;
-        height: 30px;
-        box-sizing: border-box;
-        width: 100px;
-        letter-spacing: -1px;
-      }
+    }
+    .year_button svg *{
+      fill: var(--primary_color);
+    }
+    .year_button.active{
+      background-color:var(--ac-1);
+    }
+    .year_button.active svg {
+      rotate: 90deg;
+    }
+    .year_button .text_wrapper {
+      text-align: center;
+      font-size: 0.875em;
+      line-height: .5em;
+      padding: 11px 0;
+      height: 30px;
+      box-sizing: border-box;
+      width: 100px;
+      letter-spacing: -1px;
     }
   `
 }
@@ -4910,7 +5938,7 @@ function commingsoon (opts = default_opts, protocol) {
   const {
     banner_cover = `${prefix}/banner_cover.svg`,
     tree_character = `${prefix}/tree_character.png`,
-    icon_pdf_reader
+    icon_pdf_reader_solid = `${prefix}/icon_pdf_reader_solid.svg`,
   } = img_src
   // ----------------------------------------
   // PROTOCOL
@@ -4946,8 +5974,8 @@ function commingsoon (opts = default_opts, protocol) {
     const on = { 'toggle_active_state': toggle_active_state }
     const protocol = use_protocol('windowbar')({ state, on })
     const opts = {
-      name: 'Coming_soon.pdf', 
-      src: icon_pdf_reader,
+      name: 'post-growth-program.pdf', 
+      src: icon_pdf_reader_solid,
       data
     }
     const element = window_bar(opts, protocol)
@@ -4981,36 +6009,36 @@ function get_theme () {
       background-color: var(--bg_color);
       border: 1px solid var(--primary_color);
       margin-bottom: 30px;
-      /* This covers background-image will change to an image */
-      .cover_image {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        img {
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          width: auto;
-          height: 100%;
-          transform: translate(-50%, -50%);
-        }
-      }
-      /* Cover image alignment */
-      .content_wrapper {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-        position: relative;
-        z-index: 1;
-        color: var(--primary_color);
-        text-align: center;
-        img {
-          width: 300px;
-          height: auto;
-        }
-      }
+    }
+    /* This covers background-image will change to an image */
+    .cover_content .cover_image {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    .cover_content .cover_image img {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: auto;
+      height: 100%;
+      transform: translate(-50%, -50%);
+    }
+    /* Cover image alignment */
+    .cover_content .content_wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      position: relative;
+      z-index: 1;
+      color: var(--primary_color);
+      text-align: center;
+    }
+    .cover_content img {
+      width: 300px;
+      height: auto;
     }
   `
 }
@@ -5065,9 +6093,9 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/comingsoon/comingsoon.js")
-},{"_process":2,"window-bar":51}],26:[function(require,module,exports){
+},{"_process":2,"window-bar":52}],26:[function(require,module,exports){
 (function (process,__filename){(function (){
-const mission_statement = require('mission-statement')
+const mission_statement = require('manifesto/manifesto')
 const important_documents = require('important-documents')
 const our_members = require('our-members')
 const tools = require('tools')
@@ -5108,7 +6136,7 @@ function consortium_page (opts = default_opts, protocol) {
     icon_folder,
   } = img_src
   const icons_data = [{
-    name: 'mission_statement',
+    name: 'manifesto',
     type: '.md',
     img: icon_pdf_reader,
   },{
@@ -5227,62 +6255,60 @@ function get_theme () {
       padding:30px 10px;
       opacity: 1;
       background-size: 16px 16px;
-      .icon_wrapper {
-        display: flex;
-        flex-wrap: wrap;
-        flex-direction: row;
-        gap: 25px;
-        width: fit-content;
-        height: fit-content;
-        align-items: center;
-        user-select: none;
-        &:hover {
-          cursor: pointer;
-        }
-      }
-      .popup_wrapper {
-        display: inline;
-        position: absolute;
-        top: 0;
-        left: 0;
-        z-index: 20;
-        .mini_popup_wrapper {
-          display: flex;
-          flex-direction: column;
-          width: 100%;
-        }
-      }
+      position: relative;
+      overflow-scroll;
+    }
+    .main_wrapper .icon_wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      flex-direction: row;
+      gap: 25px;
+      width: fit-content;
+      height: fit-content;
+      align-items: center;
+      user-select: none;
+      position:sticky;
+      top:30px;
+    }
+    .main_wrapper .icon_wrapper:hover {
+      cursor: pointer;
+    }
+    .main_wrapper .popup_wrapper {
+      display: inline;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 20;
+    }
+    .main_wrapper .popup_wrapper .mini_popup_wrapper {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
     }
     @container (min-width: 510px) {
-      .main_wrapper {
-        .icon_wrapper {
-          flex-direction: column;
-        }
-        .main_wrapper {
-          flex-direction: row;
-        }
-        .popup_wrapper {
-          display: flex;
-          flex-direction: column;
-          position: relative;
-          top: 0;
-        }
+      .main_wrapper .icon_wrapper {
+        flex-direction: column;
+      }
+      .main_wrapper .main_wrapper {
+        flex-direction: row;
+      }
+      .main_wrapper .popup_wrapper {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        top: 0;
       }
     }
     @container (min-width: 768px) {
-      .main_wrapper {
-        .popup_wrapper {
-          margin-left: 100px;
-        }
+      .main_wrapper .popup_wrapper {
+        margin-left: 100px;
       }
     }
     @container (min-width: 1200px) {
-      .main_wrapper {
-        .popup_wrapper {
-          flex-direction: row;
-          gap: 20px;
-          margin-left: 200px;
-        }
+      .main_wrapper .popup_wrapper {
+        flex-direction: row;
+        gap: 20px;
+        margin-left: 200px;
       }
     }
   `
@@ -5338,7 +6364,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/consortium-page/consortium-page.js")
-},{"_process":2,"app-icon":10,"important-documents":29,"mission-statement":30,"our-members":34,"tools":50}],27:[function(require,module,exports){
+},{"_process":2,"app-icon":10,"important-documents":29,"manifesto/manifesto":30,"our-members":35,"tools":51}],27:[function(require,module,exports){
 (function (process,__filename){(function (){
 const comingsoon = require('comingsoon')
 const app_footer = require('app-footer')
@@ -5416,12 +6442,12 @@ function get_theme () {
     }
     .main-wrapper {
       container-type: inline-size;
-      .main {
-        margin: 0;
-        padding: 30px 10px;
-        opacity: 1;
-        background-size: 16px 16px;
-      }
+    }
+    .main-wrapper .main {
+      margin: 0;
+      padding: 30px 10px;
+      opacity: 1;
+      background-size: 16px 16px;
     }
     @container (min-width: 856px) {
       .main {
@@ -5545,21 +6571,27 @@ function home_page (opts = default_opts, protocol) {
     main.append(element)
   }
   { // app timeline mini
-    const on = {}
+    const on = {
+      'navigate': navigate
+    }
     const protocol = use_protocol('app_timeline_mini')({ state, on })
     const opts = { data }
     const element = shadowfy()(app_timeline_mini(opts, protocol))
     main.append(element)
   }
   { // app projects mini
-    const on = {}
+    const on = {
+      'navigate': navigate
+    }
     const protocol = use_protocol('app_projects_mini')({ state, on })
     const opts = { data }
     const element = shadowfy()(app_projects_mini(opts, protocol))
     main.append(element)
   }
   { // app about us
-    const on = {}
+    const on = {
+      'navigate': navigate
+    }
     const protocol = use_protocol('app_about_us')({ state, on })
     const opts = { data }
     const element = shadowfy()(app_about_us(opts, protocol))
@@ -5577,6 +6609,14 @@ function home_page (opts = default_opts, protocol) {
   // ----------------------------------------
 
   return el
+
+  async function navigate( {data} ){
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'navigate',
+      data
+    })
+  }
 }
 function get_theme () {
   return `
@@ -5585,12 +6625,12 @@ function get_theme () {
     }
     .main-wrapper {
       container-type: inline-size;
-      .main {
-        margin: 0;
-        padding: 30px 10px;
-        opacity: 1;
-        background-size: 16px 16px;
-      }
+    }
+    .main-wrapper .main {
+      margin: 0;
+      padding: 30px 10px;
+      opacity: 1;
+      background-size: 16px 16px;
     }
     @container (min-width: 856px) {
       .main {
@@ -5703,8 +6743,12 @@ function important_documents (opts = default_opts, protocol) {
     <div class="documents_content">
       <h2>Visit links for more info</h2>
       <ol type="1">
-        <li>Manifesto</li>
-        <li>Organization github repository</li>
+        <li> <a href="https://github.com/dat-ecosystem/organization/blob/main/code-of-conduct.md" target="_blank">code of conduct</a> </li>
+        <li> <a href="https://github.com/dat-ecosystem/organization/blob/main/code-of-conduct-contact.md" target="_blank">code of conduct - reporting guide</a> </li>
+        <li> <a href="https://github.com/dat-ecosystem/comm-comm#readme" target="_blank">comm comm calls</a> </li>
+        <li> <a href="https://github.com/dat-ecosystem/organization/tree/main/consortium/meeting%20notes" target="_blank">consortium meeting notes</a> </li>
+        <li> <a href="https://github.com/dat-ecosystem/organization/tree/main/assets/logo%20%26%20visuals%20final" target="_blank">visuals</a> </li>
+        <li> <a href="https://github.com/dat-ecosystem/organization" target="_blank">organization repository</a> </li>
       </ol>
     </div>
   </div>`
@@ -5748,28 +6792,26 @@ function get_theme () {
     }
     .important_documents {
       display: none;
-      .documents_content {
-        position: relative;
-        display: flex;
-        width: 100vw;
-        height: 100vh;
-        flex-direction: column;
-        padding: 10px;
-        background-size: 10px 10px;
-        background-color: var(--bg_color);
-        border: 1px solid var(--primary_color);
-        margin-bottom: 30px;
-        h2 {
-          margin: 0;
-        }
-      }
+    }
+    .important_documents .documents_content {
+      position: relative;
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+      flex-direction: column;
+      padding: 10px;
+      background-size: 10px 10px;
+      background-color: var(--bg_color);
+      border: 1px solid var(--primary_color);
+      margin-bottom: 30px;
+    }
+    .important_documents .documents_content h2 {
+      margin: 0;
     }
     @container (min-width: 510px) {
-      .important_documents {
-        .documents_content {
-          width: auto;
-          height: auto;
-        }
+      .important_documents .documents_content {
+        width: auto;
+        height: auto;
       }
     }
   `
@@ -5825,9 +6867,10 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/important-documents/important-documents.js")
-},{"_process":2,"window-bar":51}],30:[function(require,module,exports){
+},{"_process":2,"window-bar":52}],30:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
+const scrollbar = require('scrollbar')
 /******************************************************************************
   MISSION STATEMENT COMPONENT
 ******************************************************************************/
@@ -5843,9 +6886,21 @@ sheet.replaceSync(get_theme())
 const default_opts = { }
 const shopts = { mode: 'closed' }
 // ----------------------------------------
-module.exports = mission_statement
+module.exports = manifesto
 // ----------------------------------------
-function mission_statement (opts = default_opts, protocol) {
+function manifesto (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // RESOURCE POOL (can't be serialized)
+  // ----------------------------------------
+  const ro = new ResizeObserver(entries => {
+    console.log('ResizeObserver:terminal:resize')
+    const scroll_channel = state.net[state.aka.scrollbar]
+    scroll_channel.send({
+      head: [id, scroll_channel.send.id, scroll_channel.mid++],
+      refs: { },
+      type: 'handle_scroll',
+    })
+  })
   // ----------------------------------------
   // ID + JSON STATE
   // ----------------------------------------
@@ -5875,14 +6930,62 @@ function mission_statement (opts = default_opts, protocol) {
   shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `<div class="mission_statement">
     <div class="window_bar_wrapper"></div>
-    <div class="mission_content">
-      <h2>OUR MISSION</h2>
-      <p>We aim to connect and support the dat community, promoting user rights and decentralized democracy, dat ecosystem provides resources to advance your hyprecore project.</p>
-      <h2>OUR MISSION</h2>
-      <p>We aim to connect and support the dat community, promoting user rights and decentralized democracy, dat ecosystem provides resources to advance your hyprecore project.</p>    
+    <div class="main_wrapper">
+
+      <div class="mission_content">
+        <h2># MANIFESTO </h2>
+        <p>We, the "Dat Ecosystem" members, come together to achieve the following goals:</p>
+        <ul>
+          <li>Share our knowledge on building decentralized systems.</li>
+          <li>Publish our work under permissive, open culture, licenses.</li>
+          <li>Build decentralized systems that profit the general public and empower users.</li>
+          <li>Have dat protocols (e.g. <a href="https://hypercore-protocol.org/" target="_blank">hypercore-protocol</a> or similar) as a foundation of our work.</li>
+          <li>Promote our shared goals with the public.</li>
+          <li>Develop solutions to shared technical problems.</li>
+          <li>Find and invite new members that share our goals.</li>
+          <li>Promote the adoption of shared technology through documentation or standardization.</li>
+        </ul>
+        <p>This group is <b>governed by individuals</b> that form together "<i>the Consortium</i>". The Consortium works to:</p>
+        <ul>
+          <li>Enact our <a href="https://github.com/dat-ecosystem/organization/blob/main/code-of-conduct.md" targer="_blank">code of conduct</a>.</li>
+          <li>Raise and maintain funds and assets to fulfill the goals.</li>
+          <li>Use decentralized systems wherever feasible.</li>
+          <li>Publicly and transparently document the process and offer the public a means to comment.</li>
+          <li>Coordinate efforts by members.</li>
+          <li>Communicate on <a href="https://github.com/dat-ecosystem/dat-ecosystem.github.io#join-the-dat-ecosystem-chat-network" target="_blank">discord/cabal</a> </li>
+        </ul>
+        <p>
+          Proposals are submitted as pull requests to /consortium/decisions/{YYY}.{MM}.{DD}-{proposal_name}.md in <a href="https://github.com/dat-ecosystem/organization/tree/main" target="_blank">organization repository.</a><br>
+          Proposals to change the manifesto are submitted as pull requests to change the manifesto itself.<br>
+          Proposer needs to tag all consortium members in the pull request and notify consortium members in the active consortium communication channel.<br>
+        </p> 
+        <p>
+          Decisions will be done through voting by consortium members. The voting period lasts 2 weeks.<br>
+          Regular voting items are accepted unless there is opposition by at least one Consortium member. Members may state opposition beforehands.<br>
+        </p>   
+        <p>
+          The addition of a member or changes to this Manifesto requires unanimous support by all Consortium members.<br>
+          The removal of one member requires unanimous support by all Consortium members except by the member in question.<br>
+          After a consortium member is tagged in a proposals pull request and the consortium communication channel and that member does not respond within 3 months, their consortium membership becomes dormant, which means they do not count as consortium member in the context of deciding about any proposals.<br>
+          Dormant consortium members can reactivate themselves at any given time to become normal consortium members again unilateraly.<br>
+          Consortium Members can end their consortium membership and remove themselves from the consortium membership list at any given time unilateraly.<br>
+        </p>
+        <p>Consortium members <i>(alphabetic order)</i>:</p>
+        <ul>
+          <li><a href="https://github.com/cblgh" target="_blank">Alexander Cobleigh</a></li>
+          <li><a href="https://github.com/serapath" target="_blank">Alexander Praetorius</a></li>
+          <li><a href="https://github.com/dpaez" target="_blank">Diego Paez</a></li>
+          <li><a href="https://github.com/frando" target="_blank">Franz Heinzmann</a></li>
+          <li><a href="https://github.com/zootella" target="_blank">Kevin Faaborg</a></li>
+          <li><a href="https://github.com/nbreznik" target="_blank">Nina Breznik</a></li>
+        <ul>
+      </div>
+
     </div>
   </div>`
   const mission_statement_wrapper = shadow.querySelector('.mission_statement')
+  const mission_content = shadow.querySelector('.mission_content')
+  const main_wrapper = shadow.querySelector('.main_wrapper')
   // ----------------------------------------
   const window_bar_wrapper = shadow.querySelector('.window_bar_wrapper').attachShadow(shopts)
   // ----------------------------------------
@@ -5894,7 +6997,7 @@ function mission_statement (opts = default_opts, protocol) {
     }
     const protocol = use_protocol('windowbar')({ state, on })
     const opts = {
-      name: 'Mission_statement.md', 
+      name: 'MANIFESTO.md', 
       src: icon_pdf_reader,
       data
     }
@@ -5903,6 +7006,47 @@ function mission_statement (opts = default_opts, protocol) {
     async function toggle_active_state (message) {
       const { active_state } = message.data
       if (active_state === 'active') mission_statement_wrapper.style.display = 'none'
+    }
+  }
+  { // scrollbar
+    const on = { 'set_scroll': on_set_scroll, status: onstatus }
+    const protocol = use_protocol('scrollbar')({ state, on })
+    opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_up
+    opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_down  
+    const scroll_opts = { data }
+    const element = scrollbar(scroll_opts, protocol)
+
+    const channel = state.net[state.aka.scrollbar]
+    mission_content.onscroll = onscroll
+    ro.observe(main_wrapper)
+
+    main_wrapper.append(shadowfy()(element))
+
+    function onscroll (event) {
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        refs: { },
+        type: 'handle_scroll',
+      })
+    }
+    function on_set_scroll (message) {
+      console.log('set_scroll', message) 
+      setScrollTop(message.data)
+    }
+    function onstatus (message) {
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        refs: { cause: message.head },
+        type: 'update_size',
+        data: {
+          sh: mission_content.scrollHeight,
+          ch: mission_content.clientHeight,
+          st: mission_content.scrollTop
+        }
+      })
+    }
+    function setScrollTop (value) {
+      mission_content.scrollTop = value
     }
   }
   // ----------------------------------------
@@ -5923,28 +7067,49 @@ function get_theme () {
     }
     .mission_statement {
       display: none;
-      .mission_content {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        width: 100vw;
-        height: 100vh;
-        padding: 10px;
-        background-size: 10px 10px;
-        background-color: var(--bg_color);
-        border: 1px solid var(--primary_color);
-        margin-bottom: 30px;
-        h2 {
-          margin: 0;
-        }
-      }
     } 
+    .main_wrapper{
+      display: flex;
+      --s: 15px; /* control the size */
+      --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
+      background:
+        repeating-conic-gradient(at 33% 33%,var(--_g)),
+        repeating-conic-gradient(at 66% 66%,var(--_g)),
+        var(--bg_color_3);  /* second color */  
+      background-size: var(--s) var(--s);  
+      border: 1px solid var(--primary_color);
+    }
+    .mission_statement .mission_content {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      font-size:0.87em;
+      letter-spacing: -1px;
+      line-height: 18px;
+      width: 100%;
+      height: 100vh;
+      padding: 10px;
+      overflow:scroll;
+      scrollbar-width: none; /* For Firefox */
+      background-size: 10px 10px;
+      border: 1px solid var(--primary_color);
+      background-color: var(--bg_color);
+    }
+    a{
+      color:blue;
+    }
+    .mission_statement .mission_content::-webkit-scrollbar {
+      display: none;
+    }
+    .mission_statement .mission_content h2 {
+      margin: 0;
+    }
     @container (min-width: 510px) {
-      .mission_statement {
-        .mission_content {
-          width: auto;
-          height: auto;
-        }
+      .mission_statement .mission_content {
+        width: auto;
+        height: 100%;
+        max-width:1200px;
+        max-height:600px;
       }
     }
   `
@@ -5999,8 +7164,8 @@ function resources (pool) {
     return Object.assign(get, factory)
   }
 }
-}).call(this)}).call(this,require('_process'),"/src/node_modules/mission-statement/mission-statement.js")
-},{"_process":2,"window-bar":51}],31:[function(require,module,exports){
+}).call(this)}).call(this,require('_process'),"/src/node_modules/manifesto/manifesto.js")
+},{"_process":2,"scrollbar":39,"window-bar":52}],31:[function(require,module,exports){
 (function (process,__filename){(function (){
 const day_button = require('buttons/day-button')
 /******************************************************************************
@@ -6039,6 +7204,7 @@ function month_card (opts = default_opts, protocol) {
     toggle_month_button,
     toggle_all_days,
     toggle_day_highlight,
+    toggle_day_button_visibility,
   }
   const up_channel = use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
@@ -6069,7 +7235,7 @@ function month_card (opts = default_opts, protocol) {
         up_channel.send({
           head: [id, up_channel.send.id, up_channel.mid++],
           type: 'toggle_day_button',
-          data: petname
+          data: label + ' ' + ('0' + i).slice(-2)
         })
       }
     }
@@ -6083,17 +7249,21 @@ function month_card (opts = default_opts, protocol) {
   return el
 
   function onclick (e) {
+    toggle_month_button()
     up_channel.send({
       head: [id, up_channel.send.id, up_channel.mid++],
       type: 'toggle_month_button',
       data: label
     })
   }
-  async function toggle_month_button ({ data }) {
+  async function toggle_month_button () {
     month_name.classList.toggle('active')
   }
   async function toggle_all_days ({ data }) {
-    const day = new Date(data).getDate()
+    let day = new Date(data).getDate()
+    if(!day){
+      day = new Date(data + ', 2000').getDate()
+    }
     const petname = `day_${day}`
     const channel = state.net[state.aka[petname]]
     channel.send({
@@ -6113,32 +7283,43 @@ function month_card (opts = default_opts, protocol) {
       data: ''
     })
   }
+
+  async function toggle_day_button_visibility ({ data }) {
+    const petname = 'day_29'
+    const channel = state.net[state.aka[petname]]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'toggle_visibility',
+      data
+    })
+  }
 }
 function get_theme () {
   return `
     .month_card {
-      /* box-sizing: border-box; */
       width: 140px;
-      height: 130px;
       border: 1px solid var(--primary_color);
-      border-right-width: 4px;
-      background-color: var(--bg_color);
-      margin-top: -1px;
-      margin-left: -1px;
-      .month_name {
-        display: block;
-        text-align: center;
-        padding: 5px 0;
-        cursor: pointer;
-        &.active {
-          background-color: var(--ac-1)
-        }
-      }
-      .days_wrapper {
-          display: flex;
-        flex-wrap: wrap;
-        border-top: 1px solid var(--primary_color);
-      }
+      background-image: radial-gradient(var(--bg_color_3) 1px, var(--bg_color_2) 2px);
+      background-size: 8px 8px;
+      min-height:130px;
+      height:100%;
+    }
+    .month_card .month_name {
+      display: block;
+      text-align: center;
+      padding: 5px 0;
+      cursor: pointer;
+      box-size: border-box;
+      border: 0px solid var(--primary_color);
+      border-width: 0 1px 2px 0;
+      background-color:var(--bg_color);
+    }
+    .month_card .month_name.active {
+      background-color: var(--ac-1)
+    }
+    .month_card .days_wrapper {
+      display: flex;
+      flex-wrap: wrap;
     }
   `
 }
@@ -6242,9 +7423,9 @@ function month_filter (opts = default_opts, protocol) {
   // OPTS
   // ----------------------------------------
   const { data } = opts
-  const month_data = [
+  let month_data = [
     { name: 'January', days: 31 },
-    { name: 'February', days: 28 },
+    { name: 'February', days: 29 },
     { name: 'March', days: 31 },
     { name: 'April', days: 30 },
     { name: 'May', days: 31 },
@@ -6261,8 +7442,29 @@ function month_filter (opts = default_opts, protocol) {
   // ----------------------------------------
   const on = { 'update_calendar': update_calendar }
   const up_channel = use_protocol('up')({ protocol, state, on })
-
+  
   function update_calendar ({ data }) {
+    if (active_day) {
+      const key = `month_${new Date(active_day + ', 2000').getMonth()}`
+      const channel = state.net[state.aka[key]]
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'toggle_all_days',
+        data: active_day
+      })
+      active_day = ''
+    }
+    if (active_month) {
+      const key = `month_${new Date('01 '+ active_month + ', 2000').getMonth()}`
+      const active_channel = state.net[state.aka[key]]
+      active_channel.send({
+        head: [id, active_channel.send.id, active_channel.mid++],
+        type: 'toggle_month_button',
+        data: ''
+      })
+      active_month = ''
+    }
+    
     active_date_prev.forEach(date => {
       const petname = `month_${new Date(date).getMonth()}`
       const channel = state.net[state.aka[petname]]
@@ -6273,6 +7475,19 @@ function month_filter (opts = default_opts, protocol) {
       })
     })
     active_date_prev = data
+
+    //Leap year check
+    const year = Number(data[0].split(' ').slice(-1)[0])
+    month_data[1] = ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0) ? 
+    { name: 'February', days: 29 } : { name: 'February', days: 28 }
+    const petname = 'month_1'
+    const channel = state.net[state.aka[petname]]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'toggle_day_button_visibility',
+      data: month_data[1].days === 29 ? true : false
+    })
+
     data.forEach(date => {
       const petname = `month_${new Date(date).getMonth()}`
       const channel = state.net[state.aka[petname]]
@@ -6316,48 +7531,62 @@ function month_filter (opts = default_opts, protocol) {
     const elements = month_data.map(make_card)
     month_filter_wrapper.append(...elements)
     async function toggle_month_button (message) {
-      const { head: [by] } = message
-      if (active_month) {
-        const active_channel = state.net[active_month]
+      const { data } = message
+      if (active_day) {
+        const key = `month_${new Date(active_day + ', 2000').getMonth()}`
+        const channel = state.net[state.aka[key]]
+        channel.send({
+          head: [id, channel.send.id, channel.mid++],
+          type: 'toggle_all_days',
+          data: active_day
+        })
+        active_day = ''
+      }
+      if (active_month && active_month !== data) {
+        const key = `month_${new Date('01 '+ active_month + ', 2000').getMonth()}`
+        const active_channel = state.net[state.aka[key]]
         active_channel.send({
           head: [id, active_channel.send.id, active_channel.mid++],
           type: 'toggle_month_button',
           data: ''
         })
       }
-      if (active_month !== by) {
-        const by_channel = state.net[by]
-        by_channel.send({
-          head: [id, by_channel.send.id, by_channel.mid++],
-          type: 'toggle_month_button',
-          data: ''
-        })
-      }
-      const value = active_month = active_month === by ? '' : by
+      active_month = active_month === data ? '' : data
       up_channel.send({
         head: [id, up_channel.send.id, up_channel.mid++],
         type: 'set_scroll',
-        data: { filter: 'MONTH', value }
+        data: { filter: 'MONTH', value: active_month }
       })
     }
     async function toggle_day_button (message) {
       const { data } = message
-      toggle_month_button({ head: [active_month] })
-      if (active_day && active_day !== data) {
-        const key = `month_card-${new Date(active_day).getMonth()}`
-        const channel = state.net[state.aka[key]]
-        if (!channel) return
-        channel.send({
-          head: [id, channel.send.id, channel.mid++],
-          type: 'toggle_all_days',
-          data: active_day
+      if (active_month) {
+        const key = `month_${new Date('01 '+ active_month + ', 2000').getMonth()}`
+        const active_channel = state.net[state.aka[key]]
+        active_channel.send({
+          head: [id, active_channel.send.id, active_channel.mid++],
+          type: 'toggle_month_button',
+          data: ''
         })
+        active_month = ''
       }
-      const value = active_day = active_day === data ? '' : data
+
+      if (active_day && active_day !== data) {
+        const key = `month_${new Date(active_day + ', 2000').getMonth()}`
+        const channel = state.net[state.aka[key]]
+        if (channel) 
+          channel.send({
+            head: [id, channel.send.id, channel.mid++],
+            type: 'toggle_all_days',
+            data: active_day
+          })
+      }
+      active_day = active_day === data ? '' : data
+
       up_channel.send({
         head: [id, up_channel.send.id, up_channel.mid++],
         type: 'set_scroll',
-        data: { filter: 'DATE', value }
+        data: { filter: 'DATE', value: active_day }
       })
     }
   }
@@ -6376,8 +7605,9 @@ function month_filter (opts = default_opts, protocol) {
     scrollbar_wrapper_shadow.append(element)
     
     function onscroll (event) {
-      channel.send({
-        head: [id, channel.send.id, channel.mid++],
+      const scroll_channel = state.net[state.aka.scrollbar]
+      scroll_channel.send({
+        head: [id, scroll_channel.send.id, scroll_channel.mid++],
         refs: { },
         type: 'handle_scroll',
       })
@@ -6386,15 +7616,16 @@ function month_filter (opts = default_opts, protocol) {
       console.log('set_scroll', message) 
       setScrollLeft(message.data)
     }
+    const channel = state.net[state.aka.scrollbar]
     function onstatus (message) {
       channel.send({
         head: [id, channel.send.id, channel.mid++],
         refs: { cause: message.head },
         type: 'update_size',
         data: {
-          sh: month_filter_wrapper.scrollHeight,
-          ch: month_filter_wrapper.clientHeight,
-          st: month_filter_wrapper.scrollTop
+          sh: month_filter_wrapper.scrollWidth, 
+          ch: month_filter_wrapper.clientWidth, 
+          st: month_filter_wrapper.scrollLeft
         }
       })
     }
@@ -6415,13 +7646,14 @@ function get_theme () {
       height: 131px;
       width: 100%;
       border: 1px solid var(--primary_color);
+      border-width: 1px 1px 3px 1px;
       overflow-x: scroll;
       overflow-y: hidden;
-
-      &::-webkit-scrollbar {
-        display: none;
-      }
+      scrollbar-width:none;
     }
+    ::-webkit-scrollbar {
+      display: none;
+    } 
   `
 }
 // ----------------------------------------------------------------------------
@@ -6475,7 +7707,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/month-filter/month-filter.js")
-},{"_process":2,"month-card":31,"scrollbar":38}],33:[function(require,module,exports){
+},{"_process":2,"month-card":31,"scrollbar":39}],33:[function(require,module,exports){
 (function (process,__filename){(function (){
 const icon_button = require('buttons/icon-button')
 const logo_button = require('buttons/logo-button')
@@ -6524,7 +7756,11 @@ function navbar (opts = default_opts, protocol) {
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
-  const on = { 'theme': handle_active_change }
+  const on = { 
+    'theme': handle_active_change,
+    'do_page_change': do_page_change,
+    'change_highlight': change_highlight
+  }
   const channel = use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
   // TEMPLATE
@@ -6599,7 +7835,7 @@ function navbar (opts = default_opts, protocol) {
     }
   }
   { // text buttons
-    const names = ['HOME', 'PROJECTS', 'GROWTH_PROGRAM', 'TIMELINE']
+    const names = ['HOME', 'PROJECTS', 'DAT_GARDEN', 'TIMELINE']
     function make_button (text) {
       const petname = text
       const on = { 'click': onclick }
@@ -6757,77 +7993,91 @@ function navbar (opts = default_opts, protocol) {
     })
     state.status.active_button = be_channel.send.id
   }
+  function change_highlight ( {head, data: page} ) {
+    const ex_channel = state.net[state.status.active_button]
+    state.status.active_button = state.aka[page]
+    const be_channel = state.net[state.status.active_button]
+
+    if (be_channel) be_channel.send({ // new active nav button
+      head: [id, be_channel.send.id, be_channel.mid++],
+      refs: { cause: head },
+      type: 'activate',
+    })
+    if (ex_channel) ex_channel.send({ // old active nav button
+      head: [id, ex_channel.send.id, ex_channel.mid++],
+      refs: { cause: head },
+      type: 'inactivate',
+    })
+  }
 }
 function get_theme () {
   return `
     .navbar_wrapper {
       container-type: inline-size;
       width: 100%;
-      .navbar {
-        display: block;
-        width: 100%;
-        height: 40px;
-        overflow: hidden;
-        border-bottom: 1px solid var(--primary_color);
-        --s: 15px; /* control the size */
-        --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
-        background:
-            repeating-conic-gradient(at 33% 33%,var(--_g)),
-            repeating-conic-gradient(at 66% 66%,var(--_g)),
-            var(--bg_color_3);  /* second color */
-        background-size: var(--s) var(--s);
-        &.active {
-          height: max-content;
-        }
-        .nav_toggle_wrapper {
-          display: flex;
-          width:1 00%;
-          justify-content: stretch;
-          .logo_wrapper{
-            width: 100% !important;
-            flex-grow: 1;
-          }
-          .nav_toggle {
-            display: block;
-          }
-        }
-        .page_btns_wrapper {
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          .text_button_wrapper {
-            width: 100%;
-            flex-grow: 1;
-          }
-        }
-        .icon_btn_wrapper {
-          display: flex;
-          justify-content: flex-start;
-        }
-      }
+    }
+    .navbar {
+      display: block;
+      width: 100%;
+      height: 40px;
+      overflow: hidden;
+      border-bottom: 1px solid var(--primary_color);
+      --s: 15px; /* control the size */
+      --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
+      background:
+          repeating-conic-gradient(at 33% 33%,var(--_g)),
+          repeating-conic-gradient(at 66% 66%,var(--_g)),
+          var(--bg_color_3);  /* second color */
+      background-size: var(--s) var(--s);
+    }
+    .navbar.active {
+      height: max-content;
+    }
+    .nav_toggle_wrapper {
+      display: flex;
+      width:1 00%;
+      justify-content: stretch;
+    }
+    .nav_toggle_wrapper .logo_wrapper{
+      width: 100% !important;
+      flex-grow: 1;
+    }
+    .nav_toggle_wrapper .nav_toggle {
+      display: block;
+    }
+    .page_btns_wrapper {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .page_btns_wrapper .text_button_wrapper {
+      width: 100%;
+      flex-grow: 1;
+    }
+    .icon_btn_wrapper {
+      display: flex;
+      justify-content: flex-start;
     }
     @container(min-width: 899px) {
-      .navbar_wrapper {
-        .navbar {
-          display: flex;
-          .nav_toggle_wrapper {
-            width: max-content;
-            display: flex;
-            .logo_wrapper {
-              width: max-content !important;
-            }
-            .nav_toggle {
-              display: none;
-            }
-          }
-          .page_btns_wrapper {
-            flex-direction: row;
-            .text_button_wrapper {
-              width: max-content !important;
-              flex-grow: unset;
-            }
-          }
-        }
+      .navbar_wrapper .navbar {
+        display: flex;
+      }
+      .navbar_wrapper .navbar .nav_toggle_wrapper {
+        width: max-content;
+        display: flex;
+      }
+      .nav_toggle_wrapper .logo_wrapper {
+        width: max-content !important;
+      }
+      .nav_toggle_wrapper .nav_toggle {
+        display: none;
+      }
+      .navbar_wrapper .navbar .page_btns_wrapper {
+        flex-direction: row;
+      }
+      .page_btns_wrapper .text_button_wrapper {
+        width: max-content !important;
+        flex-grow: unset;
       }
     }
   `
@@ -6884,8 +8134,19 @@ function resources (pool) {
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/navbar/navbar.js")
 },{"_process":2,"buttons/icon-button":16,"buttons/logo-button":17,"buttons/text-button":23}],34:[function(require,module,exports){
+module.exports=[
+    { "name": "Alexander Cobleigh", "organization": "Cabal", "link": "https://github.com/cblgh" },
+    { "name": "Alexander Praetorius", "organization": "DatDot & WizardAmigos", "link": "https://github.com/serapath" },
+    { "name": "Diego Paez", "organization": "Geut Studio", "link": "https://github.com/dpaez" },
+    { "name": "Franz Heinzmann", "organization": "Sonar", "link": "https://github.com/frando" },
+    { "name": "Kevin Faaborg", "organization": "Ara", "link": "https://github.com/zootella" },
+    { "name": "Nina Breznik", "organization": "DatDot & WizardAmigos", "link": "https://github.com/nbreznik" }
+  ]  
+},{}],35:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
+const our_members = require('./members.json');
+
 /******************************************************************************
   OUR MEMBERS COMPONENT
 ******************************************************************************/
@@ -6938,23 +8199,29 @@ function our_member (opts = default_opts, protocol) {
     <div class="windowbar"></div>
     <div class="member_content">
       <h2>## our members</h2>
-      <table>
-        <thead>
-          <tr>
-            <td> s.no </td><td> names </td><td> socials </td>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td> 01 </td><td> alexander </td><td> cabal  </td>
-          </tr>
-          <tr>
-            <td> 02 </td><td> alexander praetorius </td><td> geut/she </td>
-          </tr>
-        </tbody>
-      </table>  
     </div>
   </div>`
+
+  // Function to create a table from the members data
+  function createTable(data) {
+    const tableHeader = '<thead><tr><td> no. </td><td> name </td><td> organization </td></tr></thead>'
+    const tableRows = data.map((member, index) => {
+      const anchorLink = `<a href="${member.link}" target="_blank">${member.name}</a>`
+      return `<tr><td> ${index + 1} </td><td> ${anchorLink} </td><td> ${member.organization}  </td></tr>`
+    })
+    const table = `<table>${tableHeader}<tbody>${tableRows}</tbody></table>`
+    return table
+  }
+
+  const tableHTML = createTable(our_members)
+  const tempContainer = document.createElement('div')
+  tempContainer.innerHTML = tableHTML
+  const tableElement = tempContainer.querySelector('table')
+  const memberContent = shadow.querySelector('.member_content')
+  memberContent.appendChild(tableElement)
+
+
+
   const our_member_wrapper = shadow.querySelector('.our_member')
   // ----------------------------------------
   const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
@@ -6991,38 +8258,36 @@ function get_theme () {
     }
     .our_member {
       display: none;
-      .member_content {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        width: 100vw;
-        height: 100vh;
-        padding: 10px;
-        background-size: 10px 10px;
-        background-color: var(--bg_color);
-        border: 1px solid var(--primary_color);
-        margin-bottom: 30px;
-        h2 {
-          margin: 0;
-        }
-        table {
-          border-collapse: collapse;
-          thead {
-            font-weight: bold;
-          }
-          td {
-            border: 1px solid var(--primary_color);
-            padding: 8px;
-          }
-        }
-      }
+    }
+    .member_content {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100vh;
+      padding: 10px;
+      background-size: 10px 10px;
+      background-color: var(--bg_color);
+      border: 1px solid var(--primary_color);
+      margin-bottom: 30px;
+    }
+    .member_content h2 {
+      margin: 0;
+    }
+    .member_content table {
+      border-collapse: collapse;
+    }
+    .member_content table thead {
+      font-weight: bold;
+    }
+    .member_content table td {
+      border: 1px solid var(--primary_color);
+      padding: 8px;
     }
     @container (min-width: 510px) {
-      .our_member {
-        .member_content {
-          width: auto;
-          height: auto;
-        }
+      .our_member .member_content {
+        width: auto;
+        height: auto;
       }
     }
   `
@@ -7078,7 +8343,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/our-members/our-members.js")
-},{"_process":2,"window-bar":51}],35:[function(require,module,exports){
+},{"./members.json":34,"_process":2,"window-bar":52}],36:[function(require,module,exports){
 (function (process,__filename){(function (){
 const sm_icon_button = require('buttons/sm-icon-button')
 /******************************************************************************
@@ -7109,11 +8374,32 @@ function project_card (opts = default_opts, protocol) {
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
-  const { data, socials, project_logo, desc, tags, project } = opts
+  const { data, project_data } = opts
+  const { 
+    project_name,
+    project_desc,
+    project_logo,
+    project_website, 
+    project_socials,
+    project_tags, 
+    } = project_data
+  
   // Assigning all the icons
   const { img_src: { 
       icon_consortium = `${prefix}/icon_consortium_page.png`,
   } } = data
+  
+  const social_icons = []
+  project_socials.forEach((item) => {
+    Object.entries(data.img_src).some(([key, value]) => {
+      const icon_name = key.split('_')[1]
+      if(item[icon_name] !== undefined){
+        social_icons.push({icon: value, link: item[icon_name]})
+        return true
+      }
+    })
+  })
+
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
@@ -7123,28 +8409,29 @@ function project_card (opts = default_opts, protocol) {
   // TEMPLATE
   // ----------------------------------------
   const el = document.createElement('div')
+  el.style.height = "100%"
   const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `<div class="project_card">
     <div class="icon_wrapper">
       <div class="project_title">
-        ${project}
+        <a href="${project_website}" target="_blank">${project_name}</a>
         <img src="${project_logo}">
       </div>
       <div class="socials_wrapper"><socials></socials></div>
     </div>
     <div class="content_wrapper">
-      <div class="desc"> ${desc}</div>
+      <div class="desc"> ${project_desc}</div>
     </div>
     <div class="tags_wrapper">
-      ${tags.map(tag => `<div class="tag">${tag}</div>`).join('')}
+      ${project_tags.map(tag => `<div class="tag">${tag}</div>`).join('')}
     </div>
   </div>`
   const socials_wrapper = shadow.querySelector('socials')
   // ----------------------------------------
   // ELEMENTS
   // ----------------------------------------
-  socials_wrapper.replaceWith(...socials.map(x => sm_icon_button({ src: x })).map(shadowfy()))
+  socials_wrapper.replaceWith(...social_icons.map(x => sm_icon_button({ src: x.icon, link: x.link })).map(shadowfy()))
   // ----------------------------------------
   // INIT
   // ----------------------------------------
@@ -7158,7 +8445,10 @@ function get_theme () {
       box-sizing: border-box;
     }
     .project_card {
-      height: max-content;
+      display: flex;
+      flex-direction: column;
+      justify-content:space-between;
+      height: 100%;
       width: 100%;
       line-height: normal;
       background-color: var(--bg_color);
@@ -7166,42 +8456,44 @@ function get_theme () {
       border: 1px solid var(--primary_color);
       container-type: inline-size;
       box-sizing: border-box;
-      .icon_wrapper {
-        display: flex;
-        justify-content: space-between;
-        border-bottom: 1px solid var(--primary_color);
-        .project_title {
-          display: flex;
-          gap: 5px;
-          font-size: 16px;
-          letter-spacing: -2px;
-          align-items: center;
-          font-weight: 700;
-          margin-left: 5px;
-        }
-        .socials_wrapper {
-          display: flex;
-        }
-      }
-      .content_wrapper {
-        padding: 20px;
-        .desc {
-          font-size: 14px;
-          letter-spacing: -2px;
-          line-height: 16px;
-        }
-      }
-      .tags_wrapper {
-        display: flex;
-        flex-wrap: wrap;
-        .tag {
-          flex-grow: 1;
-          min-width: max-content;
-          padding:5px 10px;
-          border: 1px solid var(--primary_color);
-          text-align:center;
-        }
-      }
+    }
+    .icon_wrapper {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--primary_color);
+    }
+    .project_title {
+      display: flex;
+      gap: 5px;
+      font-size: 16px;
+      letter-spacing: -2px;
+      align-items: center;
+      font-weight: 700;
+      margin-left: 5px;
+    }
+    .socials_wrapper {
+      display: flex;
+    }
+    .content_wrapper {
+      padding: 20px;
+    }
+    .desc {
+      font-size: 14px;
+      letter-spacing: -2px;
+      line-height: 16px;
+    }
+    .tags_wrapper {
+      width: 100%;
+      justify-self: flex-end;
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .tag {
+      flex-grow: 1;
+      min-width: max-content;
+      padding:5px 10px;
+      border: 1px solid var(--primary_color);
+      text-align:center;
     }
   `
 }
@@ -7256,7 +8548,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/project-card/project-card.js")
-},{"_process":2,"buttons/sm-icon-button":20}],36:[function(require,module,exports){
+},{"_process":2,"buttons/sm-icon-button":20}],37:[function(require,module,exports){
 (function (process,__filename){(function (){
 const search_input = require('search-input')
 const select_button = require('buttons/select-button')
@@ -7411,7 +8703,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/project-filter/project-filter.js")
-},{"_process":2,"buttons/select-button":18,"search-input":39}],37:[function(require,module,exports){
+},{"_process":2,"buttons/select-button":18,"search-input":40}],38:[function(require,module,exports){
 (function (process,__filename){(function (){
 const app_projects = require('app-projects')
 const the_dat = require('the-dat')
@@ -7502,12 +8794,12 @@ function get_theme () {
     }
     .main-wrapper {
       container-type: inline-size;
-      .main {
-        margin: 0;
-        padding: 30px 10px;
-        opacity: 1;
-        background-size: 16px 16px;
-      }
+    }
+    .main {
+      margin: 0;
+      padding: 30px 10px;
+      opacity: 1;
+      background-size: 16px 16px;
     }
     @container (min-width: 856px) {
       .main {
@@ -7567,7 +8859,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/projects-page/projects-page.js")
-},{"_process":2,"app-footer":9,"app-projects":12,"the-dat":43}],38:[function(require,module,exports){
+},{"_process":2,"app-footer":9,"app-projects":12,"the-dat":44}],39:[function(require,module,exports){
 (function (process,__filename){(function (){
 const sm_icon_button = require('buttons/sm-icon-button')
 /******************************************************************************
@@ -7769,42 +9061,42 @@ function get_theme () {
     .scrollbar_wrapper {
       box-sizing: border-box;
       display: flex;
-      .vertical-bar-wrapper {
-        flex-direction: column;
-        height: 100%;
-      }
-      .horizontal-bar-wrapper {
-        width: 100%;
-      }
-      .controls {
-        display: flex;
-      }
-      .bar_wrapper {
-        display: flex;
-        .vertical-bar {
-          height: 30px;
-        }
-        .horizontal-bar {
-          width: 30px;
-        }
-        .bar {
-          position: relative;
-          background-color: var(--primary_color);
-          cursor: pointer;
-          transition: opacity 0.25s linear;
-          box-shadow:inset 0px 0px 0px 1px var(--bg_color);
-          &:hover {
-            cursor: pointer
-          }
-          &:active {
-            -o-user-select: none;
-            -ms-user-select: none;
-            -moz-user-select: none;
-            -webkit-user-select: none;
-            user-select: none;
-          }
-        }
-      }
+    }
+    .scrollbar_wrapper .vertical-bar-wrapper {
+      flex-direction: column;
+      height: 100%;
+    }
+    .scrollbar_wrapper .horizontal-bar-wrapper {
+      width: 100%;
+    }
+    .scrollbar_wrapper .controls {
+      display: flex;
+    }
+    .scrollbar_wrapper .bar_wrapper {
+      display: flex;
+    }
+    .bar_wrapper .vertical-bar {
+      height: 30px;
+    }
+    .bar_wrapper .horizontal-bar {
+      width: 30px;
+    }
+    .bar_wrapper .bar {
+      position: relative;
+      background-color: var(--primary_color);
+      cursor: pointer;
+      transition: opacity 0.25s linear;
+      box-shadow:inset 0px 0px 0px 1px var(--bg_color);
+    }
+    .bar_wrapper .bar:hover {
+      cursor: pointer
+    }
+    .bar_wrapper .bar:active {
+      -o-user-select: none;
+      -ms-user-select: none;
+      -moz-user-select: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
   `
 }
@@ -7859,7 +9151,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/scrollbar/scrollbar.js")
-},{"_process":2,"buttons/sm-icon-button":20}],39:[function(require,module,exports){
+},{"_process":2,"buttons/sm-icon-button":20}],40:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   SEARCH INPUT COMPONENT
@@ -7932,41 +9224,41 @@ function input_search (opts = default_opts, protocol) {
 }
 function get_theme () {
   return `
-    .search_input {
-      width: 100%;
-      min-width: 100% !important;
-      height: 30px;
-      max-height: 40px;
-      position: relative;
-      flex-grow: 1;
-      input {
-        box-sizing: border-box;
-        width: 100%;
-        height: 100%;
-        border: 2px solid var(--primary_color);
-        padding: 10px 40px 10px 5px;
-        outline: none;
-        font-family: Silkscreen;
-        font-size: 18px;
-        letter-spacing: -1px;
-        background-color: var(--bg_color);
-        color: var(--primary-color);
-        &:focus {
-          border-color: var(--ac-1) !important;
-        }
-      }
-      svg {
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        translate: 0 -50%;
-        width: 20px;
-        height: auto;
-        *{
-          fill: var(--primary_color);
-        }
-      }
-    }
+  .search_input {
+    width: 100%;
+    min-width: 100% !important;
+    height: 30px;
+    max-height: 40px;
+    position: relative;
+    flex-grow: 1;
+  }
+  .search_input input {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    border: 2px solid var(--primary_color);
+    padding: 10px 40px 10px 5px;
+    outline: none;
+    font-family: Silkscreen;
+    font-size: 18px;
+    letter-spacing: -1px;
+    background-color: var(--bg_color);
+    color: var(--primary-color);
+  }
+  .search_input input:focus {
+    border-color: var(--ac-1) !important;
+  }
+  .search_input svg {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: auto;
+  }
+  .search_input svg * {
+    fill: var(--primary_color);
+  }
   `
 }
 // ----------------------------------------------------------------------------
@@ -8020,7 +9312,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/search-input/search-input.js")
-},{"_process":2}],40:[function(require,module,exports){
+},{"_process":2}],41:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   WINDOW BAR COMPONENT
@@ -8138,7 +9430,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/svg-element/svg-element.js")
-},{"_process":2}],41:[function(require,module,exports){
+},{"_process":2}],42:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   TAB WINDOW COMPONENT
@@ -8242,7 +9534,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/tab-window/tab-window.js")
-},{"_process":2}],42:[function(require,module,exports){
+},{"_process":2}],43:[function(require,module,exports){
 (function (process,__filename){(function (){
 const tab_window = require('tab-window')
 const tab_button = require('buttons/tab-button')
@@ -8520,61 +9812,62 @@ function get_theme () {
       width: 100%;
       height: 100%;
       min-height: 300px;
-      .terminal {
-        display: flex;
-        flex-direction: column;
-        flex-grow: 1;
-        background-color: var(--bg_color);
-        .header {
-          display: flex;
-          background-color: var(--primary_color);
-          color: var(--bg_color);
-          padding: 10px 5px;
-          align-items: center;
-          gap: 5px;
-          svg path {
-            fill: white;
-          }
-        }
-        .tab_display {
-          background-color: var(--bg_color);
-          border: 5px solid var(--primary_color);
-          flex-grow: 1;
-        }
-        .footer {
-          width: 100%;
-          max-width: 100%;
-          --s: 20px; /* control the size */
-          --_g: var(--bg_color) /* first color */ 0 25%, #0000 0 50%;
-          background:
-            repeating-conic-gradient(at 66% 66%,var(--_g)),
-            repeating-conic-gradient(at 33% 33%,var(--_g)),
-            var(--primary_color);  /* second color */ 
-          background-size: var(--s) var(--s);
-          display: flex;
-          justify-content: space-between;
-          .tabs_bar {
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            .tab_buttons {
-              display: flex;
-              overflow-x: hidden;
-              overflow-y: scroll;
-              &:::-webkit-scrollbar {
-                display: none;
-              }
-            }
-          }
-          .buttons { 
-            display: flex;
-            widht: fit-content;
-            div {
-              height: fit-content;
-            }
-          }
-        }
-      }
+    }
+    
+    .terminal_wrapper .terminal {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      background-color: var(--bg_color);
+    }
+    .terminal .header {
+      display: flex;
+      background-color: var(--primary_color);
+      color: var(--bg_color);
+      padding: 10px 5px;
+      align-items: center;
+      gap: 5px;
+    }
+    .terminal .header svg path {
+      fill: white;
+    }
+    .tab_display {
+      background-color: var(--bg_color);
+      border: 5px solid var(--primary_color);
+      flex-grow: 1;
+    }
+    .footer {
+      width: 100%;
+      max-width: 100%;
+      --s: 20px; /* control the size */
+      --_g: var(--bg_color) /* first color */ 0 25%, #0000 0 50%;
+      background:
+        repeating-conic-gradient(at 66% 66%,var(--_g)),
+        repeating-conic-gradient(at 33% 33%,var(--_g)),
+        var(--primary_color);  /* second color */ 
+      background-size: var(--s) var(--s);
+      display: flex;
+      justify-content: space-between;
+    }
+    .footer .tabs_bar {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .tabs_bar .tab_buttons {
+      display: flex;
+      overflow-x: hidden;
+      overflow-y: scroll;
+    }
+    .tabs_bar .tab_buttons::-webkit-scrollbar {
+      display: none;
+    }
+    .footer .buttons {
+      display: flex;
+      widht: fit-content;
+    }
+    .footer .buttons div {
+      height: fit-content;
     }
     @container (min-width: 510px) {
       .terminal {
@@ -8634,7 +9927,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/terminal/terminal.js")
-},{"_process":2,"buttons/sm-icon-button-alt":19,"buttons/tab-button":22,"scrollbar":38,"tab-window":41}],43:[function(require,module,exports){
+},{"_process":2,"buttons/sm-icon-button-alt":19,"buttons/tab-button":22,"scrollbar":39,"tab-window":42}],44:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 /******************************************************************************
@@ -8687,7 +9980,7 @@ function the_dat (opts = default_opts, protocol) {
   shadow.innerHTML = `<div class="the_dat">
     <div class="windowbar"></div>
     <div class="dat_content">
-      <iframe class="visualization"></iframe>
+      <iframe class="visualization" src="https://micahscopes.github.io/webscape-wanderer/" title="the dat garden visualization"></iframe>
     </div>
   </div>`
   const the_dat_wrapper = shadow.querySelector('.the_dat')
@@ -8747,29 +10040,30 @@ function get_theme () {
       background-color: black;
       flex-grow: 1;
     }
-    .the_dat {
-      &.active {
-        position: fixed;
-        width: 100vw;
-        height: 100vh;
-        top: 0;
-        left: 0;
-        z-index: 20;
-      }
-      .dat_content {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        height: 100%;
-        background-size: 10px 10px;
-        background-color: var(--bg_color);
-        border: 1px solid var(--primary_color);
-        margin-bottom: 30px;
-        &.active {
-          height: 100vh;
-        }
-      }
+    .the_dat.active {
+      position: fixed;
+      width: 100vw;
+      height: 100vh;
+      top: 0;
+      left: 0;
+      z-index: 20;
+    }
+    .the_dat .dat_content {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      aspect-ratio:1/0.5;
+      background-size: 10px 10px;
+      background-color: var(--bg_color);
+      border: 1px solid var(--primary_color);
+      margin-bottom: 30px;
+      /*max-height: 80vh;*/
+      aspect-ratio: 4/1;
+    }
+    .the_dat .dat_content.active {
+      height: 96vh;
+      max-height: 96vh;
     }
   `
 }
@@ -8824,7 +10118,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/the-dat/the-dat.js")
-},{"_process":2,"window-bar":51}],44:[function(require,module,exports){
+},{"_process":2,"window-bar":52}],45:[function(require,module,exports){
 const white = {} // hsla(0, 0%, 100%, 1)
 white.hue = 0
 white.saturation = '0%'
@@ -8887,7 +10181,7 @@ purple.opacity = 1
 purple.color = `hsla(${purple.hue}, ${purple.saturation}, ${purple.lightness}, ${purple.opacity})`
 
 module.exports = { white, isabelline, gray, black, eerie_black, night_black, darkblue, green, pink, purple }
-},{}],45:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const brand = require('theme/brand')
 const path = require('path')
@@ -8922,6 +10216,21 @@ const dark_theme = {
     icon_discord: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M47.3684 25.7692V18.1538H44.7368V13.0769H39.4737V8H28.9474V13.0769H34.2105V15.6154H15.7895V13.0769H21.0526V8H10.5263V13.0769H5.26316V18.1538H2.63158V25.7692H0V35.9231H2.63158V38.4615H7.89474V41H15.7895V35.9231H34.2105V41H42.1053V38.4615H47.3684V35.9231H50V25.7692H47.3684ZM21.0526 30.8462H15.7895V20.6923H21.0526V30.8462ZM34.2105 30.8462H28.9474V20.6923H34.2105V30.8462Z" fill="#293648"/></svg>`,
     icon_twitter: `<svg width="17" height="17" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 7.89474V10.5263H47.3684V13.1579H44.7368V21.0526H47.3684V28.9474H44.7368V36.8421H42.1053V42.1053H39.4737V44.7368H34.2105V47.3684H28.9474V50H15.7895V47.3684H7.89474V44.7368H5.26316V39.4737H7.89474V42.1053H13.1579V39.4737H10.5263V36.8421H7.89474V34.2105H5.26316V28.9474H2.63158V23.6842H5.26316V26.3158H7.89474V28.9474H13.1579V26.3158H10.5263V23.6842H7.89474V21.0526H5.26316V18.4211H2.63158V13.1579H0V7.89474H2.63158V10.5263H7.89474V13.1579H15.7895V15.7895H21.0526V13.1579H23.6842V7.89474H26.3158V2.63158H31.5789V0H42.1053V2.63158H44.7368V5.26316H47.3684V7.89474H50Z" fill="#293648"/></svg>`,
     icon_github: `<svg width="18" height="18" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1915)"><path d="M50 15.7895V34.2105H47.3684V39.4737H44.7368V42.1053H42.1053V44.7368H39.4737V47.3684H34.2105V50H28.9474V34.2105H26.3158V31.5789H34.2105V28.9474H36.8421V26.3158H39.4737V18.4211H36.8421V10.5263H34.2105V13.1579H31.5789V15.7895H28.9474V13.1579H21.0526V15.7895H18.4211V13.1579H15.7895V10.5263H13.1579V18.4211H10.5263V26.3158H13.1579V28.9474H15.7895V31.5789H23.6842V34.2105H21.0526V36.8421H18.4211V39.4737H13.1579V36.8421H10.5263V34.2105H7.89474V39.4737H10.5263V42.1053H13.1579V44.7368H18.4211V42.1053H21.0526V50H15.7895V47.3684H10.5263V44.7368H7.89474V42.1053H5.26316V39.4737H2.63158V34.2105H0V15.7895H2.63158V10.5263H5.26316V7.89474H7.89474V5.26316H10.5263V2.63158H15.7895V0H34.2105V2.63158H39.4737V5.26316H42.1053V7.89474H44.7368V10.5263H47.3684V15.7895H50Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1915"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    // social icons smooth
+    icon_mastodon:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M47.9982 16.4153C47.9982 5.56761 40.9884 2.39005 40.9884 2.39005C37.4552 0.745015 31.3873 0.052501 25.0826 0H24.9273C18.6227 0.052501 12.5597 0.745015 9.02399 2.39005C9.02399 2.39005 2.01421 5.57011 2.01421 16.4153C2.01421 18.8979 1.96736 21.8679 2.0438 25.018C2.29776 35.6257 3.96206 46.0809 13.6347 48.6759C18.095 49.8735 21.9242 50.1235 25.0062 49.951C30.5983 49.636 33.737 47.9284 33.737 47.9284L33.5521 43.8133C33.5521 43.8133 29.5553 45.0909 25.0678 44.9359C20.6199 44.7809 15.9278 44.4509 15.2078 38.9133C15.1398 38.3987 15.1069 37.8799 15.1092 37.3607C15.1092 37.3607 19.4733 38.4432 25.0062 38.7007C28.389 38.8582 31.5598 38.5007 34.7824 38.1107C40.9613 37.3632 46.3413 33.5031 47.0169 29.9756C48.087 24.418 47.9982 16.4153 47.9982 16.4153ZM39.7309 30.3906H34.6V17.6428C34.6 14.9553 33.4855 13.5928 31.2541 13.5928C28.7885 13.5928 27.5532 15.2103 27.5532 18.4104V25.388H22.4518V18.4104C22.4518 15.2103 21.2165 13.5928 18.7484 13.5928C16.517 13.5928 15.4026 14.9578 15.4026 17.6428V30.3906H10.2716V17.2578C10.2716 14.5728 10.9447 12.4402 12.3008 10.8627C13.6964 9.28518 15.5234 8.47516 17.7942 8.47516C20.4201 8.47516 22.4099 9.49768 23.7241 11.5452L25.0013 13.7178L26.2809 11.5452C27.5951 9.49768 29.5849 8.47516 32.2108 8.47516C34.4792 8.47516 36.3087 9.28518 37.7042 10.8627C39.0578 12.4402 39.7309 14.5728 39.7309 17.2578V30.3906Z" fill="#2ACA4B"/></svg>`,
+    icon_opencollective:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2281_68)"><path d="M45.9543 38.6405C48.5129 34.718 50 30.0326 50 25C50 19.9674 48.5129 15.282 45.9543 11.3595L40.1106 17.2031C41.318 19.5385 42 22.1896 42 25C42 27.8104 41.318 30.4615 40.1106 32.7969L45.9543 38.6405Z" fill="#2ACA4B"/><path d="M34.8542 11.1458C32.0745 9.16504 28.6733 8 25 8C15.6112 8 8 15.6112 8 25C8 34.3888 15.6112 42 25 42C28.6733 42 32.0745 40.835 34.8542 38.8542L40.5648 44.5648C36.2942 47.9669 30.8845 50 25 50C11.1929 50 0 38.8071 0 25C0 11.1929 11.1929 0 25 0C30.8845 0 36.2942 2.03309 40.5648 5.43515L34.8542 11.1458Z" fill="#2ACA4B"/></g><defs><clipPath id="clip0_2281_68"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_matrix:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2281_59)"><path d="M1.31875 1.15V48.8547H4.75156V50.0031H0V0.003125H4.75156V1.15156L1.31875 1.15ZM15.9922 16.2703V18.6875H16.0563C16.7 17.7578 17.4813 17.0516 18.3828 16.5453C19.2875 16.0406 20.3375 15.7891 21.5078 15.7891C22.6313 15.7891 23.6641 16.0094 24.5937 16.4406C25.5297 16.8797 26.2297 17.6531 26.7172 18.7516C27.2469 17.9703 27.9719 17.2781 28.8734 16.6844C29.7781 16.0906 30.8531 15.7891 32.0969 15.7891C33.0406 15.7891 33.9109 15.9031 34.7172 16.1391C35.5312 16.3656 36.2156 16.7328 36.7922 17.2375C37.3625 17.7516 37.8094 18.4109 38.1359 19.225C38.4531 20.0375 38.6156 21.0234 38.6156 22.1797V34.1094H33.7266V24.0031C33.7266 23.4078 33.7016 22.8391 33.6516 22.3094C33.6203 21.8297 33.4969 21.3656 33.2781 20.9344C33.0734 20.5422 32.7578 20.2172 32.3656 20.0078C31.9672 19.7703 31.4141 19.6578 30.7297 19.6578C30.0375 19.6578 29.4844 19.7875 29.0609 20.0469C28.6469 20.3078 28.2969 20.6656 28.0609 21.0891C27.8094 21.5375 27.6469 22.0328 27.5797 22.5375C27.4984 23.0828 27.4594 23.6297 27.45 24.175V34.1109H22.5578V24.1094C22.5578 23.5797 22.55 23.0594 22.5187 22.5469C22.5016 22.0516 22.4047 21.5719 22.2172 21.1156C22.0547 20.6766 21.7469 20.3094 21.3547 20.0656C20.9562 19.8047 20.3609 19.6672 19.5797 19.6672C19.3438 19.6672 19.0359 19.7156 18.6609 19.8219C18.2859 19.9266 17.9125 20.1219 17.5625 20.4078C17.2047 20.7016 16.8938 21.1156 16.6422 21.6531C16.3906 22.1891 16.2687 22.8969 16.2687 23.7766V34.1203H11.3766V16.275L15.9922 16.2703ZM48.6813 48.8531V1.14844H45.2484V0H50V50H45.2484V48.8516L48.6813 48.8531Z" fill="#2ACA4B"/></g><defs><clipPath id="clip0_2281_59"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_twitter_smooth:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2281_63)"><path fill-rule="evenodd" clip-rule="evenodd" d="M15.7235 45.0005C34.5914 45.0005 44.9117 29.609 44.9117 16.2632C44.9117 15.8251 44.9117 15.3902 44.8817 14.957C46.8893 13.5294 48.6218 11.7568 49.9993 9.72861C48.1293 10.5458 46.1417 11.0817 44.1092 11.318C46.2492 10.0553 47.8518 8.07152 48.6193 5.73071C46.6042 6.90726 44.4017 7.73763 42.1041 8.18316C38.219 4.11688 31.7214 3.91987 27.5888 7.74492C24.9262 10.2113 23.7937 13.8885 24.6212 17.396C16.3735 16.9875 8.68827 13.1526 3.47814 6.84402C0.755567 11.4592 2.1481 17.361 6.65572 20.3246C5.02318 20.2778 3.42564 19.8451 1.9981 19.0623V19.1905C2.0006 23.9977 5.44319 28.1369 10.2283 29.0895C8.71827 29.4956 7.13323 29.5545 5.59819 29.2616C6.94073 33.3771 10.7933 36.1959 15.1809 36.2771C11.5483 39.0881 7.06073 40.6144 2.44061 40.6095C1.62559 40.6071 0.810568 40.5602 -0.00195312 40.4643C4.69067 43.4278 10.1483 45.0006 15.7235 44.9932" fill="#2ACA4B"/></g><defs><clipPath id="clip0_2281_63"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_github_smooth:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2281_42)"><path fill-rule="evenodd" clip-rule="evenodd" d="M25 0C38.8075 0 50 11.4748 50 25.6323C50 36.9548 42.845 46.5599 32.9175 49.9524C31.65 50.2049 31.2 49.4044 31.2 48.7219C31.2 47.8769 31.23 45.117 31.23 41.687C31.23 39.297 30.43 37.7371 29.5325 36.9421C35.1 36.3071 40.95 34.1394 40.95 24.2944C40.95 21.4944 39.98 19.2096 38.375 17.4146C38.635 16.7671 39.4925 14.1599 38.13 10.6299C38.13 10.6299 36.035 9.94306 31.2625 13.2581C29.265 12.6906 27.125 12.405 25 12.395C22.875 12.405 20.7375 12.6906 18.7425 13.2581C13.965 9.94306 11.865 10.6299 11.865 10.6299C10.5075 14.1599 11.365 16.7671 11.6225 17.4146C10.025 19.2096 9.04751 21.4944 9.04751 24.2944C9.04751 34.1144 14.885 36.3154 20.4375 36.9629C19.7225 37.6029 19.075 38.7319 18.85 40.3894C17.425 41.0444 13.805 42.178 11.575 38.2605C11.575 38.2605 10.2525 35.7977 7.7425 35.6177C7.7425 35.6177 5.305 35.5853 7.5725 37.1753C7.5725 37.1753 9.21 37.9628 10.3475 40.9253C10.3475 40.9253 11.815 45.5002 18.77 43.9502C18.7825 46.0927 18.805 48.1119 18.805 48.7219C18.805 49.3994 18.345 50.1923 17.0975 49.9548C7.16249 46.5673 0 36.9573 0 25.6323C0 11.4748 11.195 0 25 0Z" fill="#2ACA4B"/></g><defs><clipPath id="clip0_2281_42"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_cabal:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24.5 50L49 0L24.5 7.54717L0 0L24.5 50Z" fill="#2ACA4B"/></svg>`,
+    icon_jitsi:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2281_55)"><mask id="path-1-outside-1_2281_55" maskUnits="userSpaceOnUse" x="7" y="-1" width="36" height="53" fill="black"><rect fill="white" x="7" y="-1" width="36" height="53"/><path d="M39.7233 16.309C38.3714 15.4632 36.4876 15.5882 35.9091 15.6486L35.5786 15.6549C35.2925 15.534 35.5871 14.8278 35.6655 14.0861C35.7735 13.0528 35.3879 11.6341 34.6886 10.4987C34.3517 9.95288 34.2309 9.9008 34.481 9.63831C36.3223 7.70501 36.6105 5.56339 36.0257 3.78009C34.8836 0.290578 34.6526 -0.25941 34.6886 0.0905825C34.8327 1.51347 34.5106 3.50093 34.2902 4.30925C33.9766 5.45506 32.9044 6.9092 30.0968 8.23417C29.4378 8.54458 26.7806 9.7758 26.3081 10.3133C25.7232 10.982 25.5791 11.6549 25.3037 12.9862C25.0113 14.3945 24.9032 15.709 25.2465 17.2152C25.3122 17.509 25.38 17.7277 25.4181 17.9006C25.4173 17.897 25.4158 17.8935 25.4139 17.8902C25.4923 18.1965 25.3651 18.3777 25.1914 18.486C25.0189 18.5574 24.8402 18.6132 24.6574 18.6527L24.651 18.6548C24.2209 18.7215 23.8077 18.7944 23.4114 18.8715C20.4894 19.3652 14.0858 20.8672 16.3595 28.6713C17.1668 31.3191 18.7412 33.0003 19.6524 33.3087L19.6842 33.3191C19.8346 33.3857 19.9978 33.4441 20.1567 33.4753C20.1736 33.4795 20.1821 33.7337 20.1482 34.092L20.1249 34.2461C19.9978 35.1503 19.4723 36.5461 18.6988 36.5648C18.3895 36.5732 17.0248 35.7607 16.6392 35.5128C14.4778 34.117 13.7065 33.3295 12.1724 33.1608C10.9074 33.0212 8.0637 35.4378 8.00225 40.5544C7.92809 46.8021 9.71015 49.9083 9.761 50C11.0811 44.1168 12.0325 43.5418 15.4589 41.2398C15.7302 41.0585 18.9489 43.721 19.7223 43.7064C23.5937 43.6355 30.5333 43.8793 33.8961 37.0482C33.9618 36.9169 35.0594 38.0357 35.1569 38.0336C35.1972 38.0315 41.0646 35.4628 41.9355 23.6609C42.3339 18.2715 40.7997 16.9819 39.7233 16.309ZM35.1209 12.4633C35.2904 13.1445 35.2417 13.8528 35.034 14.4361C34.6568 15.3257 34.0805 15.7924 33.36 15.7424C33.1274 15.7108 32.9039 15.6328 32.7031 15.5132C31.9022 15.0528 31.4678 13.8757 31.8089 12.9612C31.8168 12.9477 31.8239 12.9338 31.8301 12.9195C31.9191 12.6862 32.1352 12.4258 32.4128 12.1612C32.9828 11.6654 34.1017 10.8279 34.2224 10.8279C34.375 10.832 34.945 11.7508 35.1209 12.4633ZM35.1124 2.23221C35.1251 2.11138 35.4366 3.03427 35.5383 3.3551C35.9812 4.74049 35.9219 5.35506 35.8223 6.05713C35.5637 7.84459 34.5954 9.01957 33.8643 9.73622C32.718 10.8612 32.4489 11.0237 32.9489 10.1341C34.5445 7.29877 34.8814 4.63216 35.1124 2.23221ZM26.4183 10.9529C26.6238 10.455 27.6557 9.90497 28.5139 9.41331C29.3997 8.90499 32.2158 8.18417 33.9512 5.9363C34.4873 5.24256 33.4977 9.9258 30.9486 12.1903C30.0883 12.9549 27.7235 13.3507 25.683 14.7778C25.4732 14.9257 25.7296 12.3758 26.4183 10.9529ZM25.8716 15.1049C26.3716 14.6965 27.2786 14.1111 30.5524 13.0487C30.9571 12.9174 30.9274 13.0528 31.1245 14.0007C31.3343 15.0132 31.5419 15.9444 33.6821 16.4548C33.8347 16.4923 32.9871 18.0631 32.7434 18.2694C32.2666 19.0194 29.745 21.1693 28.6771 20.9652C27.946 20.8256 26.3738 19.1006 25.9457 18.1486C25.6385 17.4652 25.0875 15.7444 25.8716 15.1049ZM16.7579 24.0359C17.1075 22.4047 18.417 21.5776 18.4552 21.5443C19.1184 20.9777 20.4025 20.4652 21.7396 20.0777C21.9409 20.0256 22.0659 19.9985 22.0955 19.9923C22.9219 19.8256 23.9602 19.5485 24.6468 19.4798C25.1681 19.4277 25.8101 19.161 26.3377 19.5548C26.9099 20.2381 28.1685 21.3693 28.8614 21.4277C29.0966 21.4464 30.6795 20.961 33.2753 18.6756C33.5995 18.3902 33.9406 18.109 34.3008 17.8465L34.4047 17.7715C35.2014 17.2027 36.0829 16.7298 37.0407 16.5215C37.3373 16.4569 35.9812 17.7819 37.1424 20.5548C37.9031 22.3714 40.0051 28.6025 39.6597 29.6004C39.4542 30.1962 39.2677 30.3066 38.7443 30.0691C37.278 29.4004 35.4726 27.4254 32.0039 26.0942C29.2089 25.0213 26.8929 25.0463 25.3927 25.3359C21.9409 26.0046 20.1525 27.4817 19.1502 28.3067C18.9976 28.4338 20.6356 27.7963 22.8245 27.5525C24.8078 27.3317 26.7976 27.5442 29.2598 29.19C30.8321 30.4837 30.4485 30.3837 29.7387 30.5775C27.0264 31.3191 21.8582 32.8524 20.055 32.5941C18.1903 32.3254 15.8891 27.6192 16.7579 24.0359ZM31.2707 30.5983C29.0924 28.0463 26.6068 27.2567 25.024 27.1525C23.0597 27.0234 21.6463 27.2713 20.3071 27.7088C20.163 27.7567 27.4841 22.5651 35.5468 28.7275C36.9983 29.8379 37.865 30.4566 38.6278 30.9483C38.738 31.0191 36.6847 31.5524 36.3372 31.6483C32.9998 32.192 32.0823 31.5483 31.2707 30.5983ZM29.406 31.117C28.6093 31.3983 27.4926 31.7858 26.2763 32.1566C27.315 31.7972 28.3584 31.4506 29.406 31.117ZM13.6091 38.2231C13.7362 36.9711 14.018 35.8357 13.893 34.5711C13.8909 34.5461 17.5249 36.994 18.5102 37.1628C18.6713 37.1898 16.8129 38.8544 14.9143 39.6377C14.2638 39.5544 13.5561 38.7461 13.6091 38.2231ZM9.62115 48.5042C9.4262 48.2355 8.15058 43.2751 8.50445 40.1002C8.99181 35.7253 11.488 34.1753 11.969 34.1191C12.3673 34.0732 13.1556 34.3274 12.7869 38.6981C12.7424 39.2252 15.1538 40.8648 15.1538 40.8648C10.2335 43.7064 10.6277 45.8459 9.62115 48.5042ZM19.6948 43.223C19.4468 43.2126 14.8974 40.1544 15.05 40.096C20.2987 38.0877 20.678 34.9565 21.0403 34.1607C20.9979 34.0941 22.0659 33.6691 23.5195 33.1378C25.8588 32.3129 29.0945 31.2816 30.2112 30.8754L30.2684 30.8587C30.7749 30.715 30.7961 30.8087 30.9317 30.9837C31.3343 31.4983 32.0102 31.842 32.0844 31.8774C33.0803 32.342 34.3644 32.2983 34.3941 32.3379C34.5933 32.6212 34.7204 43.871 19.6948 43.223ZM35.1845 37.6377C35.14 37.6398 34.0656 36.6544 34.0656 36.6544C34.0656 36.6544 34.481 35.7649 34.6907 34.6336C34.8602 33.7128 34.945 32.3483 34.945 32.3483C34.945 32.3483 39.8843 31.7691 40.1047 30.0941C40.3547 28.1817 38.9477 24.2047 38.738 23.5547C38.649 23.2797 37.4221 20.0339 37.242 19.1944C37.0386 18.2486 37.4263 16.7215 38.0048 16.4986C39.3673 15.9715 41.374 18.2236 41.4948 21.5006C41.9546 34.0628 35.229 37.6357 35.1845 37.6377Z"/></mask><path d="M39.7233 16.309C38.3714 15.4632 36.4876 15.5882 35.9091 15.6486L35.5786 15.6549C35.2925 15.534 35.5871 14.8278 35.6655 14.0861C35.7735 13.0528 35.3879 11.6341 34.6886 10.4987C34.3517 9.95288 34.2309 9.9008 34.481 9.63831C36.3223 7.70501 36.6105 5.56339 36.0257 3.78009C34.8836 0.290578 34.6526 -0.25941 34.6886 0.0905825C34.8327 1.51347 34.5106 3.50093 34.2902 4.30925C33.9766 5.45506 32.9044 6.9092 30.0968 8.23417C29.4378 8.54458 26.7806 9.7758 26.3081 10.3133C25.7232 10.982 25.5791 11.6549 25.3037 12.9862C25.0113 14.3945 24.9032 15.709 25.2465 17.2152C25.3122 17.509 25.38 17.7277 25.4181 17.9006C25.4173 17.897 25.4158 17.8935 25.4139 17.8902C25.4923 18.1965 25.3651 18.3777 25.1914 18.486C25.0189 18.5574 24.8402 18.6132 24.6574 18.6527L24.651 18.6548C24.2209 18.7215 23.8077 18.7944 23.4114 18.8715C20.4894 19.3652 14.0858 20.8672 16.3595 28.6713C17.1668 31.3191 18.7412 33.0003 19.6524 33.3087L19.6842 33.3191C19.8346 33.3857 19.9978 33.4441 20.1567 33.4753C20.1736 33.4795 20.1821 33.7337 20.1482 34.092L20.1249 34.2461C19.9978 35.1503 19.4723 36.5461 18.6988 36.5648C18.3895 36.5732 17.0248 35.7607 16.6392 35.5128C14.4778 34.117 13.7065 33.3295 12.1724 33.1608C10.9074 33.0212 8.0637 35.4378 8.00225 40.5544C7.92809 46.8021 9.71015 49.9083 9.761 50C11.0811 44.1168 12.0325 43.5418 15.4589 41.2398C15.7302 41.0585 18.9489 43.721 19.7223 43.7064C23.5937 43.6355 30.5333 43.8793 33.8961 37.0482C33.9618 36.9169 35.0594 38.0357 35.1569 38.0336C35.1972 38.0315 41.0646 35.4628 41.9355 23.6609C42.3339 18.2715 40.7997 16.9819 39.7233 16.309ZM35.1209 12.4633C35.2904 13.1445 35.2417 13.8528 35.034 14.4361C34.6568 15.3257 34.0805 15.7924 33.36 15.7424C33.1274 15.7108 32.9039 15.6328 32.7031 15.5132C31.9022 15.0528 31.4678 13.8757 31.8089 12.9612C31.8168 12.9477 31.8239 12.9338 31.8301 12.9195C31.9191 12.6862 32.1352 12.4258 32.4128 12.1612C32.9828 11.6654 34.1017 10.8279 34.2224 10.8279C34.375 10.832 34.945 11.7508 35.1209 12.4633ZM35.1124 2.23221C35.1251 2.11138 35.4366 3.03427 35.5383 3.3551C35.9812 4.74049 35.9219 5.35506 35.8223 6.05713C35.5637 7.84459 34.5954 9.01957 33.8643 9.73622C32.718 10.8612 32.4489 11.0237 32.9489 10.1341C34.5445 7.29877 34.8814 4.63216 35.1124 2.23221ZM26.4183 10.9529C26.6238 10.455 27.6557 9.90497 28.5139 9.41331C29.3997 8.90499 32.2158 8.18417 33.9512 5.9363C34.4873 5.24256 33.4977 9.9258 30.9486 12.1903C30.0883 12.9549 27.7235 13.3507 25.683 14.7778C25.4732 14.9257 25.7296 12.3758 26.4183 10.9529ZM25.8716 15.1049C26.3716 14.6965 27.2786 14.1111 30.5524 13.0487C30.9571 12.9174 30.9274 13.0528 31.1245 14.0007C31.3343 15.0132 31.5419 15.9444 33.6821 16.4548C33.8347 16.4923 32.9871 18.0631 32.7434 18.2694C32.2666 19.0194 29.745 21.1693 28.6771 20.9652C27.946 20.8256 26.3738 19.1006 25.9457 18.1486C25.6385 17.4652 25.0875 15.7444 25.8716 15.1049ZM16.7579 24.0359C17.1075 22.4047 18.417 21.5776 18.4552 21.5443C19.1184 20.9777 20.4025 20.4652 21.7396 20.0777C21.9409 20.0256 22.0659 19.9985 22.0955 19.9923C22.9219 19.8256 23.9602 19.5485 24.6468 19.4798C25.1681 19.4277 25.8101 19.161 26.3377 19.5548C26.9099 20.2381 28.1685 21.3693 28.8614 21.4277C29.0966 21.4464 30.6795 20.961 33.2753 18.6756C33.5995 18.3902 33.9406 18.109 34.3008 17.8465L34.4047 17.7715C35.2014 17.2027 36.0829 16.7298 37.0407 16.5215C37.3373 16.4569 35.9812 17.7819 37.1424 20.5548C37.9031 22.3714 40.0051 28.6025 39.6597 29.6004C39.4542 30.1962 39.2677 30.3066 38.7443 30.0691C37.278 29.4004 35.4726 27.4254 32.0039 26.0942C29.2089 25.0213 26.8929 25.0463 25.3927 25.3359C21.9409 26.0046 20.1525 27.4817 19.1502 28.3067C18.9976 28.4338 20.6356 27.7963 22.8245 27.5525C24.8078 27.3317 26.7976 27.5442 29.2598 29.19C30.8321 30.4837 30.4485 30.3837 29.7387 30.5775C27.0264 31.3191 21.8582 32.8524 20.055 32.5941C18.1903 32.3254 15.8891 27.6192 16.7579 24.0359ZM31.2707 30.5983C29.0924 28.0463 26.6068 27.2567 25.024 27.1525C23.0597 27.0234 21.6463 27.2713 20.3071 27.7088C20.163 27.7567 27.4841 22.5651 35.5468 28.7275C36.9983 29.8379 37.865 30.4566 38.6278 30.9483C38.738 31.0191 36.6847 31.5524 36.3372 31.6483C32.9998 32.192 32.0823 31.5483 31.2707 30.5983ZM29.406 31.117C28.6093 31.3983 27.4926 31.7858 26.2763 32.1566C27.315 31.7972 28.3584 31.4506 29.406 31.117ZM13.6091 38.2231C13.7362 36.9711 14.018 35.8357 13.893 34.5711C13.8909 34.5461 17.5249 36.994 18.5102 37.1628C18.6713 37.1898 16.8129 38.8544 14.9143 39.6377C14.2638 39.5544 13.5561 38.7461 13.6091 38.2231ZM9.62115 48.5042C9.4262 48.2355 8.15058 43.2751 8.50445 40.1002C8.99181 35.7253 11.488 34.1753 11.969 34.1191C12.3673 34.0732 13.1556 34.3274 12.7869 38.6981C12.7424 39.2252 15.1538 40.8648 15.1538 40.8648C10.2335 43.7064 10.6277 45.8459 9.62115 48.5042ZM19.6948 43.223C19.4468 43.2126 14.8974 40.1544 15.05 40.096C20.2987 38.0877 20.678 34.9565 21.0403 34.1607C20.9979 34.0941 22.0659 33.6691 23.5195 33.1378C25.8588 32.3129 29.0945 31.2816 30.2112 30.8754L30.2684 30.8587C30.7749 30.715 30.7961 30.8087 30.9317 30.9837C31.3343 31.4983 32.0102 31.842 32.0844 31.8774C33.0803 32.342 34.3644 32.2983 34.3941 32.3379C34.5933 32.6212 34.7204 43.871 19.6948 43.223ZM35.1845 37.6377C35.14 37.6398 34.0656 36.6544 34.0656 36.6544C34.0656 36.6544 34.481 35.7649 34.6907 34.6336C34.8602 33.7128 34.945 32.3483 34.945 32.3483C34.945 32.3483 39.8843 31.7691 40.1047 30.0941C40.3547 28.1817 38.9477 24.2047 38.738 23.5547C38.649 23.2797 37.4221 20.0339 37.242 19.1944C37.0386 18.2486 37.4263 16.7215 38.0048 16.4986C39.3673 15.9715 41.374 18.2236 41.4948 21.5006C41.9546 34.0628 35.229 37.6357 35.1845 37.6377Z" fill="#2ACA4B"/><path d="M39.7233 16.309C38.3714 15.4632 36.4876 15.5882 35.9091 15.6486L35.5786 15.6549C35.2925 15.534 35.5871 14.8278 35.6655 14.0861C35.7735 13.0528 35.3879 11.6341 34.6886 10.4987C34.3517 9.95288 34.2309 9.9008 34.481 9.63831C36.3223 7.70501 36.6105 5.56339 36.0257 3.78009C34.8836 0.290578 34.6526 -0.25941 34.6886 0.0905825C34.8327 1.51347 34.5106 3.50093 34.2902 4.30925C33.9766 5.45506 32.9044 6.9092 30.0968 8.23417C29.4378 8.54458 26.7806 9.7758 26.3081 10.3133C25.7232 10.982 25.5791 11.6549 25.3037 12.9862C25.0113 14.3945 24.9032 15.709 25.2465 17.2152C25.3122 17.509 25.38 17.7277 25.4181 17.9006C25.4173 17.897 25.4158 17.8935 25.4139 17.8902C25.4923 18.1965 25.3651 18.3777 25.1914 18.486C25.0189 18.5574 24.8402 18.6132 24.6574 18.6527L24.651 18.6548C24.2209 18.7215 23.8077 18.7944 23.4114 18.8715C20.4894 19.3652 14.0858 20.8672 16.3595 28.6713C17.1668 31.3191 18.7412 33.0003 19.6524 33.3087L19.6842 33.3191C19.8346 33.3857 19.9978 33.4441 20.1567 33.4753C20.1736 33.4795 20.1821 33.7337 20.1482 34.092L20.1249 34.2461C19.9978 35.1503 19.4723 36.5461 18.6988 36.5648C18.3895 36.5732 17.0248 35.7607 16.6392 35.5128C14.4778 34.117 13.7065 33.3295 12.1724 33.1608C10.9074 33.0212 8.0637 35.4378 8.00225 40.5544C7.92809 46.8021 9.71015 49.9083 9.761 50C11.0811 44.1168 12.0325 43.5418 15.4589 41.2398C15.7302 41.0585 18.9489 43.721 19.7223 43.7064C23.5937 43.6355 30.5333 43.8793 33.8961 37.0482C33.9618 36.9169 35.0594 38.0357 35.1569 38.0336C35.1972 38.0315 41.0646 35.4628 41.9355 23.6609C42.3339 18.2715 40.7997 16.9819 39.7233 16.309ZM35.1209 12.4633C35.2904 13.1445 35.2417 13.8528 35.034 14.4361C34.6568 15.3257 34.0805 15.7924 33.36 15.7424C33.1274 15.7108 32.9039 15.6328 32.7031 15.5132C31.9022 15.0528 31.4678 13.8757 31.8089 12.9612C31.8168 12.9477 31.8239 12.9338 31.8301 12.9195C31.9191 12.6862 32.1352 12.4258 32.4128 12.1612C32.9828 11.6654 34.1017 10.8279 34.2224 10.8279C34.375 10.832 34.945 11.7508 35.1209 12.4633ZM35.1124 2.23221C35.1251 2.11138 35.4366 3.03427 35.5383 3.3551C35.9812 4.74049 35.9219 5.35506 35.8223 6.05713C35.5637 7.84459 34.5954 9.01957 33.8643 9.73622C32.718 10.8612 32.4489 11.0237 32.9489 10.1341C34.5445 7.29877 34.8814 4.63216 35.1124 2.23221ZM26.4183 10.9529C26.6238 10.455 27.6557 9.90497 28.5139 9.41331C29.3997 8.90499 32.2158 8.18417 33.9512 5.9363C34.4873 5.24256 33.4977 9.9258 30.9486 12.1903C30.0883 12.9549 27.7235 13.3507 25.683 14.7778C25.4732 14.9257 25.7296 12.3758 26.4183 10.9529ZM25.8716 15.1049C26.3716 14.6965 27.2786 14.1111 30.5524 13.0487C30.9571 12.9174 30.9274 13.0528 31.1245 14.0007C31.3343 15.0132 31.5419 15.9444 33.6821 16.4548C33.8347 16.4923 32.9871 18.0631 32.7434 18.2694C32.2666 19.0194 29.745 21.1693 28.6771 20.9652C27.946 20.8256 26.3738 19.1006 25.9457 18.1486C25.6385 17.4652 25.0875 15.7444 25.8716 15.1049ZM16.7579 24.0359C17.1075 22.4047 18.417 21.5776 18.4552 21.5443C19.1184 20.9777 20.4025 20.4652 21.7396 20.0777C21.9409 20.0256 22.0659 19.9985 22.0955 19.9923C22.9219 19.8256 23.9602 19.5485 24.6468 19.4798C25.1681 19.4277 25.8101 19.161 26.3377 19.5548C26.9099 20.2381 28.1685 21.3693 28.8614 21.4277C29.0966 21.4464 30.6795 20.961 33.2753 18.6756C33.5995 18.3902 33.9406 18.109 34.3008 17.8465L34.4047 17.7715C35.2014 17.2027 36.0829 16.7298 37.0407 16.5215C37.3373 16.4569 35.9812 17.7819 37.1424 20.5548C37.9031 22.3714 40.0051 28.6025 39.6597 29.6004C39.4542 30.1962 39.2677 30.3066 38.7443 30.0691C37.278 29.4004 35.4726 27.4254 32.0039 26.0942C29.2089 25.0213 26.8929 25.0463 25.3927 25.3359C21.9409 26.0046 20.1525 27.4817 19.1502 28.3067C18.9976 28.4338 20.6356 27.7963 22.8245 27.5525C24.8078 27.3317 26.7976 27.5442 29.2598 29.19C30.8321 30.4837 30.4485 30.3837 29.7387 30.5775C27.0264 31.3191 21.8582 32.8524 20.055 32.5941C18.1903 32.3254 15.8891 27.6192 16.7579 24.0359ZM31.2707 30.5983C29.0924 28.0463 26.6068 27.2567 25.024 27.1525C23.0597 27.0234 21.6463 27.2713 20.3071 27.7088C20.163 27.7567 27.4841 22.5651 35.5468 28.7275C36.9983 29.8379 37.865 30.4566 38.6278 30.9483C38.738 31.0191 36.6847 31.5524 36.3372 31.6483C32.9998 32.192 32.0823 31.5483 31.2707 30.5983ZM29.406 31.117C28.6093 31.3983 27.4926 31.7858 26.2763 32.1566C27.315 31.7972 28.3584 31.4506 29.406 31.117ZM13.6091 38.2231C13.7362 36.9711 14.018 35.8357 13.893 34.5711C13.8909 34.5461 17.5249 36.994 18.5102 37.1628C18.6713 37.1898 16.8129 38.8544 14.9143 39.6377C14.2638 39.5544 13.5561 38.7461 13.6091 38.2231ZM9.62115 48.5042C9.4262 48.2355 8.15058 43.2751 8.50445 40.1002C8.99181 35.7253 11.488 34.1753 11.969 34.1191C12.3673 34.0732 13.1556 34.3274 12.7869 38.6981C12.7424 39.2252 15.1538 40.8648 15.1538 40.8648C10.2335 43.7064 10.6277 45.8459 9.62115 48.5042ZM19.6948 43.223C19.4468 43.2126 14.8974 40.1544 15.05 40.096C20.2987 38.0877 20.678 34.9565 21.0403 34.1607C20.9979 34.0941 22.0659 33.6691 23.5195 33.1378C25.8588 32.3129 29.0945 31.2816 30.2112 30.8754L30.2684 30.8587C30.7749 30.715 30.7961 30.8087 30.9317 30.9837C31.3343 31.4983 32.0102 31.842 32.0844 31.8774C33.0803 32.342 34.3644 32.2983 34.3941 32.3379C34.5933 32.6212 34.7204 43.871 19.6948 43.223ZM35.1845 37.6377C35.14 37.6398 34.0656 36.6544 34.0656 36.6544C34.0656 36.6544 34.481 35.7649 34.6907 34.6336C34.8602 33.7128 34.945 32.3483 34.945 32.3483C34.945 32.3483 39.8843 31.7691 40.1047 30.0941C40.3547 28.1817 38.9477 24.2047 38.738 23.5547C38.649 23.2797 37.4221 20.0339 37.242 19.1944C37.0386 18.2486 37.4263 16.7215 38.0048 16.4986C39.3673 15.9715 41.374 18.2236 41.4948 21.5006C41.9546 34.0628 35.229 37.6357 35.1845 37.6377Z" stroke="#2ACA4B" mask="url(#path-1-outside-1_2281_55)"/></g><defs><clipPath id="clip0_2281_55"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_discord_smooth:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M42.3201 9.18609C39.0846 7.70961 35.6387 6.62168 32.0086 6C31.5614 6.77709 31.0354 7.83912 30.6934 8.69393C26.8529 8.12406 23.0387 8.12406 19.2771 8.69393C18.9089 7.83912 18.3828 6.77709 17.9356 6C14.3055 6.62168 10.8596 7.70961 7.62408 9.18609C1.10049 18.8739 -0.661938 28.3286 0.206122 37.6278C4.54642 40.8139 8.72888 42.7307 12.8587 44C13.8846 42.6271 14.779 41.1507 15.5681 39.6224C14.0688 39.0784 12.6483 38.379 11.3068 37.576C11.675 37.317 12.017 37.0321 12.3589 36.773C20.5923 40.5549 29.5097 40.5549 37.6379 36.773C37.9798 37.058 38.3218 37.317 38.6901 37.576C37.3485 38.379 35.9017 39.0525 34.4287 39.6224C35.2178 41.1507 36.1122 42.6271 37.1381 44C41.2679 42.7307 45.4767 40.8139 49.7907 37.6278C50.8166 26.8262 48.0283 17.4751 42.3727 9.18609H42.3201ZM16.6729 31.9291C14.2003 31.9291 12.1748 29.6756 12.1748 26.9039C12.1748 24.1323 14.1477 21.8787 16.6729 21.8787C19.1982 21.8787 21.1973 24.1323 21.171 26.9039C21.171 29.6497 19.1982 31.9291 16.6729 31.9291ZM33.2713 31.9291C30.7986 31.9291 28.7731 29.6756 28.7731 26.9039C28.7731 24.1323 30.746 21.8787 33.2713 21.8787C35.7965 21.8787 37.7957 24.1323 37.7694 26.9039C37.7694 29.6497 35.7965 31.9291 33.2713 31.9291Z" fill="#2ACA4B"/></svg>`,
+    icon_bigbluebutton:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2281_38)"><path d="M25 0C18.3696 0 12.0107 2.63392 7.32233 7.32233C2.63392 12.0107 0 18.3696 0 25C0 31.6304 2.63392 37.9893 7.32233 42.6777C12.0107 47.3661 18.3696 50 25 50C31.6304 50 37.9893 47.3661 42.6777 42.6777C47.3661 37.9893 50 31.6304 50 25C50 18.3696 47.3661 12.0107 42.6777 7.32233C37.9893 2.63392 31.6304 0 25 0ZM14.2458 9.40833C15.7937 9.40833 17.1167 10.1667 18.2125 11.6812C19.3083 13.1979 19.8521 15.0188 19.8521 17.15V31.2333C19.8521 32.3562 20.4146 32.9187 21.5375 32.9187H30.2333C31.3542 32.9187 31.9167 32.3562 31.9167 31.2333V24.5562C31.9167 23.4729 31.3542 22.9146 30.2333 22.875H28.5521C26.3833 22.8 24.5458 22.2333 23.0521 21.175C21.5542 20.1187 20.8083 18.8146 20.8083 17.2646H30.2333C32.2542 17.2646 33.975 17.9771 35.3958 19.3979C36.0848 20.0665 36.6296 20.8691 36.9965 21.7562C37.3634 22.6434 37.5447 23.5963 37.5292 24.5562V31.2333C37.5292 33.2542 36.8167 34.9771 35.3958 36.3979C33.975 37.8187 32.2521 38.525 30.2333 38.525H21.5375C19.5167 38.525 17.7979 37.8187 16.3771 36.3979C15.6879 35.7283 15.1432 34.9246 14.7766 34.0363C14.4101 33.1481 14.2294 32.1941 14.2458 31.2333V9.40833Z" fill="#2ACA4B"/></g><defs><clipPath id="clip0_2281_38"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_youtube:`<svg width="51" height="50" viewBox="0 0 51 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M49.9625 13.5028C49.6723 12.4472 49.105 11.4845 48.3173 10.7106C47.5296 9.93668 46.5488 9.37849 45.4726 9.09158C41.4821 8.0175 25.5177 8.00002 25.5177 8.00002C25.5177 8.00002 9.55574 7.98253 5.56272 9.00915C4.48719 9.30926 3.50842 9.87535 2.72037 10.6531C1.93233 11.4308 1.36147 12.3941 1.0626 13.4503C0.010197 17.362 3.73348e-06 25.475 3.73348e-06 25.475C3.73348e-06 25.475 -0.010189 33.628 1.03457 37.4997C1.62066 39.6404 3.34069 41.3314 5.52704 41.9084C9.55829 42.9825 25.4794 43 25.4794 43C25.4794 43 41.4439 43.0175 45.4344 41.9933C46.511 41.7069 47.4927 41.15 48.2824 40.3777C49.0721 39.6053 49.6424 38.6443 49.937 37.5896C50.992 33.6805 50.9996 25.5699 50.9996 25.5699C50.9996 25.5699 51.0506 17.4144 49.9625 13.5028ZM20.4111 32.9911L20.4238 18.0039L33.6923 25.51L20.4111 32.9911Z" fill="#2ACA4B"/></svg>`,
+    icon_hackmd:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2281_47)"><path d="M47 17.2141V47.2698C47 47.9939 46.7105 48.6884 46.1952 49.2004C45.6798 49.7124 44.9809 50 44.2521 50H5.75094C5.38982 50.0004 5.03217 49.9301 4.69843 49.793C4.36469 49.656 4.0614 49.455 3.80591 49.2014C3.55042 48.9479 3.34774 48.6468 3.20946 48.3153C3.07117 47.9839 3 47.6286 3 47.2698V1.73016C3.0008 1.0058 3.29098 0.311381 3.8068 -0.200537C4.32261 -0.712456 5.02187 -1 5.75094 -1H28.6674V14.4809C28.6674 15.2058 28.9572 15.901 29.4732 16.4135C29.9891 16.9261 30.6888 17.2141 31.4184 17.2141H47ZM36.0023 21.7683C36.0023 21.5296 35.9068 21.3007 35.7369 21.1319C35.567 20.9631 35.3366 20.8683 35.0964 20.8683H14.9187C14.6785 20.8683 14.4481 20.9631 14.2782 21.1319C14.1083 21.3007 14.0128 21.5296 14.0128 21.7683V23.5894C14.0128 23.8282 14.1083 24.0571 14.2782 24.2259C14.4481 24.3947 14.6785 24.4895 14.9187 24.4895H35.0843C35.3245 24.4895 35.555 24.3947 35.7248 24.2259C35.8947 24.0571 35.9902 23.8282 35.9902 23.5894L36.0023 21.7683ZM36.0023 29.0528C36.0023 28.8141 35.9068 28.5851 35.7369 28.4163C35.567 28.2475 35.3366 28.1527 35.0964 28.1527H14.9187C14.6785 28.1527 14.4481 28.2475 14.2782 28.4163C14.1083 28.5851 14.0128 28.8141 14.0128 29.0528V30.8769C14.0128 31.1156 14.1083 31.3445 14.2782 31.5133C14.4481 31.6821 14.6785 31.7769 14.9187 31.7769H35.0843C35.3245 31.7769 35.555 31.6821 35.7248 31.5133C35.8947 31.3445 35.9902 31.1156 35.9902 30.8769L36.0023 29.0528ZM36.0023 36.3402C36.0023 36.1015 35.9068 35.8726 35.7369 35.7038C35.567 35.535 35.3366 35.4401 35.0964 35.4401H14.9187C14.6785 35.4401 14.4481 35.535 14.2782 35.7038C14.1083 35.8726 14.0128 36.1015 14.0128 36.3402V38.1613C14.0128 38.4 14.1083 38.6289 14.2782 38.7977C14.4481 38.9665 14.6785 39.0614 14.9187 39.0614H35.0843C35.3245 39.0614 35.555 38.9665 35.7248 38.7977C35.8947 38.6289 35.9902 38.4 35.9902 38.1613L36.0023 36.3402ZM45.8555 13.5719H32.3333V0.137065C32.7049 0.366237 33.051 0.633736 33.3661 0.935113L45.0523 12.5458C45.3565 12.858 45.6258 13.202 45.8555 13.5719Z" fill="#2ACA4B"/></g><defs><clipPath id="clip0_2281_47"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_protonmail:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M0 6.1115V16.7959L15 29.3296L22.7083 22.96C22.5 22.96 22.5 22.7546 22.2917 22.7546L1.66667 5.28962C1.04167 4.67321 0 5.08415 0 6.1115ZM12.2917 32.4116L0 22.1381V42.8906C0 45.1508 1.875 47 4.16667 47H35.4167V17.6178L17.7083 32.4116C16.0417 33.6445 13.9583 33.6445 12.2917 32.4116ZM39.5833 13.3029V12.4811L48.3333 5.28962C48.9583 4.67321 50 5.28962 50 6.1115V42.8906C50 45.1508 48.125 47 45.8333 47H39.5833V13.7139C39.5833 13.7139 39.5833 13.5084 39.5833 13.3029Z" fill="#2ACA4B"/></svg>`,
+    icon_reddit:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2281_72)"><path d="M19.5 30C19.0056 30 18.5222 29.8534 18.1111 29.5787C17.7 29.304 17.3795 28.9134 17.1903 28.4565C17.0011 28 16.9516 27.4972 17.0481 27.0122C17.1445 26.5272 17.3826 26.0819 17.7323 25.7322C18.0819 25.3825 18.5273 25.1444 19.0122 25.0481C19.4972 24.9515 20 25.0009 20.4566 25.1903C20.9134 25.3794 21.3041 25.7 21.5788 26.1109C21.8534 26.5222 22 27.0056 22 27.5C22 27.8284 21.9353 28.1534 21.8097 28.4565C21.6841 28.76 21.5 29.0356 21.2678 29.2678C21.0356 29.5 20.76 29.684 20.4566 29.8097C20.1534 29.9353 19.8284 30 19.5 30ZM50 25C50 29.9447 48.5338 34.7781 45.7869 38.8893C43.0397 43.0006 39.1353 46.2046 34.5672 48.0968C29.9991 49.989 24.9722 50.4843 20.1228 49.5196C15.2732 48.555 10.8187 46.174 7.32234 42.6778C3.82603 39.1812 1.445 34.7268 0.480373 29.8772C-0.484252 25.0278 0.0108423 20.0009 1.90303 15.4329C3.79522 10.8647 6.99953 6.96027 11.1107 4.21325C15.222 1.46622 20.0556 0 25 0C31.6303 0 37.9894 2.6339 42.6778 7.32234C47.3659 12.0107 50 18.3696 50 25ZM36.6562 20.8437C35.7947 20.8944 34.9822 21.2619 34.375 21.875C31.8047 20.1762 28.7994 19.254 25.7187 19.2187L27.4687 11.3125L33.0625 12.5625C33.0584 12.8893 33.1191 13.2137 33.2413 13.5168C33.3638 13.82 33.5447 14.0958 33.7744 14.3284C34.0041 14.561 34.2778 14.7456 34.5794 14.8716C34.8809 14.9976 35.2044 15.0625 35.5312 15.0625C36.1972 15.0543 36.8331 14.784 37.3009 14.3101C37.7691 13.8363 38.0313 13.1972 38.0313 12.5312C38.05 11.9598 37.8697 11.3997 37.5216 10.9464C37.1731 10.493 36.6781 10.1746 36.1212 10.0456C35.5644 9.91646 34.98 9.98468 34.4675 10.2385C33.9553 10.4924 33.5472 10.9161 33.3125 11.4375L27.0625 10.0625C26.9137 10.034 26.7597 10.0633 26.6319 10.1447C26.5041 10.226 26.4122 10.3531 26.375 10.5L24.4375 19.2187C21.3581 19.2628 18.3553 20.184 15.7813 21.875C15.443 21.5256 15.0326 21.2544 14.5787 21.08C14.1248 20.9056 13.6383 20.8322 13.1532 20.8653C12.6681 20.8981 12.1959 21.0362 11.7697 21.2703C11.3435 21.5044 10.9735 21.8287 10.6854 22.2203C10.3974 22.6122 10.1982 23.0622 10.1019 23.5387C10.0056 24.0153 10.0143 24.5072 10.1276 24.98C10.2408 25.4528 10.4558 25.8953 10.7576 26.2765C11.0594 26.6578 11.4407 26.9687 11.875 27.1875C11.8272 27.7072 11.8272 28.2303 11.875 28.75C11.875 34.0312 17.8437 38.3437 25.1875 38.3437C32.5313 38.3437 38.5 34.0312 38.5 28.75C38.5012 28.2131 38.4381 27.6781 38.3125 27.1562C38.9441 26.7984 39.4422 26.245 39.7313 25.5794C40.0206 24.9137 40.0856 24.1722 39.9162 23.4662C39.7469 22.7606 39.3522 22.129 38.7925 21.6672C38.2325 21.2056 37.5375 20.9384 36.8125 20.9062L36.6562 20.8437ZM29.7188 32.5625C28.3144 33.4447 26.6897 33.9125 25.0312 33.9125C23.3728 33.9125 21.7481 33.4447 20.3438 32.5625C20.2284 32.4572 20.0781 32.3987 19.9219 32.3987C19.7656 32.3987 19.6153 32.4572 19.5 32.5625C19.4394 32.6181 19.3909 32.6856 19.3578 32.7609C19.3247 32.8362 19.3078 32.9178 19.3078 33C19.3078 33.0822 19.3247 33.1637 19.3578 33.239C19.3909 33.3143 19.4394 33.3818 19.5 33.4375C21.1412 34.5512 23.0791 35.1465 25.0625 35.1465C27.0459 35.1465 28.9837 34.5512 30.625 33.4375C30.6856 33.3818 30.7341 33.3143 30.7672 33.239C30.8003 33.1637 30.8175 33.0822 30.8175 33C30.8175 32.9178 30.8003 32.8362 30.7672 32.7609C30.7341 32.6856 30.6856 32.6181 30.625 32.5625C30.5666 32.5009 30.4962 32.4522 30.4184 32.4187C30.3406 32.3853 30.2566 32.3678 30.1719 32.3678C30.0872 32.3678 30.0031 32.3853 29.9253 32.4187C29.8475 32.4522 29.7772 32.5009 29.7188 32.5625ZM30.5 25C30.0056 25 29.5222 25.1465 29.1109 25.4212C28.7 25.6959 28.3794 26.0865 28.1903 26.5434C28.0012 27 27.9516 27.5028 28.0481 27.9878C28.1444 28.4728 28.3825 28.9181 28.7322 29.2678C29.0819 29.6175 29.5272 29.8556 30.0122 29.9518C30.4972 30.0484 31 29.999 31.4569 29.8097C31.9134 29.6206 32.3041 29.3 32.5788 28.889C32.8534 28.4778 33 27.9943 33 27.5C33 26.8369 32.7366 26.2009 32.2678 25.7322C31.7991 25.2634 31.1631 25 30.5 25Z" fill="#2ACA4B"/></g><defs><clipPath id="clip0_2281_72"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_keet:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24.5 50L49 0L24.5 7.54717L0 0L24.5 50Z" fill="#2ACA4B"/></svg>    `,
     // terminal
     icon_consortium: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1927)"><path d="M38 41.1776V50.0011H12V41.1776H20.6667V23.5306H14.8889V14.707H29.3333V41.1776H38Z" fill="#293648"/><path d="M29.3337 0H20.667V8.82353H29.3337V0Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1927"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
     icon_terminal: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M47.619 9.70588V7.35294H45.2381V5H4.7619V7.35294H2.38095V9.70588H0V40.2941H2.38095V42.6471H4.7619V45H45.2381V42.6471H47.619V40.2941H50V9.70588H47.619ZM19.0476 30.8824H16.6667V33.2353H14.2857V35.5882H9.52381V33.2353H11.9048V30.8824H14.2857V28.5294H16.6667V26.1765H19.0476V23.8235H16.6667V21.4706H14.2857V19.1176H11.9048V16.7647H9.52381V14.4118H14.2857V16.7647H16.6667V19.1176H19.0476V21.4706H21.4286V23.8235H23.8095V26.1765H21.4286V28.5294H19.0476V30.8824ZM40.4762 35.5882H21.4286V33.2353H40.4762V35.5882Z" fill="#293648"/></svg>`,
@@ -8930,7 +10239,9 @@ const dark_theme = {
     icon_close_dark: `<svg width="15" height="15" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.25 12V9.75H7V7.5H4.75V5.25H2.5V3H0.25V0.75H2.5V3H4.75V5.25H7V7.5H9.25V9.75H11.5V12H9.25ZM7 5.25V3H9.25V0.75H11.5V3H9.25V5.25H7ZM2.5 9.75V7.5H4.75V9.75H2.5ZM0.25 12V9.75H2.5V12H0.25Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9 12.25V10H6.75V7.75H5V10H2.75V12.25H0V9.5H2.25V7.25H4.5V5.5H2.25V3.25H0V0.5H2.75V2.75H5V5H6.75V2.75H9V0.5H11.75V3.25H9.5V5.5H7.25V7.25H9.5V9.5H11.75V12.25H9ZM9.25 9.75V7.5H7V5.25H9.25V3H11.5V0.75H9.25V3H7V5.25H4.75V3H2.5V0.75H0.25V3H2.5V5.25H4.75V7.5H2.5V9.75H0.25V12H2.5V9.75H4.75V7.5H7V9.75H9.25V12H11.5V9.75H9.25Z" fill="#293648"/></svg>`,
     icon_close_light: `<svg width="15" height="15" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.25 11.9023V9.65234H7V7.40234H4.75V5.15234H2.5V2.90234H0.25V0.652344H2.5V2.90234H4.75V5.15234H7V7.40234H9.25V9.65234H11.5V11.9023H9.25ZM7 5.15234V2.90234H9.25V0.652344H11.5V2.90234H9.25V5.15234H7ZM2.5 9.65234V7.40234H4.75V9.65234H2.5ZM0.25 11.9023V9.65234H2.5V11.9023H0.25Z" fill="white"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9 12.1523V9.90234H6.75V7.65234H5V9.90234H2.75V12.1523H0V9.40234H2.25V7.15234H4.5V5.40234H2.25V3.15234H0V0.402344H2.75V2.65234H5V4.90234H6.75V2.65234H9V0.402344H11.75V3.15234H9.5V5.40234H7.25V7.15234H9.5V9.40234H11.75V12.1523H9ZM9.25 9.65234V7.40234H7V5.15234H9.25V2.90234H11.5V0.652344H9.25V2.90234H7V5.15234H4.75V2.90234H2.5V0.652344H0.25V2.90234H2.5V5.15234H4.75V7.40234H2.5V9.65234H0.25V11.9023H2.5V9.65234H4.75V7.40234H7V9.65234H9.25V11.9023H11.5V9.65234H9.25Z" fill="white"/></svg>`,
     icon_pdf_reader: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2040_2024)"><path fill-rule="evenodd" clip-rule="evenodd" d="M45 6.00332V8V50H5V0H37H39V2L41 2.00332L40.9998 4.00332H43V6.00332H45ZM37 2H39V4H40.9991L41 6.00332H43V8H37V2ZM8 3H33.9987V11.0032H42V47H8V3Z" fill="white"/><path d="M26.9981 12.0012H10.9981V14.0012H26.9981V12.0012Z" fill="white"/><path d="M32.9981 25.9951H10.9981V27.9951H32.9981V25.9951Z" fill="white"/><path d="M34.9981 15.9953H10.9981V17.9953H34.9981V15.9953Z" fill="white"/><path d="M32.9981 29.9989H10.9981V31.9989H32.9981V29.9989Z" fill="white"/></g><defs><clipPath id="clip0_2040_2024"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_pdf_reader_solid:`<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M35.3636 0H6V50H44V8.92857H35.3636V0ZM10.4902 11.0698H27.072V13.2127H10.4902V11.0698ZM33.2902 26.0633H10.4902V28.2062H33.2902V26.0633ZM10.4902 15.3492H35.3629V17.4921H10.4902V15.3492ZM33.2902 30.3531H10.4902V32.496H33.2902V30.3531Z" fill="white"/><path d="M37.0909 1.78571H38.8182V3.57143H40.5455V5.35714H42.2727V7.14286H37.0909V1.78571Z" fill="white"/></svg>`,
     icon_folder: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M28 15H0V41H50V9H28V15ZM31 12V18H3V38H47V12H31Z" fill="white"/></svg>`,
+    icon_folder_solid:`<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M30.137 9V15.5306H0V41H50V9H30.137Z" fill="#FFFAF4"/></svg>`,
     // arrows
     icon_arrow_down: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="#293648"/></svg>`,
     icon_arrow_up: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.5789 9H18.4211V17H7.89473V27.6667H0V41H18.4211V33H31.5789V41H50V27.6667H42.1053V17H31.5789V9Z" fill="#293648"/></svg>`,
@@ -8963,7 +10274,7 @@ const dark_theme = {
 
 module.exports = dark_theme
 }).call(this)}).call(this,require('_process'),"/src/node_modules/theme/dark-theme")
-},{"_process":2,"path":1,"theme/brand":44}],46:[function(require,module,exports){
+},{"_process":2,"path":1,"theme/brand":45}],47:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const brand = require('theme/brand')
 const path = require('path')
@@ -8993,11 +10304,26 @@ const light_theme = {
   highlight_color,
   
   img_src:{
-    // social icons
+    // social icons pixel
     icon_blogger: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1919)"><path d="M47.0588 26.4706V23.5294H44.1176V20.5882H38.2353V17.6471H35.2941V5.88235H32.3529V2.94118H29.4118V0H5.88235V2.94118H2.94118V5.88235H0V44.1176H2.94118V47.0588H5.88235V50H44.1176V47.0588H47.0588V44.1176H50V26.4706H47.0588ZM5.88235 35.2941H8.82353V32.3529H38.2353V35.2941H41.1765V38.2353H38.2353V41.1765H8.82353V38.2353H5.88235V35.2941ZM5.88235 14.7059H8.82353V11.7647H26.4706V14.7059H29.4118V17.6471H26.4706V20.5882H8.82353V17.6471H5.88235V14.7059Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1919"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
     icon_discord: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M47.3684 25.7692V18.1538H44.7368V13.0769H39.4737V8H28.9474V13.0769H34.2105V15.6154H15.7895V13.0769H21.0526V8H10.5263V13.0769H5.26316V18.1538H2.63158V25.7692H0V35.9231H2.63158V38.4615H7.89474V41H15.7895V35.9231H34.2105V41H42.1053V38.4615H47.3684V35.9231H50V25.7692H47.3684ZM21.0526 30.8462H15.7895V20.6923H21.0526V30.8462ZM34.2105 30.8462H28.9474V20.6923H34.2105V30.8462Z" fill="#293648"/></svg>`,
     icon_twitter: `<svg width="17" height="17" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 7.89474V10.5263H47.3684V13.1579H44.7368V21.0526H47.3684V28.9474H44.7368V36.8421H42.1053V42.1053H39.4737V44.7368H34.2105V47.3684H28.9474V50H15.7895V47.3684H7.89474V44.7368H5.26316V39.4737H7.89474V42.1053H13.1579V39.4737H10.5263V36.8421H7.89474V34.2105H5.26316V28.9474H2.63158V23.6842H5.26316V26.3158H7.89474V28.9474H13.1579V26.3158H10.5263V23.6842H7.89474V21.0526H5.26316V18.4211H2.63158V13.1579H0V7.89474H2.63158V10.5263H7.89474V13.1579H15.7895V15.7895H21.0526V13.1579H23.6842V7.89474H26.3158V2.63158H31.5789V0H42.1053V2.63158H44.7368V5.26316H47.3684V7.89474H50Z" fill="#293648"/></svg>`,
     icon_github: `<svg width="18" height="18" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1915)"><path d="M50 15.7895V34.2105H47.3684V39.4737H44.7368V42.1053H42.1053V44.7368H39.4737V47.3684H34.2105V50H28.9474V34.2105H26.3158V31.5789H34.2105V28.9474H36.8421V26.3158H39.4737V18.4211H36.8421V10.5263H34.2105V13.1579H31.5789V15.7895H28.9474V13.1579H21.0526V15.7895H18.4211V13.1579H15.7895V10.5263H13.1579V18.4211H10.5263V26.3158H13.1579V28.9474H15.7895V31.5789H23.6842V34.2105H21.0526V36.8421H18.4211V39.4737H13.1579V36.8421H10.5263V34.2105H7.89474V39.4737H10.5263V42.1053H13.1579V44.7368H18.4211V42.1053H21.0526V50H15.7895V47.3684H10.5263V44.7368H7.89474V42.1053H5.26316V39.4737H2.63158V34.2105H0V15.7895H2.63158V10.5263H5.26316V7.89474H7.89474V5.26316H10.5263V2.63158H15.7895V0H34.2105V2.63158H39.4737V5.26316H42.1053V7.89474H44.7368V10.5263H47.3684V15.7895H50Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1915"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    // social icons smooth
+    icon_mastodon:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M47.9982 16.4153C47.9982 5.56761 40.9884 2.39005 40.9884 2.39005C37.4552 0.745015 31.3873 0.052501 25.0826 0H24.9273C18.6227 0.052501 12.5597 0.745015 9.02399 2.39005C9.02399 2.39005 2.01421 5.57011 2.01421 16.4153C2.01421 18.8979 1.96736 21.8679 2.0438 25.018C2.29776 35.6257 3.96206 46.0809 13.6347 48.6759C18.095 49.8735 21.9242 50.1235 25.0062 49.951C30.5983 49.636 33.737 47.9284 33.737 47.9284L33.5521 43.8133C33.5521 43.8133 29.5553 45.0909 25.0678 44.9359C20.6199 44.7809 15.9278 44.4509 15.2078 38.9133C15.1398 38.3987 15.1069 37.8799 15.1092 37.3607C15.1092 37.3607 19.4733 38.4432 25.0062 38.7007C28.389 38.8582 31.5598 38.5007 34.7824 38.1107C40.9613 37.3632 46.3413 33.5031 47.0169 29.9756C48.087 24.418 47.9982 16.4153 47.9982 16.4153ZM39.7309 30.3906H34.6V17.6428C34.6 14.9553 33.4855 13.5928 31.2541 13.5928C28.7885 13.5928 27.5532 15.2103 27.5532 18.4104V25.388H22.4518V18.4104C22.4518 15.2103 21.2165 13.5928 18.7484 13.5928C16.517 13.5928 15.4026 14.9578 15.4026 17.6428V30.3906H10.2716V17.2578C10.2716 14.5728 10.9447 12.4402 12.3008 10.8627C13.6964 9.28518 15.5234 8.47516 17.7942 8.47516C20.4201 8.47516 22.4099 9.49768 23.7241 11.5452L25.0013 13.7178L26.2809 11.5452C27.5951 9.49768 29.5849 8.47516 32.2108 8.47516C34.4792 8.47516 36.3087 9.28518 37.7042 10.8627C39.0578 12.4402 39.7309 14.5728 39.7309 17.2578V30.3906Z" fill="#293648"/></svg>`,
+    icon_opencollective:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2284_208)"><path d="M45.9543 38.6405C48.5129 34.718 50 30.0326 50 25C50 19.9674 48.5129 15.282 45.9543 11.3595L40.1106 17.2031C41.318 19.5385 42 22.1896 42 25C42 27.8104 41.318 30.4615 40.1106 32.7969L45.9543 38.6405Z" fill="#293648"/><path d="M34.8542 11.1458C32.0745 9.16504 28.6733 8 25 8C15.6112 8 8 15.6112 8 25C8 34.3888 15.6112 42 25 42C28.6733 42 32.0745 40.835 34.8542 38.8542L40.5648 44.5648C36.2942 47.9669 30.8845 50 25 50C11.1929 50 0 38.8071 0 25C0 11.1929 11.1929 0 25 0C30.8845 0 36.2942 2.03309 40.5648 5.43515L34.8542 11.1458Z" fill="#293648"/></g><defs><clipPath id="clip0_2284_208"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_matrix:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2284_206)"><path d="M1.31875 1.15V48.8547H4.75156V50.0031H0V0.003125H4.75156V1.15156L1.31875 1.15ZM15.9922 16.2703V18.6875H16.0563C16.7 17.7578 17.4813 17.0516 18.3828 16.5453C19.2875 16.0406 20.3375 15.7891 21.5078 15.7891C22.6313 15.7891 23.6641 16.0094 24.5937 16.4406C25.5297 16.8797 26.2297 17.6531 26.7172 18.7516C27.2469 17.9703 27.9719 17.2781 28.8734 16.6844C29.7781 16.0906 30.8531 15.7891 32.0969 15.7891C33.0406 15.7891 33.9109 15.9031 34.7172 16.1391C35.5312 16.3656 36.2156 16.7328 36.7922 17.2375C37.3625 17.7516 37.8094 18.4109 38.1359 19.225C38.4531 20.0375 38.6156 21.0234 38.6156 22.1797V34.1094H33.7266V24.0031C33.7266 23.4078 33.7016 22.8391 33.6516 22.3094C33.6203 21.8297 33.4969 21.3656 33.2781 20.9344C33.0734 20.5422 32.7578 20.2172 32.3656 20.0078C31.9672 19.7703 31.4141 19.6578 30.7297 19.6578C30.0375 19.6578 29.4844 19.7875 29.0609 20.0469C28.6469 20.3078 28.2969 20.6656 28.0609 21.0891C27.8094 21.5375 27.6469 22.0328 27.5797 22.5375C27.4984 23.0828 27.4594 23.6297 27.45 24.175V34.1109H22.5578V24.1094C22.5578 23.5797 22.55 23.0594 22.5187 22.5469C22.5016 22.0516 22.4047 21.5719 22.2172 21.1156C22.0547 20.6766 21.7469 20.3094 21.3547 20.0656C20.9562 19.8047 20.3609 19.6672 19.5797 19.6672C19.3438 19.6672 19.0359 19.7156 18.6609 19.8219C18.2859 19.9266 17.9125 20.1219 17.5625 20.4078C17.2047 20.7016 16.8938 21.1156 16.6422 21.6531C16.3906 22.1891 16.2687 22.8969 16.2687 23.7766V34.1203H11.3766V16.275L15.9922 16.2703ZM48.6813 48.8531V1.14844H45.2484V0H50V50H45.2484V48.8516L48.6813 48.8531Z" fill="#293648"/></g><defs><clipPath id="clip0_2284_206"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_twitter_smooth:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2284_214)"><path fill-rule="evenodd" clip-rule="evenodd" d="M15.7235 45.0005C34.5914 45.0005 44.9117 29.609 44.9117 16.2632C44.9117 15.8251 44.9117 15.3902 44.8817 14.957C46.8893 13.5294 48.6218 11.7568 49.9993 9.72861C48.1293 10.5458 46.1417 11.0817 44.1092 11.318C46.2492 10.0553 47.8518 8.07152 48.6193 5.73071C46.6042 6.90726 44.4017 7.73763 42.1041 8.18316C38.219 4.11688 31.7214 3.91987 27.5888 7.74492C24.9262 10.2113 23.7937 13.8885 24.6212 17.396C16.3735 16.9875 8.68827 13.1526 3.47814 6.84402C0.755567 11.4592 2.1481 17.361 6.65572 20.3246C5.02318 20.2778 3.42564 19.8451 1.9981 19.0623V19.1905C2.0006 23.9977 5.44319 28.1369 10.2283 29.0895C8.71827 29.4956 7.13323 29.5545 5.59819 29.2616C6.94073 33.3771 10.7933 36.1959 15.1809 36.2771C11.5483 39.0881 7.06073 40.6144 2.44061 40.6095C1.62559 40.6071 0.810568 40.5602 -0.00195312 40.4643C4.69067 43.4278 10.1483 45.0006 15.7235 44.9932" fill="#293648"/></g><defs><clipPath id="clip0_2284_214"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_github:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2284_195)"><path fill-rule="evenodd" clip-rule="evenodd" d="M25 0C38.8075 0 50 11.4748 50 25.6323C50 36.9548 42.845 46.5599 32.9175 49.9524C31.65 50.2049 31.2 49.4044 31.2 48.7219C31.2 47.8769 31.23 45.117 31.23 41.687C31.23 39.297 30.43 37.7371 29.5325 36.9421C35.1 36.3071 40.95 34.1394 40.95 24.2944C40.95 21.4944 39.98 19.2096 38.375 17.4146C38.635 16.7671 39.4925 14.1599 38.13 10.6299C38.13 10.6299 36.035 9.94306 31.2625 13.2581C29.265 12.6906 27.125 12.405 25 12.395C22.875 12.405 20.7375 12.6906 18.7425 13.2581C13.965 9.94306 11.865 10.6299 11.865 10.6299C10.5075 14.1599 11.365 16.7671 11.6225 17.4146C10.025 19.2096 9.04751 21.4944 9.04751 24.2944C9.04751 34.1144 14.885 36.3154 20.4375 36.9629C19.7225 37.6029 19.075 38.7319 18.85 40.3894C17.425 41.0444 13.805 42.178 11.575 38.2605C11.575 38.2605 10.2525 35.7977 7.7425 35.6177C7.7425 35.6177 5.305 35.5853 7.5725 37.1753C7.5725 37.1753 9.21 37.9628 10.3475 40.9253C10.3475 40.9253 11.815 45.5002 18.77 43.9502C18.7825 46.0927 18.805 48.1119 18.805 48.7219C18.805 49.3994 18.345 50.1923 17.0975 49.9548C7.16249 46.5673 0 36.9573 0 25.6323C0 11.4748 11.195 0 25 0Z" fill="#293648"/></g><defs><clipPath id="clip0_2284_195"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_cabal:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24.5 50L49 0L24.5 7.54717L0 0L24.5 50Z" fill="#293648"/></svg>`,
+    icon_jitsi:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2284_202)"><mask id="path-1-outside-1_2284_202" maskUnits="userSpaceOnUse" x="7" y="-1" width="36" height="53" fill="black"><rect fill="white" x="7" y="-1" width="36" height="53"/><path d="M39.7233 16.309C38.3714 15.4632 36.4876 15.5882 35.9091 15.6486L35.5786 15.6549C35.2925 15.534 35.5871 14.8278 35.6655 14.0861C35.7735 13.0528 35.3879 11.6341 34.6886 10.4987C34.3517 9.95288 34.2309 9.9008 34.481 9.63831C36.3223 7.70501 36.6105 5.56339 36.0257 3.78009C34.8836 0.290578 34.6526 -0.25941 34.6886 0.0905825C34.8327 1.51347 34.5106 3.50093 34.2902 4.30925C33.9766 5.45506 32.9044 6.9092 30.0968 8.23417C29.4378 8.54458 26.7806 9.7758 26.3081 10.3133C25.7232 10.982 25.5791 11.6549 25.3037 12.9862C25.0113 14.3945 24.9032 15.709 25.2465 17.2152C25.3122 17.509 25.38 17.7277 25.4181 17.9006C25.4173 17.897 25.4158 17.8935 25.4139 17.8902C25.4923 18.1965 25.3651 18.3777 25.1914 18.486C25.0189 18.5574 24.8402 18.6132 24.6574 18.6527L24.651 18.6548C24.2209 18.7215 23.8077 18.7944 23.4114 18.8715C20.4894 19.3652 14.0858 20.8672 16.3595 28.6713C17.1668 31.3191 18.7412 33.0003 19.6524 33.3087L19.6842 33.3191C19.8346 33.3857 19.9978 33.4441 20.1567 33.4753C20.1736 33.4795 20.1821 33.7337 20.1482 34.092L20.1249 34.2461C19.9978 35.1503 19.4723 36.5461 18.6988 36.5648C18.3895 36.5732 17.0248 35.7607 16.6392 35.5128C14.4778 34.117 13.7065 33.3295 12.1724 33.1608C10.9074 33.0212 8.0637 35.4378 8.00225 40.5544C7.92809 46.8021 9.71015 49.9083 9.761 50C11.0811 44.1168 12.0325 43.5418 15.4589 41.2398C15.7302 41.0585 18.9489 43.721 19.7223 43.7064C23.5937 43.6355 30.5333 43.8793 33.8961 37.0482C33.9618 36.9169 35.0594 38.0357 35.1569 38.0336C35.1972 38.0315 41.0646 35.4628 41.9355 23.6609C42.3339 18.2715 40.7997 16.9819 39.7233 16.309ZM35.1209 12.4633C35.2904 13.1445 35.2417 13.8528 35.034 14.4361C34.6568 15.3257 34.0805 15.7924 33.36 15.7424C33.1274 15.7108 32.9039 15.6328 32.7031 15.5132C31.9022 15.0528 31.4678 13.8757 31.8089 12.9612C31.8168 12.9477 31.8239 12.9338 31.8301 12.9195C31.9191 12.6862 32.1352 12.4258 32.4128 12.1612C32.9828 11.6654 34.1017 10.8279 34.2224 10.8279C34.375 10.832 34.945 11.7508 35.1209 12.4633ZM35.1124 2.23221C35.1251 2.11138 35.4366 3.03427 35.5383 3.3551C35.9812 4.74049 35.9219 5.35506 35.8223 6.05713C35.5637 7.84459 34.5954 9.01957 33.8643 9.73622C32.718 10.8612 32.4489 11.0237 32.9489 10.1341C34.5445 7.29877 34.8814 4.63216 35.1124 2.23221ZM26.4183 10.9529C26.6238 10.455 27.6557 9.90497 28.5139 9.41331C29.3997 8.90499 32.2158 8.18417 33.9512 5.9363C34.4873 5.24256 33.4977 9.9258 30.9486 12.1903C30.0883 12.9549 27.7235 13.3507 25.683 14.7778C25.4732 14.9257 25.7296 12.3758 26.4183 10.9529ZM25.8716 15.1049C26.3716 14.6965 27.2786 14.1111 30.5524 13.0487C30.9571 12.9174 30.9274 13.0528 31.1245 14.0007C31.3343 15.0132 31.5419 15.9444 33.6821 16.4548C33.8347 16.4923 32.9871 18.0631 32.7434 18.2694C32.2666 19.0194 29.745 21.1693 28.6771 20.9652C27.946 20.8256 26.3738 19.1006 25.9457 18.1486C25.6385 17.4652 25.0875 15.7444 25.8716 15.1049ZM16.7579 24.0359C17.1075 22.4047 18.417 21.5776 18.4552 21.5443C19.1184 20.9777 20.4025 20.4652 21.7396 20.0777C21.9409 20.0256 22.0659 19.9985 22.0955 19.9923C22.9219 19.8256 23.9602 19.5485 24.6468 19.4798C25.1681 19.4277 25.8101 19.161 26.3377 19.5548C26.9099 20.2381 28.1685 21.3693 28.8614 21.4277C29.0966 21.4464 30.6795 20.961 33.2753 18.6756C33.5995 18.3902 33.9406 18.109 34.3008 17.8465L34.4047 17.7715C35.2014 17.2027 36.0829 16.7298 37.0407 16.5215C37.3373 16.4569 35.9812 17.7819 37.1424 20.5548C37.9031 22.3714 40.0051 28.6025 39.6597 29.6004C39.4542 30.1962 39.2677 30.3066 38.7443 30.0691C37.278 29.4004 35.4726 27.4254 32.0039 26.0942C29.2089 25.0213 26.8929 25.0463 25.3927 25.3359C21.9409 26.0046 20.1525 27.4817 19.1502 28.3067C18.9976 28.4338 20.6356 27.7963 22.8245 27.5525C24.8078 27.3317 26.7976 27.5442 29.2598 29.19C30.8321 30.4837 30.4485 30.3837 29.7387 30.5775C27.0264 31.3191 21.8582 32.8524 20.055 32.5941C18.1903 32.3254 15.8891 27.6192 16.7579 24.0359ZM31.2707 30.5983C29.0924 28.0463 26.6068 27.2567 25.024 27.1525C23.0597 27.0234 21.6463 27.2713 20.3071 27.7088C20.163 27.7567 27.4841 22.5651 35.5468 28.7275C36.9983 29.8379 37.865 30.4566 38.6278 30.9483C38.738 31.0191 36.6847 31.5524 36.3372 31.6483C32.9998 32.192 32.0823 31.5483 31.2707 30.5983ZM29.406 31.117C28.6093 31.3983 27.4926 31.7858 26.2763 32.1566C27.315 31.7972 28.3584 31.4506 29.406 31.117ZM13.6091 38.2231C13.7362 36.9711 14.018 35.8357 13.893 34.5711C13.8909 34.5461 17.5249 36.994 18.5102 37.1628C18.6713 37.1898 16.8129 38.8544 14.9143 39.6377C14.2638 39.5544 13.5561 38.7461 13.6091 38.2231ZM9.62115 48.5042C9.4262 48.2355 8.15058 43.2751 8.50445 40.1002C8.99181 35.7253 11.488 34.1753 11.969 34.1191C12.3673 34.0732 13.1556 34.3274 12.7869 38.6981C12.7424 39.2252 15.1538 40.8648 15.1538 40.8648C10.2335 43.7064 10.6277 45.8459 9.62115 48.5042ZM19.6948 43.223C19.4468 43.2126 14.8974 40.1544 15.05 40.096C20.2987 38.0877 20.678 34.9565 21.0403 34.1607C20.9979 34.0941 22.0659 33.6691 23.5195 33.1378C25.8588 32.3129 29.0945 31.2816 30.2112 30.8754L30.2684 30.8587C30.7749 30.715 30.7961 30.8087 30.9317 30.9837C31.3343 31.4983 32.0102 31.842 32.0844 31.8774C33.0803 32.342 34.3644 32.2983 34.3941 32.3379C34.5933 32.6212 34.7204 43.871 19.6948 43.223ZM35.1845 37.6377C35.14 37.6398 34.0656 36.6544 34.0656 36.6544C34.0656 36.6544 34.481 35.7649 34.6907 34.6336C34.8602 33.7128 34.945 32.3483 34.945 32.3483C34.945 32.3483 39.8843 31.7691 40.1047 30.0941C40.3547 28.1817 38.9477 24.2047 38.738 23.5547C38.649 23.2797 37.4221 20.0339 37.242 19.1944C37.0386 18.2486 37.4263 16.7215 38.0048 16.4986C39.3673 15.9715 41.374 18.2236 41.4948 21.5006C41.9546 34.0628 35.229 37.6357 35.1845 37.6377Z"/></mask><path d="M39.7233 16.309C38.3714 15.4632 36.4876 15.5882 35.9091 15.6486L35.5786 15.6549C35.2925 15.534 35.5871 14.8278 35.6655 14.0861C35.7735 13.0528 35.3879 11.6341 34.6886 10.4987C34.3517 9.95288 34.2309 9.9008 34.481 9.63831C36.3223 7.70501 36.6105 5.56339 36.0257 3.78009C34.8836 0.290578 34.6526 -0.25941 34.6886 0.0905825C34.8327 1.51347 34.5106 3.50093 34.2902 4.30925C33.9766 5.45506 32.9044 6.9092 30.0968 8.23417C29.4378 8.54458 26.7806 9.7758 26.3081 10.3133C25.7232 10.982 25.5791 11.6549 25.3037 12.9862C25.0113 14.3945 24.9032 15.709 25.2465 17.2152C25.3122 17.509 25.38 17.7277 25.4181 17.9006C25.4173 17.897 25.4158 17.8935 25.4139 17.8902C25.4923 18.1965 25.3651 18.3777 25.1914 18.486C25.0189 18.5574 24.8402 18.6132 24.6574 18.6527L24.651 18.6548C24.2209 18.7215 23.8077 18.7944 23.4114 18.8715C20.4894 19.3652 14.0858 20.8672 16.3595 28.6713C17.1668 31.3191 18.7412 33.0003 19.6524 33.3087L19.6842 33.3191C19.8346 33.3857 19.9978 33.4441 20.1567 33.4753C20.1736 33.4795 20.1821 33.7337 20.1482 34.092L20.1249 34.2461C19.9978 35.1503 19.4723 36.5461 18.6988 36.5648C18.3895 36.5732 17.0248 35.7607 16.6392 35.5128C14.4778 34.117 13.7065 33.3295 12.1724 33.1608C10.9074 33.0212 8.0637 35.4378 8.00225 40.5544C7.92809 46.8021 9.71015 49.9083 9.761 50C11.0811 44.1168 12.0325 43.5418 15.4589 41.2398C15.7302 41.0585 18.9489 43.721 19.7223 43.7064C23.5937 43.6355 30.5333 43.8793 33.8961 37.0482C33.9618 36.9169 35.0594 38.0357 35.1569 38.0336C35.1972 38.0315 41.0646 35.4628 41.9355 23.6609C42.3339 18.2715 40.7997 16.9819 39.7233 16.309ZM35.1209 12.4633C35.2904 13.1445 35.2417 13.8528 35.034 14.4361C34.6568 15.3257 34.0805 15.7924 33.36 15.7424C33.1274 15.7108 32.9039 15.6328 32.7031 15.5132C31.9022 15.0528 31.4678 13.8757 31.8089 12.9612C31.8168 12.9477 31.8239 12.9338 31.8301 12.9195C31.9191 12.6862 32.1352 12.4258 32.4128 12.1612C32.9828 11.6654 34.1017 10.8279 34.2224 10.8279C34.375 10.832 34.945 11.7508 35.1209 12.4633ZM35.1124 2.23221C35.1251 2.11138 35.4366 3.03427 35.5383 3.3551C35.9812 4.74049 35.9219 5.35506 35.8223 6.05713C35.5637 7.84459 34.5954 9.01957 33.8643 9.73622C32.718 10.8612 32.4489 11.0237 32.9489 10.1341C34.5445 7.29877 34.8814 4.63216 35.1124 2.23221ZM26.4183 10.9529C26.6238 10.455 27.6557 9.90497 28.5139 9.41331C29.3997 8.90499 32.2158 8.18417 33.9512 5.9363C34.4873 5.24256 33.4977 9.9258 30.9486 12.1903C30.0883 12.9549 27.7235 13.3507 25.683 14.7778C25.4732 14.9257 25.7296 12.3758 26.4183 10.9529ZM25.8716 15.1049C26.3716 14.6965 27.2786 14.1111 30.5524 13.0487C30.9571 12.9174 30.9274 13.0528 31.1245 14.0007C31.3343 15.0132 31.5419 15.9444 33.6821 16.4548C33.8347 16.4923 32.9871 18.0631 32.7434 18.2694C32.2666 19.0194 29.745 21.1693 28.6771 20.9652C27.946 20.8256 26.3738 19.1006 25.9457 18.1486C25.6385 17.4652 25.0875 15.7444 25.8716 15.1049ZM16.7579 24.0359C17.1075 22.4047 18.417 21.5776 18.4552 21.5443C19.1184 20.9777 20.4025 20.4652 21.7396 20.0777C21.9409 20.0256 22.0659 19.9985 22.0955 19.9923C22.9219 19.8256 23.9602 19.5485 24.6468 19.4798C25.1681 19.4277 25.8101 19.161 26.3377 19.5548C26.9099 20.2381 28.1685 21.3693 28.8614 21.4277C29.0966 21.4464 30.6795 20.961 33.2753 18.6756C33.5995 18.3902 33.9406 18.109 34.3008 17.8465L34.4047 17.7715C35.2014 17.2027 36.0829 16.7298 37.0407 16.5215C37.3373 16.4569 35.9812 17.7819 37.1424 20.5548C37.9031 22.3714 40.0051 28.6025 39.6597 29.6004C39.4542 30.1962 39.2677 30.3066 38.7443 30.0691C37.278 29.4004 35.4726 27.4254 32.0039 26.0942C29.2089 25.0213 26.8929 25.0463 25.3927 25.3359C21.9409 26.0046 20.1525 27.4817 19.1502 28.3067C18.9976 28.4338 20.6356 27.7963 22.8245 27.5525C24.8078 27.3317 26.7976 27.5442 29.2598 29.19C30.8321 30.4837 30.4485 30.3837 29.7387 30.5775C27.0264 31.3191 21.8582 32.8524 20.055 32.5941C18.1903 32.3254 15.8891 27.6192 16.7579 24.0359ZM31.2707 30.5983C29.0924 28.0463 26.6068 27.2567 25.024 27.1525C23.0597 27.0234 21.6463 27.2713 20.3071 27.7088C20.163 27.7567 27.4841 22.5651 35.5468 28.7275C36.9983 29.8379 37.865 30.4566 38.6278 30.9483C38.738 31.0191 36.6847 31.5524 36.3372 31.6483C32.9998 32.192 32.0823 31.5483 31.2707 30.5983ZM29.406 31.117C28.6093 31.3983 27.4926 31.7858 26.2763 32.1566C27.315 31.7972 28.3584 31.4506 29.406 31.117ZM13.6091 38.2231C13.7362 36.9711 14.018 35.8357 13.893 34.5711C13.8909 34.5461 17.5249 36.994 18.5102 37.1628C18.6713 37.1898 16.8129 38.8544 14.9143 39.6377C14.2638 39.5544 13.5561 38.7461 13.6091 38.2231ZM9.62115 48.5042C9.4262 48.2355 8.15058 43.2751 8.50445 40.1002C8.99181 35.7253 11.488 34.1753 11.969 34.1191C12.3673 34.0732 13.1556 34.3274 12.7869 38.6981C12.7424 39.2252 15.1538 40.8648 15.1538 40.8648C10.2335 43.7064 10.6277 45.8459 9.62115 48.5042ZM19.6948 43.223C19.4468 43.2126 14.8974 40.1544 15.05 40.096C20.2987 38.0877 20.678 34.9565 21.0403 34.1607C20.9979 34.0941 22.0659 33.6691 23.5195 33.1378C25.8588 32.3129 29.0945 31.2816 30.2112 30.8754L30.2684 30.8587C30.7749 30.715 30.7961 30.8087 30.9317 30.9837C31.3343 31.4983 32.0102 31.842 32.0844 31.8774C33.0803 32.342 34.3644 32.2983 34.3941 32.3379C34.5933 32.6212 34.7204 43.871 19.6948 43.223ZM35.1845 37.6377C35.14 37.6398 34.0656 36.6544 34.0656 36.6544C34.0656 36.6544 34.481 35.7649 34.6907 34.6336C34.8602 33.7128 34.945 32.3483 34.945 32.3483C34.945 32.3483 39.8843 31.7691 40.1047 30.0941C40.3547 28.1817 38.9477 24.2047 38.738 23.5547C38.649 23.2797 37.4221 20.0339 37.242 19.1944C37.0386 18.2486 37.4263 16.7215 38.0048 16.4986C39.3673 15.9715 41.374 18.2236 41.4948 21.5006C41.9546 34.0628 35.229 37.6357 35.1845 37.6377Z" fill="#293648"/><path d="M39.7233 16.309C38.3714 15.4632 36.4876 15.5882 35.9091 15.6486L35.5786 15.6549C35.2925 15.534 35.5871 14.8278 35.6655 14.0861C35.7735 13.0528 35.3879 11.6341 34.6886 10.4987C34.3517 9.95288 34.2309 9.9008 34.481 9.63831C36.3223 7.70501 36.6105 5.56339 36.0257 3.78009C34.8836 0.290578 34.6526 -0.25941 34.6886 0.0905825C34.8327 1.51347 34.5106 3.50093 34.2902 4.30925C33.9766 5.45506 32.9044 6.9092 30.0968 8.23417C29.4378 8.54458 26.7806 9.7758 26.3081 10.3133C25.7232 10.982 25.5791 11.6549 25.3037 12.9862C25.0113 14.3945 24.9032 15.709 25.2465 17.2152C25.3122 17.509 25.38 17.7277 25.4181 17.9006C25.4173 17.897 25.4158 17.8935 25.4139 17.8902C25.4923 18.1965 25.3651 18.3777 25.1914 18.486C25.0189 18.5574 24.8402 18.6132 24.6574 18.6527L24.651 18.6548C24.2209 18.7215 23.8077 18.7944 23.4114 18.8715C20.4894 19.3652 14.0858 20.8672 16.3595 28.6713C17.1668 31.3191 18.7412 33.0003 19.6524 33.3087L19.6842 33.3191C19.8346 33.3857 19.9978 33.4441 20.1567 33.4753C20.1736 33.4795 20.1821 33.7337 20.1482 34.092L20.1249 34.2461C19.9978 35.1503 19.4723 36.5461 18.6988 36.5648C18.3895 36.5732 17.0248 35.7607 16.6392 35.5128C14.4778 34.117 13.7065 33.3295 12.1724 33.1608C10.9074 33.0212 8.0637 35.4378 8.00225 40.5544C7.92809 46.8021 9.71015 49.9083 9.761 50C11.0811 44.1168 12.0325 43.5418 15.4589 41.2398C15.7302 41.0585 18.9489 43.721 19.7223 43.7064C23.5937 43.6355 30.5333 43.8793 33.8961 37.0482C33.9618 36.9169 35.0594 38.0357 35.1569 38.0336C35.1972 38.0315 41.0646 35.4628 41.9355 23.6609C42.3339 18.2715 40.7997 16.9819 39.7233 16.309ZM35.1209 12.4633C35.2904 13.1445 35.2417 13.8528 35.034 14.4361C34.6568 15.3257 34.0805 15.7924 33.36 15.7424C33.1274 15.7108 32.9039 15.6328 32.7031 15.5132C31.9022 15.0528 31.4678 13.8757 31.8089 12.9612C31.8168 12.9477 31.8239 12.9338 31.8301 12.9195C31.9191 12.6862 32.1352 12.4258 32.4128 12.1612C32.9828 11.6654 34.1017 10.8279 34.2224 10.8279C34.375 10.832 34.945 11.7508 35.1209 12.4633ZM35.1124 2.23221C35.1251 2.11138 35.4366 3.03427 35.5383 3.3551C35.9812 4.74049 35.9219 5.35506 35.8223 6.05713C35.5637 7.84459 34.5954 9.01957 33.8643 9.73622C32.718 10.8612 32.4489 11.0237 32.9489 10.1341C34.5445 7.29877 34.8814 4.63216 35.1124 2.23221ZM26.4183 10.9529C26.6238 10.455 27.6557 9.90497 28.5139 9.41331C29.3997 8.90499 32.2158 8.18417 33.9512 5.9363C34.4873 5.24256 33.4977 9.9258 30.9486 12.1903C30.0883 12.9549 27.7235 13.3507 25.683 14.7778C25.4732 14.9257 25.7296 12.3758 26.4183 10.9529ZM25.8716 15.1049C26.3716 14.6965 27.2786 14.1111 30.5524 13.0487C30.9571 12.9174 30.9274 13.0528 31.1245 14.0007C31.3343 15.0132 31.5419 15.9444 33.6821 16.4548C33.8347 16.4923 32.9871 18.0631 32.7434 18.2694C32.2666 19.0194 29.745 21.1693 28.6771 20.9652C27.946 20.8256 26.3738 19.1006 25.9457 18.1486C25.6385 17.4652 25.0875 15.7444 25.8716 15.1049ZM16.7579 24.0359C17.1075 22.4047 18.417 21.5776 18.4552 21.5443C19.1184 20.9777 20.4025 20.4652 21.7396 20.0777C21.9409 20.0256 22.0659 19.9985 22.0955 19.9923C22.9219 19.8256 23.9602 19.5485 24.6468 19.4798C25.1681 19.4277 25.8101 19.161 26.3377 19.5548C26.9099 20.2381 28.1685 21.3693 28.8614 21.4277C29.0966 21.4464 30.6795 20.961 33.2753 18.6756C33.5995 18.3902 33.9406 18.109 34.3008 17.8465L34.4047 17.7715C35.2014 17.2027 36.0829 16.7298 37.0407 16.5215C37.3373 16.4569 35.9812 17.7819 37.1424 20.5548C37.9031 22.3714 40.0051 28.6025 39.6597 29.6004C39.4542 30.1962 39.2677 30.3066 38.7443 30.0691C37.278 29.4004 35.4726 27.4254 32.0039 26.0942C29.2089 25.0213 26.8929 25.0463 25.3927 25.3359C21.9409 26.0046 20.1525 27.4817 19.1502 28.3067C18.9976 28.4338 20.6356 27.7963 22.8245 27.5525C24.8078 27.3317 26.7976 27.5442 29.2598 29.19C30.8321 30.4837 30.4485 30.3837 29.7387 30.5775C27.0264 31.3191 21.8582 32.8524 20.055 32.5941C18.1903 32.3254 15.8891 27.6192 16.7579 24.0359ZM31.2707 30.5983C29.0924 28.0463 26.6068 27.2567 25.024 27.1525C23.0597 27.0234 21.6463 27.2713 20.3071 27.7088C20.163 27.7567 27.4841 22.5651 35.5468 28.7275C36.9983 29.8379 37.865 30.4566 38.6278 30.9483C38.738 31.0191 36.6847 31.5524 36.3372 31.6483C32.9998 32.192 32.0823 31.5483 31.2707 30.5983ZM29.406 31.117C28.6093 31.3983 27.4926 31.7858 26.2763 32.1566C27.315 31.7972 28.3584 31.4506 29.406 31.117ZM13.6091 38.2231C13.7362 36.9711 14.018 35.8357 13.893 34.5711C13.8909 34.5461 17.5249 36.994 18.5102 37.1628C18.6713 37.1898 16.8129 38.8544 14.9143 39.6377C14.2638 39.5544 13.5561 38.7461 13.6091 38.2231ZM9.62115 48.5042C9.4262 48.2355 8.15058 43.2751 8.50445 40.1002C8.99181 35.7253 11.488 34.1753 11.969 34.1191C12.3673 34.0732 13.1556 34.3274 12.7869 38.6981C12.7424 39.2252 15.1538 40.8648 15.1538 40.8648C10.2335 43.7064 10.6277 45.8459 9.62115 48.5042ZM19.6948 43.223C19.4468 43.2126 14.8974 40.1544 15.05 40.096C20.2987 38.0877 20.678 34.9565 21.0403 34.1607C20.9979 34.0941 22.0659 33.6691 23.5195 33.1378C25.8588 32.3129 29.0945 31.2816 30.2112 30.8754L30.2684 30.8587C30.7749 30.715 30.7961 30.8087 30.9317 30.9837C31.3343 31.4983 32.0102 31.842 32.0844 31.8774C33.0803 32.342 34.3644 32.2983 34.3941 32.3379C34.5933 32.6212 34.7204 43.871 19.6948 43.223ZM35.1845 37.6377C35.14 37.6398 34.0656 36.6544 34.0656 36.6544C34.0656 36.6544 34.481 35.7649 34.6907 34.6336C34.8602 33.7128 34.945 32.3483 34.945 32.3483C34.945 32.3483 39.8843 31.7691 40.1047 30.0941C40.3547 28.1817 38.9477 24.2047 38.738 23.5547C38.649 23.2797 37.4221 20.0339 37.242 19.1944C37.0386 18.2486 37.4263 16.7215 38.0048 16.4986C39.3673 15.9715 41.374 18.2236 41.4948 21.5006C41.9546 34.0628 35.229 37.6357 35.1845 37.6377Z" stroke="#293648" mask="url(#path-1-outside-1_2284_202)"/></g><defs><clipPath id="clip0_2284_202"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_discord_smooth:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M42.3201 9.18609C39.0846 7.70961 35.6387 6.62168 32.0086 6C31.5614 6.77709 31.0354 7.83912 30.6934 8.69393C26.8529 8.12406 23.0387 8.12406 19.2771 8.69393C18.9089 7.83912 18.3828 6.77709 17.9356 6C14.3055 6.62168 10.8596 7.70961 7.62408 9.18609C1.10049 18.8739 -0.661938 28.3286 0.206122 37.6278C4.54642 40.8139 8.72888 42.7307 12.8587 44C13.8846 42.6271 14.779 41.1507 15.5681 39.6224C14.0688 39.0784 12.6483 38.379 11.3068 37.576C11.675 37.317 12.017 37.0321 12.3589 36.773C20.5923 40.5549 29.5097 40.5549 37.6379 36.773C37.9798 37.058 38.3218 37.317 38.6901 37.576C37.3485 38.379 35.9017 39.0525 34.4287 39.6224C35.2178 41.1507 36.1122 42.6271 37.1381 44C41.2679 42.7307 45.4767 40.8139 49.7907 37.6278C50.8166 26.8262 48.0283 17.4751 42.3727 9.18609H42.3201ZM16.6729 31.9291C14.2003 31.9291 12.1748 29.6756 12.1748 26.9039C12.1748 24.1323 14.1477 21.8787 16.6729 21.8787C19.1982 21.8787 21.1973 24.1323 21.171 26.9039C21.171 29.6497 19.1982 31.9291 16.6729 31.9291ZM33.2713 31.9291C30.7986 31.9291 28.7731 29.6756 28.7731 26.9039C28.7731 24.1323 30.746 21.8787 33.2713 21.8787C35.7965 21.8787 37.7957 24.1323 37.7694 26.9039C37.7694 29.6497 35.7965 31.9291 33.2713 31.9291Z" fill="#293648"/></svg>`,
+    icon_bigbluebutton:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2284_191)"><path d="M25 0C18.3696 0 12.0107 2.63392 7.32233 7.32233C2.63392 12.0107 0 18.3696 0 25C0 31.6304 2.63392 37.9893 7.32233 42.6777C12.0107 47.3661 18.3696 50 25 50C31.6304 50 37.9893 47.3661 42.6777 42.6777C47.3661 37.9893 50 31.6304 50 25C50 18.3696 47.3661 12.0107 42.6777 7.32233C37.9893 2.63392 31.6304 0 25 0ZM14.2458 9.40833C15.7937 9.40833 17.1167 10.1667 18.2125 11.6812C19.3083 13.1979 19.8521 15.0188 19.8521 17.15V31.2333C19.8521 32.3562 20.4146 32.9187 21.5375 32.9187H30.2333C31.3542 32.9187 31.9167 32.3562 31.9167 31.2333V24.5562C31.9167 23.4729 31.3542 22.9146 30.2333 22.875H28.5521C26.3833 22.8 24.5458 22.2333 23.0521 21.175C21.5542 20.1187 20.8083 18.8146 20.8083 17.2646H30.2333C32.2542 17.2646 33.975 17.9771 35.3958 19.3979C36.0848 20.0665 36.6296 20.8691 36.9965 21.7562C37.3634 22.6434 37.5447 23.5963 37.5292 24.5562V31.2333C37.5292 33.2542 36.8167 34.9771 35.3958 36.3979C33.975 37.8187 32.2521 38.525 30.2333 38.525H21.5375C19.5167 38.525 17.7979 37.8187 16.3771 36.3979C15.6879 35.7283 15.1432 34.9246 14.7766 34.0363C14.4101 33.1481 14.2294 32.1941 14.2458 31.2333V9.40833Z" fill="#293648"/></g><defs><clipPath id="clip0_2284_191"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_youtube:`<svg width="51" height="50" viewBox="0 0 51 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M49.9625 13.5028C49.6723 12.4472 49.105 11.4845 48.3173 10.7106C47.5296 9.93668 46.5488 9.37849 45.4726 9.09158C41.4821 8.0175 25.5177 8.00002 25.5177 8.00002C25.5177 8.00002 9.55574 7.98253 5.56272 9.00915C4.48719 9.30926 3.50842 9.87535 2.72037 10.6531C1.93233 11.4308 1.36147 12.3941 1.0626 13.4503C0.010197 17.362 3.73348e-06 25.475 3.73348e-06 25.475C3.73348e-06 25.475 -0.010189 33.628 1.03457 37.4997C1.62066 39.6404 3.34069 41.3314 5.52704 41.9084C9.55829 42.9825 25.4794 43 25.4794 43C25.4794 43 41.4439 43.0175 45.4344 41.9933C46.511 41.7069 47.4927 41.15 48.2824 40.3777C49.0721 39.6053 49.6424 38.6443 49.937 37.5896C50.992 33.6805 50.9996 25.5699 50.9996 25.5699C50.9996 25.5699 51.0506 17.4144 49.9625 13.5028ZM20.4111 32.9911L20.4238 18.0039L33.6923 25.51L20.4111 32.9911Z" fill="#293648"/></svg>`,
+    icon_hackmd:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2284_200)"><path d="M47 17.2141V47.2698C47 47.9939 46.7105 48.6884 46.1952 49.2004C45.6798 49.7124 44.9809 50 44.2521 50H5.75094C5.38982 50.0004 5.03217 49.9301 4.69843 49.793C4.36469 49.656 4.0614 49.455 3.80591 49.2014C3.55042 48.9479 3.34774 48.6468 3.20946 48.3153C3.07117 47.9839 3 47.6286 3 47.2698V1.73016C3.0008 1.0058 3.29098 0.311381 3.8068 -0.200537C4.32261 -0.712456 5.02187 -1 5.75094 -1H28.6674V14.4809C28.6674 15.2058 28.9572 15.901 29.4732 16.4135C29.9891 16.9261 30.6888 17.2141 31.4184 17.2141H47ZM36.0023 21.7683C36.0023 21.5296 35.9068 21.3007 35.7369 21.1319C35.567 20.9631 35.3366 20.8683 35.0964 20.8683H14.9187C14.6785 20.8683 14.4481 20.9631 14.2782 21.1319C14.1083 21.3007 14.0128 21.5296 14.0128 21.7683V23.5894C14.0128 23.8282 14.1083 24.0571 14.2782 24.2259C14.4481 24.3947 14.6785 24.4895 14.9187 24.4895H35.0843C35.3245 24.4895 35.555 24.3947 35.7248 24.2259C35.8947 24.0571 35.9902 23.8282 35.9902 23.5894L36.0023 21.7683ZM36.0023 29.0528C36.0023 28.8141 35.9068 28.5851 35.7369 28.4163C35.567 28.2475 35.3366 28.1527 35.0964 28.1527H14.9187C14.6785 28.1527 14.4481 28.2475 14.2782 28.4163C14.1083 28.5851 14.0128 28.8141 14.0128 29.0528V30.8769C14.0128 31.1156 14.1083 31.3445 14.2782 31.5133C14.4481 31.6821 14.6785 31.7769 14.9187 31.7769H35.0843C35.3245 31.7769 35.555 31.6821 35.7248 31.5133C35.8947 31.3445 35.9902 31.1156 35.9902 30.8769L36.0023 29.0528ZM36.0023 36.3402C36.0023 36.1015 35.9068 35.8726 35.7369 35.7038C35.567 35.535 35.3366 35.4401 35.0964 35.4401H14.9187C14.6785 35.4401 14.4481 35.535 14.2782 35.7038C14.1083 35.8726 14.0128 36.1015 14.0128 36.3402V38.1613C14.0128 38.4 14.1083 38.6289 14.2782 38.7977C14.4481 38.9665 14.6785 39.0614 14.9187 39.0614H35.0843C35.3245 39.0614 35.555 38.9665 35.7248 38.7977C35.8947 38.6289 35.9902 38.4 35.9902 38.1613L36.0023 36.3402ZM45.8555 13.5719H32.3333V0.137065C32.7049 0.366237 33.051 0.633736 33.3661 0.935113L45.0523 12.5458C45.3565 12.858 45.6258 13.202 45.8555 13.5719Z" fill="#293648"/></g><defs><clipPath id="clip0_2284_200"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_protonmail:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M0 6.1115V16.7959L15 29.3296L22.7083 22.96C22.5 22.96 22.5 22.7546 22.2917 22.7546L1.66667 5.28962C1.04167 4.67321 0 5.08415 0 6.1115ZM12.2917 32.4116L0 22.1381V42.8906C0 45.1508 1.875 47 4.16667 47H35.4167V17.6178L17.7083 32.4116C16.0417 33.6445 13.9583 33.6445 12.2917 32.4116ZM39.5833 13.3029V12.4811L48.3333 5.28962C48.9583 4.67321 50 5.28962 50 6.1115V42.8906C50 45.1508 48.125 47 45.8333 47H39.5833V13.7139C39.5833 13.7139 39.5833 13.5084 39.5833 13.3029Z" fill="#293648"/></svg>`,
+    icon_reddit:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2284_212)"><path d="M19.5 30C19.0056 30 18.5222 29.8534 18.1111 29.5787C17.7 29.304 17.3795 28.9134 17.1903 28.4565C17.0011 28 16.9516 27.4972 17.0481 27.0122C17.1445 26.5272 17.3826 26.0819 17.7323 25.7322C18.0819 25.3825 18.5273 25.1444 19.0122 25.0481C19.4972 24.9515 20 25.0009 20.4566 25.1903C20.9134 25.3794 21.3041 25.7 21.5788 26.1109C21.8534 26.5222 22 27.0056 22 27.5C22 27.8284 21.9353 28.1534 21.8097 28.4565C21.6841 28.76 21.5 29.0356 21.2678 29.2678C21.0356 29.5 20.76 29.684 20.4566 29.8097C20.1534 29.9353 19.8284 30 19.5 30ZM50 25C50 29.9447 48.5338 34.7781 45.7869 38.8893C43.0397 43.0006 39.1353 46.2046 34.5672 48.0968C29.9991 49.989 24.9722 50.4843 20.1228 49.5196C15.2732 48.555 10.8187 46.174 7.32234 42.6778C3.82603 39.1812 1.445 34.7268 0.480373 29.8772C-0.484252 25.0278 0.0108423 20.0009 1.90303 15.4329C3.79522 10.8647 6.99953 6.96027 11.1107 4.21325C15.222 1.46622 20.0556 0 25 0C31.6303 0 37.9894 2.6339 42.6778 7.32234C47.3659 12.0107 50 18.3696 50 25ZM36.6562 20.8437C35.7947 20.8944 34.9822 21.2619 34.375 21.875C31.8047 20.1762 28.7994 19.254 25.7187 19.2187L27.4687 11.3125L33.0625 12.5625C33.0584 12.8893 33.1191 13.2137 33.2413 13.5168C33.3638 13.82 33.5447 14.0958 33.7744 14.3284C34.0041 14.561 34.2778 14.7456 34.5794 14.8716C34.8809 14.9976 35.2044 15.0625 35.5312 15.0625C36.1972 15.0543 36.8331 14.784 37.3009 14.3101C37.7691 13.8363 38.0313 13.1972 38.0313 12.5312C38.05 11.9598 37.8697 11.3997 37.5216 10.9464C37.1731 10.493 36.6781 10.1746 36.1212 10.0456C35.5644 9.91646 34.98 9.98468 34.4675 10.2385C33.9553 10.4924 33.5472 10.9161 33.3125 11.4375L27.0625 10.0625C26.9137 10.034 26.7597 10.0633 26.6319 10.1447C26.5041 10.226 26.4122 10.3531 26.375 10.5L24.4375 19.2187C21.3581 19.2628 18.3553 20.184 15.7813 21.875C15.443 21.5256 15.0326 21.2544 14.5787 21.08C14.1248 20.9056 13.6383 20.8322 13.1532 20.8653C12.6681 20.8981 12.1959 21.0362 11.7697 21.2703C11.3435 21.5044 10.9735 21.8287 10.6854 22.2203C10.3974 22.6122 10.1982 23.0622 10.1019 23.5387C10.0056 24.0153 10.0143 24.5072 10.1276 24.98C10.2408 25.4528 10.4558 25.8953 10.7576 26.2765C11.0594 26.6578 11.4407 26.9687 11.875 27.1875C11.8272 27.7072 11.8272 28.2303 11.875 28.75C11.875 34.0312 17.8437 38.3437 25.1875 38.3437C32.5313 38.3437 38.5 34.0312 38.5 28.75C38.5012 28.2131 38.4381 27.6781 38.3125 27.1562C38.9441 26.7984 39.4422 26.245 39.7313 25.5794C40.0206 24.9137 40.0856 24.1722 39.9162 23.4662C39.7469 22.7606 39.3522 22.129 38.7925 21.6672C38.2325 21.2056 37.5375 20.9384 36.8125 20.9062L36.6562 20.8437ZM29.7188 32.5625C28.3144 33.4447 26.6897 33.9125 25.0312 33.9125C23.3728 33.9125 21.7481 33.4447 20.3438 32.5625C20.2284 32.4572 20.0781 32.3987 19.9219 32.3987C19.7656 32.3987 19.6153 32.4572 19.5 32.5625C19.4394 32.6181 19.3909 32.6856 19.3578 32.7609C19.3247 32.8362 19.3078 32.9178 19.3078 33C19.3078 33.0822 19.3247 33.1637 19.3578 33.239C19.3909 33.3143 19.4394 33.3818 19.5 33.4375C21.1412 34.5512 23.0791 35.1465 25.0625 35.1465C27.0459 35.1465 28.9837 34.5512 30.625 33.4375C30.6856 33.3818 30.7341 33.3143 30.7672 33.239C30.8003 33.1637 30.8175 33.0822 30.8175 33C30.8175 32.9178 30.8003 32.8362 30.7672 32.7609C30.7341 32.6856 30.6856 32.6181 30.625 32.5625C30.5666 32.5009 30.4962 32.4522 30.4184 32.4187C30.3406 32.3853 30.2566 32.3678 30.1719 32.3678C30.0872 32.3678 30.0031 32.3853 29.9253 32.4187C29.8475 32.4522 29.7772 32.5009 29.7188 32.5625ZM30.5 25C30.0056 25 29.5222 25.1465 29.1109 25.4212C28.7 25.6959 28.3794 26.0865 28.1903 26.5434C28.0012 27 27.9516 27.5028 28.0481 27.9878C28.1444 28.4728 28.3825 28.9181 28.7322 29.2678C29.0819 29.6175 29.5272 29.8556 30.0122 29.9518C30.4972 30.0484 31 29.999 31.4569 29.8097C31.9134 29.6206 32.3041 29.3 32.5788 28.889C32.8534 28.4778 33 27.9943 33 27.5C33 26.8369 32.7366 26.2009 32.2678 25.7322C31.7991 25.2634 31.1631 25 30.5 25Z" fill="#293648"/></g><defs><clipPath id="clip0_2284_212"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_keet:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.99472 15.2267C6.51879 16.9459 3.66532 22.1035 4.0589 28.9802C4.55088 37.5761 10.9462 46.9088 21.0317 48.6279C29.1002 50.0033 34.7251 47.2362 36.529 45.6808C36.611 44.8621 36.8734 42.9792 37.267 41.9968C37.759 40.7688 39.2349 36.8393 35.791 32.4185C35.0697 31.4925 34.3604 30.6943 33.7053 29.9571C31.2332 27.175 29.5334 25.2622 30.8713 20.6299C32.5026 14.9814 38.1603 14.2446 41.6948 14.7356C39.8909 12.1159 34.7087 6.77848 28.4114 6.38552C26.2419 6.25015 24.4648 6.18939 22.9153 6.13642C18.8427 5.99718 16.3424 5.9117 12.4221 4.66634C8.09274 3.291 5.86245 0.982388 5.28848 0C4.8785 0.982388 4.40292 3.291 5.78045 4.66634C7.15799 6.04169 8.32233 7.36791 8.73231 7.85911C7.58437 7.85911 5.23928 7.95734 5.04249 8.3503C4.8457 8.74325 7.25638 10.3151 8.48633 11.0519C6.76441 11.1337 3.12378 11.6413 2.33661 13.0166C1.79771 13.9582 1.92279 13.9421 2.59079 13.8559C3.14246 13.7847 4.06442 13.6658 5.28848 13.999C7.45347 14.5885 7.99472 15.0631 7.99472 15.2267ZM23.302 24.4897C23.2528 24.6956 22.9727 24.7314 22.8311 24.5738C22.7196 24.4498 22.596 24.3349 22.4622 24.2297C21.9452 23.8229 21.2736 23.5773 20.5395 23.5773C19.6136 23.5773 18.7877 23.9637 18.2464 24.5724C18.1056 24.7308 17.8261 24.6955 17.7769 24.4895C17.6543 23.9769 17.5876 23.4208 17.5876 22.8405C17.5876 20.2637 18.9088 18.1742 20.5395 18.1742C22.1701 18.1742 23.4913 20.2637 23.4913 22.8405C23.4913 23.4208 23.4246 23.977 23.302 24.4897Z" fill="#293648"/><path d="M47.2957 32.1806C49.2239 24.7096 47.0547 17.7207 42.4752 15.7923C38.8598 14.829 33.0327 15.8675 31.6293 21.3318C30.4241 26.0239 32.4772 27.4531 34.7625 30.0089C35.4066 30.729 36.2107 31.7188 36.9317 32.6598C40.065 36.7497 38.3606 41.0203 37.8928 42.2081C37.5854 42.9898 37.5127 44.1328 37.4529 44.955C37.4383 45.1552 37.6543 45.293 37.8245 45.1862C40.566 43.4654 45.4631 39.281 47.2957 32.1806Z" fill="#293648"/></svg>`,
     // terminal
     icon_consortium: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1927)"><path d="M38 41.1776V50.0011H12V41.1776H20.6667V23.5306H14.8889V14.707H29.3333V41.1776H38Z" fill="#293648"/><path d="M29.3337 0H20.667V8.82353H29.3337V0Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1927"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
     icon_terminal: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M47.619 9.70588V7.35294H45.2381V5H4.7619V7.35294H2.38095V9.70588H0V40.2941H2.38095V42.6471H4.7619V45H45.2381V42.6471H47.619V40.2941H50V9.70588H47.619ZM19.0476 30.8824H16.6667V33.2353H14.2857V35.5882H9.52381V33.2353H11.9048V30.8824H14.2857V28.5294H16.6667V26.1765H19.0476V23.8235H16.6667V21.4706H14.2857V19.1176H11.9048V16.7647H9.52381V14.4118H14.2857V16.7647H16.6667V19.1176H19.0476V21.4706H21.4286V23.8235H23.8095V26.1765H21.4286V28.5294H19.0476V30.8824ZM40.4762 35.5882H21.4286V33.2353H40.4762V35.5882Z" fill="#293648"/></svg>`,
@@ -9006,7 +10332,9 @@ const light_theme = {
     icon_close_dark: `<svg width="15" height="15" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.25 12V9.75H7V7.5H4.75V5.25H2.5V3H0.25V0.75H2.5V3H4.75V5.25H7V7.5H9.25V9.75H11.5V12H9.25ZM7 5.25V3H9.25V0.75H11.5V3H9.25V5.25H7ZM2.5 9.75V7.5H4.75V9.75H2.5ZM0.25 12V9.75H2.5V12H0.25Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9 12.25V10H6.75V7.75H5V10H2.75V12.25H0V9.5H2.25V7.25H4.5V5.5H2.25V3.25H0V0.5H2.75V2.75H5V5H6.75V2.75H9V0.5H11.75V3.25H9.5V5.5H7.25V7.25H9.5V9.5H11.75V12.25H9ZM9.25 9.75V7.5H7V5.25H9.25V3H11.5V0.75H9.25V3H7V5.25H4.75V3H2.5V0.75H0.25V3H2.5V5.25H4.75V7.5H2.5V9.75H0.25V12H2.5V9.75H4.75V7.5H7V9.75H9.25V12H11.5V9.75H9.25Z" fill="#293648"/></svg>`,
     icon_close_light: `<svg width="15" height="15" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.25 11.9023V9.65234H7V7.40234H4.75V5.15234H2.5V2.90234H0.25V0.652344H2.5V2.90234H4.75V5.15234H7V7.40234H9.25V9.65234H11.5V11.9023H9.25ZM7 5.15234V2.90234H9.25V0.652344H11.5V2.90234H9.25V5.15234H7ZM2.5 9.65234V7.40234H4.75V9.65234H2.5ZM0.25 11.9023V9.65234H2.5V11.9023H0.25Z" fill="white"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9 12.1523V9.90234H6.75V7.65234H5V9.90234H2.75V12.1523H0V9.40234H2.25V7.15234H4.5V5.40234H2.25V3.15234H0V0.402344H2.75V2.65234H5V4.90234H6.75V2.65234H9V0.402344H11.75V3.15234H9.5V5.40234H7.25V7.15234H9.5V9.40234H11.75V12.1523H9ZM9.25 9.65234V7.40234H7V5.15234H9.25V2.90234H11.5V0.652344H9.25V2.90234H7V5.15234H4.75V2.90234H2.5V0.652344H0.25V2.90234H2.5V5.15234H4.75V7.40234H2.5V9.65234H0.25V11.9023H2.5V9.65234H4.75V7.40234H7V9.65234H9.25V11.9023H11.5V9.65234H9.25Z" fill="white"/></svg>`,
     icon_pdf_reader: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2040_2024)"><path fill-rule="evenodd" clip-rule="evenodd" d="M45 6.00332V8V50H5V0H37H39V2L41 2.00332L40.9998 4.00332H43V6.00332H45ZM37 2H39V4H40.9991L41 6.00332H43V8H37V2ZM8 3H33.9987V11.0032H42V47H8V3Z" fill="white"/><path d="M26.9981 12.0012H10.9981V14.0012H26.9981V12.0012Z" fill="white"/><path d="M32.9981 25.9951H10.9981V27.9951H32.9981V25.9951Z" fill="white"/><path d="M34.9981 15.9953H10.9981V17.9953H34.9981V15.9953Z" fill="white"/><path d="M32.9981 29.9989H10.9981V31.9989H32.9981V29.9989Z" fill="white"/></g><defs><clipPath id="clip0_2040_2024"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
-    icon_folder: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M28 15H0V41H50V9H28V15ZM31 12V18H3V38H47V12H31Z" fill="white"/></svg>`,
+    icon_pdf_reader_solid:`<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M35.3636 0H6V50H44V8.92857H35.3636V0ZM10.4902 11.0698H27.072V13.2127H10.4902V11.0698ZM33.2902 26.0633H10.4902V28.2062H33.2902V26.0633ZM10.4902 15.3492H35.3629V17.4921H10.4902V15.3492ZM33.2902 30.3531H10.4902V32.496H33.2902V30.3531Z" fill="white"/><path d="M37.0909 1.78571H38.8182V3.57143H40.5455V5.35714H42.2727V7.14286H37.0909V1.78571Z" fill="white"/></svg>`,
+    icon_folder: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M28 15H0V41H50V9H28V15ZM31 12V18H3V38H47V12H31Z" fill="white"/></svg>`,    
+    icon_folder_solid:`<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M30.137 9V15.5306H0V41H50V9H30.137Z" fill="#FFFAF4"/></svg>`,
     // arrows
     icon_arrow_down: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="#293648"/></svg>`,
     icon_arrow_up: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.5789 9H18.4211V17H7.89473V27.6667H0V41H18.4211V33H31.5789V41H50V27.6667H42.1053V17H31.5789V9Z" fill="#293648"/></svg>`,
@@ -9039,7 +10367,7 @@ const light_theme = {
 
 module.exports = light_theme
 }).call(this)}).call(this,require('_process'),"/src/node_modules/theme/lite-theme")
-},{"_process":2,"path":1,"theme/brand":44}],47:[function(require,module,exports){
+},{"_process":2,"path":1,"theme/brand":45}],48:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   TIMELINE CARD COMPONENT
@@ -9086,13 +10414,14 @@ function timeline_card (opts = default_opts) {
   // TEMPLATE
   // ----------------------------------------
   const el = document.createElement('div')
+  el.style.height = "100%"
   const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `<div class="timeline_card">
     <div class="content_wrapper">
       <div class="icon_wrapper">
         <div> ${icon_calendar} ${date} </div>
-        <div> ${icon_clock} ${time} </div>
+        ${time !== '' ? `<div> ${icon_clock} ${time} </div>` : ''}
         <div> <a href="${link}">${icon_link}</a> </div>
       </div>
       <div class="title"> ${title} </div>
@@ -9114,62 +10443,65 @@ function get_theme () {
       box-sizing: border-box;
     }
     .timeline_card {
-      height: max-content;
+      display: flex;
+      flex-direction:column;
+      justify-content:space-between;
+      height: 100%;
       width: 100%;
       line-height: normal;
       background-color: var(--bg_color);
       color: var(--primary_color) !important;
       border: 1px solid var(--primary_color);
       container-type: inline-size;
-      .content_wrapper {
-        padding: 20px;
-        .icon_wrapper {
-          display: flex;
-          gap: 20px;
-          div {
-            display: flex;
-            gap: 5px;
-            font-size: 16px;
-            letter-spacing: -2px;
-            align-items: center;
-          }
-          svg *{
-            fill: var(--primary_color);
-          }
-          img {
-            width: 20px;
-            height: 20px;
-          }
-          div:nth-last-child(1) {
-            margin-left: auto;
-          }
-        }
-        .title {
-          margin-top: 20px;
-          margin-bottom: 5px;
-          font-size: 18px;
-          font-weight: 700;
-          letter-spacing: -2px;
-          line-height: 16px;
-        }
-        .desc {
-          font-size: 14px;
-          letter-spacing: -2px;
-          line-height: 16px;
-        }
-      }
-      .tags_wrapper {
-        display: flex;
-        flex-wrap: wrap;
-        .tag {
-          flex-grow: 1;
-          min-width: max-content;
-          padding: 5px 10px;
-          border: 1px solid var(--primary_color);
-          // line-height:0px;
-          text-align: center;
-        }
-      }
+    }
+    .content_wrapper {
+      padding: 20px;
+    }
+    .icon_wrapper {
+      display: flex;
+      gap: 20px;
+    }
+    .icon_wrapper div {
+      display: flex;
+      gap: 5px;
+      font-size: 16px;
+      letter-spacing: -2px;
+      align-items: center;
+    }
+    .icon_wrapper svg *{
+      fill: var(--primary_color);
+    }
+    .icon_wrapper img {
+      width: 20px;
+      height: 20px;
+    }
+    .icon_wrapper div:nth-last-child(1) {
+      margin-left: auto;
+    }
+    .title {
+      margin-top: 20px;
+      margin-bottom: 5px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -2px;
+      line-height: 16px;
+    }
+    .desc {
+      font-size: 14px;
+      letter-spacing: -2px;
+      line-height: 16px;
+    }
+    .tags_wrapper {
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .tag {
+      flex-grow: 1;
+      min-width: max-content;
+      padding: 5px 10px;
+      border: 1px solid var(--primary_color);
+      // line-height:0px;
+      text-align: center;
     }
   `
 }
@@ -9224,7 +10556,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/timeline-card/timeline-card.js")
-},{"_process":2}],48:[function(require,module,exports){
+},{"_process":2}],49:[function(require,module,exports){
 (function (process,__filename){(function (){
 const search_input = require('search-input')
 const select_button = require('buttons/select-button')
@@ -9372,21 +10704,23 @@ function get_theme () {
   return `
     .filter_wrapper {
       container-type: inline-size;
-      .timeline_filter {
-        display: grid;
-        grid-template-columns: 12fr;
-        align-items: flex-end;   
-        .date_wrapper {
-          display: grid;
-          grid-template-columns: 1fr 12fr;
-        }
-      }
+      position:relative;
+      z-index:4;
+    }
+    .timeline_filter {
+      display: grid;
+      grid-template-columns: 12fr;
+      align-items: flex-end;   
+    }
+    .date_wrapper {
+      display: grid;
+      grid-template-columns: 1fr 12fr;
     }
     @container (min-width: 450px) {
       .filter_wrapper {
-        .timeline_filter {
-          grid-template-columns: 1fr 1fr 9fr 1fr;
-        }
+      }
+      .timeline_filter {
+        grid-template-columns: 1fr 1fr 9fr 1fr;
       }
     }
   `
@@ -9442,7 +10776,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/timeline-filter/timeline-filter.js")
-},{"_process":2,"buttons/select-button":18,"buttons/sm-icon-button":20,"buttons/year-button":24,"search-input":39}],49:[function(require,module,exports){
+},{"_process":2,"buttons/select-button":18,"buttons/sm-icon-button":20,"buttons/year-button":24,"search-input":40}],50:[function(require,module,exports){
 (function (process,__filename){(function (){
 const app_timeline = require('app-timeline')
 const app_footer = require('app-footer')
@@ -9520,12 +10854,12 @@ function get_theme () {
     }
     .main-wrapper {
       container-type: inline-size;
-      .main {
-        margin: 0;
-        padding: 30px 10px;
-        opacity: 1;
-        background-size: 16px 16px;
-      }
+    }
+    .main {
+      margin: 0;
+      padding: 30px 10px;
+      opacity: 1;
+      background-size: 16px 16px;
     }
     @container (min-width: 856px) {
       .main {
@@ -9585,7 +10919,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/timeline-page/timeline-page.js")
-},{"_process":2,"app-footer":9,"app-timeline":14}],50:[function(require,module,exports){
+},{"_process":2,"app-footer":9,"app-timeline":14}],51:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 /******************************************************************************
@@ -9623,6 +10957,20 @@ function tools (opts = default_opts, protocol) {
     icon_folder,
     icon_discord,
     icon_github,
+    icon_mastodon,
+    icon_opencollective,
+    icon_matrix,
+    icon_twitter_smooth,
+    icon_github_smooth,
+    icon_cabal,
+    icon_jitsi,
+    icon_discord_smooth,
+    icon_bigbluebutton,
+    icon_youtube,
+    icon_hackmd,
+    icon_protonmail,
+    icon_reddit,
+    icon_keet,
   } = img_src
   // ----------------------------------------
   // PROTOCOL
@@ -9638,14 +10986,48 @@ function tools (opts = default_opts, protocol) {
   shadow.innerHTML = `<div class="tools">
     <div class="windowbar"></div>
     <div class="tools_content">
-      <div class="icon">
-        ${icon_discord}
-        <span>discord link</span>
-      </div>
-      <div class="icon">
-        ${icon_github}
-        <span>github link</span>
-      </div>
+      <a href="https://fosstodon.org/@dat_ecosystem" target="_blank"> 
+        <div class="icon"> ${icon_mastodon} Mastodon </div> 
+      </a>
+      <a href="https://opencollective.com/dat" target="_blank"> 
+        <div class="icon"> ${icon_opencollective} OpenCollective </div> 
+      </a>
+      <a href="https://matrix.to/#/%23datproject_discussions:gitter.im" target="_blank"> 
+        <div class="icon"> ${icon_matrix} Matrix </div> 
+      </a>
+      <a href="https://twitter.com/dat_ecosystem" target="_blank"> 
+        <div class="icon"> ${icon_twitter_smooth} Twitter </div> 
+      </a>
+      <a href="https://github.com/dat-ecosystem" target="_blank"> 
+        <div class="icon"> ${icon_github_smooth} github </div> 
+      </a>
+      <a href="https://github.com/dat-ecosystem/dat-ecosystem.github.io/blob/main/README.md#connect-to-cabal-with-cli-or-download-cabal-desktop" target="_blank"> 
+        <div class="icon"> ${icon_cabal} Cabal </div> 
+      </a>
+      <a href="https://meet.jit.si/dat-ecosystem" target="_blank"> 
+        <div class="icon"> ${icon_jitsi} Jitsi </div> 
+      </a>
+      <a href="https://discord.gg/egsvGc9TkQ" target="_blank"> 
+        <div class="icon"> ${icon_discord_smooth} discord </div> 
+      </a>
+      <a href="https://bigbluebutton.org/" target="_blank"> 
+        <div class="icon"> ${icon_bigbluebutton} BigBlueButton </div> 
+      </a>
+      <a href="https://www.youtube.com/@DatEcosystem-" target="_blank"> 
+        <div class="icon"> ${icon_youtube} Youtube </div> 
+      </a>
+      <a href="https://hackmd.io/@T6Wf5EsOQKe-6wyPjJPtuw/Hycn0F63r/%2Fx_4tQHwtT3u7vrksrposHw" target="_blank"> 
+        <div class="icon"> ${icon_hackmd} HackMD </div> 
+      </a>
+      <a href="dat-ecosystem@protonmail.com" target="_blank"> 
+        <div class="icon"> ${icon_protonmail} Protonmail </div> 
+      </a>
+      <a href="https://www.reddit.com/r/dat_ecosystem/" target="_blank"> 
+        <div class="icon"> ${icon_reddit} Reddit </div> 
+      </a>
+      <a href="https://keet.io/" target="_blank"> 
+        <div class="icon"> ${icon_keet} Keet </div> 
+      </a>
     </div>
   </div>`
   const tools_wrapper = shadow.querySelector('.tools')
@@ -9689,35 +11071,42 @@ function get_theme () {
     }
     .tools {
       display: none;
-      .tools_content {
-        position: relative;
-        display: flex;
-        padding: 10px;
-        width: 100vw;
-        height: 100vh;
-        background-size: 10px 10px;
-        background-color: var(--bg_color);
-        border: 1px solid var(--primary_color);
-        gap: 25px;
-        margin-bottom: 30px;
-        .icon {
-          display: flex;
-          flex-direction: column;
-          gap: 5px;
-          align-items: center;
-          svg {
-            width: 50px;
-            height: 50px;
-          }
-        }
-      }
+    }
+    .tools_content {
+      position: relative;
+      display: grid;
+      grid-template-columns: 4fr 4fr 4fr;
+      padding: 10px;
+      width: 100%;
+      height: 100vh;
+      background-size: 10px 10px;
+      background-color: var(--bg_color);
+      border: 1px solid var(--primary_color);
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+    .tools_content a{
+      text-decoration:none;
+    }
+    .tools_content .icon {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      align-items: center;
+      color: var(--primary_color);
+    }
+    .tools_content .icon svg {
+      width: 50px;
+      height: 50px;
+    }
+    path{
+      fill: var(--primary_color);
+      stroke: var(--primary_color);
     }
     @container (min-width: 510px) {
-      .tools {
-        .tools_content {
-          width: auto;
-          height: auto;
-        }
+      .tools_content {
+        width: auto;
+        height: auto;
       }
     }
   `
@@ -9773,7 +11162,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/tools/tools.js")
-},{"_process":2,"window-bar":51}],51:[function(require,module,exports){
+},{"_process":2,"window-bar":52}],52:[function(require,module,exports){
 (function (process,__filename){(function (){
 const sm_icon_button_alt = require('buttons/sm-icon-button-alt')
 const sm_text_button = require('buttons/sm-text-button')
@@ -9848,12 +11237,19 @@ function window_bar (opts = default_opts, protocol) {
   }
   if (opts.action_buttons) {
     { // action buttons
-      const on = {}
-      function make_element (text, i) {
+      function make_element ({text, action: type, toggle_able}, i) {
+        // console.log(text)
+        const on = { 'click': onclick }
         const protocol = use_protocol(text)({ state, on })
-        const opts = { toggle: true, text }
+        const opts = { toggle: true, text, toggle_able }
         const element = shadowfy()(sm_text_button(opts, protocol))
         return element
+        function onclick (message) {
+          up_channel.send({
+            head: [id, up_channel.send.id, up_channel.mid++],
+            type
+          })
+        }
       }
       const elements = opts.action_buttons.map(make_element)
       actions_wrapper.append(...elements)
@@ -9924,64 +11320,56 @@ function get_theme () {
       width: 100%;
       justify-content: flex-start;
       background-size: 5px 5px;
-      
       background-image: repeating-linear-gradient(0deg, var(--bg_color_2), var(--bg_color_2) 1px, var(--primary_color) 2px, var(--primary_color));
-
       container-type: inline-size;
       border: 1px solid var(--primary_color);
       box-sizing: border-box;
-      .application_name {
-        display: flex;
-        align-items: center;
-        min-height: 100%;
-        width: max-content;
-        color: var(--bg_color);
-        padding: 0 10px;
-        font-size: 14px;
-        letter-spacing: -1px;
-        box-sizing: border-box;
-        border: 1px solid var(--primary_color);
-        background-color: var(--primary_color);
-      }
-      .window_bar_actions {
-        margin-left: auto;
-        display: flex;
-        &.active {
-          .actions_wrapper {
-            display: flex;
-          }
-        }
-        .actions_wrapper {
-          display: none;
-          position: absolute;
-          flex-direction: column;
-          z-index: 10;
-          width: 100%;
-          height: max-content;
-          top: 30px;
-          right: 0;
-          background-color: var(--bg_color);
-          border: 1px solid var(--primary_color);
-        }
-      }
+    }
+    .window_bar_actions {
+      margin-left: auto;
+      display: flex;
+    }
+    .window_bar_actions.active .actions_wrapper {
+      display: flex;
+    }
+    .actions_wrapper {
+      display: none;
+      position: absolute;
+      flex-direction: column;
+      z-index: 10;
+      width: 100%;
+      height: max-content;
+      top: 30px;
+      right: 0;
+      background-color: var(--bg_color);
+      border: 1px solid var(--primary_color);
+    }
+    .application_name {
+      display: flex;
+      align-items: center;
+      min-height: 100%;
+      width: max-content;
+      color: var(--bg_color);
+      padding: 0 10px;
+      font-size: 14px;
+      letter-spacing: -1px;
+      box-sizing: border-box;
+      border: 1px solid var(--primary_color);
+      background-color: var(--primary_color);
     }
     @container (min-width: 856px) {
-      .window_bar {
-        .window_bar_actions {
-          .actions_toggle_btn {
-            display: none;
-          }
-          .actions_wrapper {
-            display: flex !important;
-            position: relative;
-            flex-direction: row;
-            top: unset;
-            right: unset;
-            height: 100%;
-            width: max-content;
-            border: 0px;
-          }
-        }
+      .actions_toggle_btn {
+        display: none;
+      }
+      .actions_wrapper {
+        display: flex !important;
+        position: relative;
+        flex-direction: row;
+        top: unset;
+        right: unset;
+        height: 100%;
+        width: max-content;
+        border: 0px;
       }
     }
   `
@@ -10037,7 +11425,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/window-bar/window-bar.js")
-},{"_process":2,"buttons/sm-icon-button-alt":19,"buttons/sm-text-button":21}],52:[function(require,module,exports){
+},{"_process":2,"buttons/sm-icon-button-alt":19,"buttons/sm-text-button":21}],53:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   YEAR FILTER COMPONENT
@@ -10070,7 +11458,7 @@ function year_filter (opts = default_opts, protocol) {
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
-  const { latest_date } = opts
+  const { latest_date, oldest_date } = opts
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
@@ -10087,7 +11475,10 @@ function year_filter (opts = default_opts, protocol) {
   // ----------------------------------------
   // ELEMENTS
   // ----------------------------------------
-  for (let i = 2013; i <= 2023; i++) {
+  const latest_year = new Date(latest_date).getFullYear()
+  const oldest_year = new Date(oldest_date).getFullYear()
+
+  for (let i = oldest_year; i <= latest_year; i++) {
     const year_button = document.createElement('span')
     year_button.classList.add('year_button')
     year_button.innerHTML = i.toString()
@@ -10137,18 +11528,18 @@ function get_theme () {
       height: 100%;
       border: 1px solid var(--primary_color);
       box-sizing: border-box;
-      .year_button {
-        display: block;
-        text-align: center;
-        background-color: var(--bg_color);
-        border: 1px solid var(--primary_color);
-        padding: 4px 10px;
-        cursor: pointer;
-        &.active {
-          background-color: var(--ac-1);
-          color: var(--primary_color);
-        }
-      }
+    }
+    .year_button {
+      display: block;
+      text-align: center;
+      background-color: var(--bg_color);
+      border: 1px solid var(--primary_color);
+      padding: 4px 10px;
+      cursor: pointer;
+    }
+    .year_button.active {
+      background-color: var(--ac-1);
+      color: var(--primary_color);
     }
   `
 }
