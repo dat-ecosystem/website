@@ -1230,7 +1230,9 @@ function app_about_us (opts = default_opts, protocol) {
       </div>
     </div>
     <div class="about_us_desc">
-      Dat ecosystem garden supports open source projects that strengthen P2P foundations, with a focus on builder tools, infrastructure, research, and community resources.
+    Dat projects in its core build tools and infrastructure for distributed data syncronization. But as people and technologists we stand for Sustainable Open Source, Modularity & Technical Inclusion, Local First & Cloudless, Social Impact & Cooperative Ownership, Non-extractive Business Models, Data Sovereignty & Access Control.
+    Dat's first project was a protocol which later grew to become the independent project (hypercore protocol). Today Dat ecosystem is a global community of many projects working side by side on open and secure protocols for the web of commons.
+    See <a target=_blank href='https://github.com/dat-ecosystem/dat-ecosystem/issues/link-to-projects-page'>dat-ecosystem visualization</a> to explore the whole universe of dat projects and the relationships between them.
     </div>
   </div>`
   // ----------------------------------------
@@ -1463,7 +1465,8 @@ function cover_app (opts = default_opts, protocol) {
       </div>
     </div>
     <div class="cover_desc">
-      Dat ecosystem garden supports open source projects that strengthen P2P foundations, with a focus on builder tools, infrastructure, research, and community resources.
+      <h3> Community for the next generation Web </h3>
+      Dat ecosystem is driven forward by many projects, most self funded. Some of the projects contribute maintainance and development to core pieces of the Dat ecosystem while others create high level applications built on top of p2p protocols.
     </div>
   </div>`
   const cover_wrapper = shadow.querySelector('.cover_wrapper')
@@ -1555,6 +1558,9 @@ function get_theme () {
       margin-bottom: 30px;
       height: 0;
       overflow: hidden;
+    }
+    .cover_desc h3{
+      margin-top: 0;
     }
     .cover_desc.active{
       height: auto;
@@ -1676,8 +1682,8 @@ function app_footer (opts = default_opts, protocol) {
     <div class="footer_wrapper">
       <div class="robot_img_2"><img src="${img_robot_2}"></div>
       <div class="footer_info_wrapper">
-        <div class="title"> INTERESTED IN JOINING DAT ECOSYSTEM CHAT NETWORKING? </div>
-        <div class="desc"> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vitae porta aliquet sit amet ornare sagittis, ultricies sed. Viverra sit felis ullamcorper pharetra mattis amet, vel. </div>
+        <div class="title"> Interested in learning more about the Dat Ecosystem? </div>
+        <div class="desc"> Join our <a target="_blank" href="https://discord.gg/egsvGc9TkQ">chat</a> and discuss tech, society, funding and your project development with the community. But you can also subscribe to the newsletter updates! </div>
         <div class="apply_button"></div>
       </div>
     </div>
@@ -1692,7 +1698,7 @@ function app_footer (opts = default_opts, protocol) {
   { // join_program_button
     const on = {}
     const protocol = use_protocol('join_button')({ state, on })
-    const opts = { text: 'JOIN OUR GROWTH PROGRAME'}
+    const opts = { text: 'JOIN THE NEWSLETTER' }
     const element = sm_text_button(opts, protocol)
     apply_button_shadow.append(element)
   }
@@ -4412,7 +4418,7 @@ function icon_button (opts = default_opts, protocol) {
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
-  const { src = '', src_active = '' } = opts
+  const { src = '', src_active = '', activate = true, link = '' } = opts
   const $src = src // @TODO: make those subscribable signals
   const $src_acitve = src_active
   // ----------------------------------------
@@ -4426,8 +4432,17 @@ function icon_button (opts = default_opts, protocol) {
   const el = document.createElement('div')
   const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
-  shadow.innerHTML = `<div class="icon_btn"></div>`
-  const icon_button = shadow.querySelector('.icon_btn')
+
+  let icon_button
+  if (link) {
+    shadow.innerHTML = `<div class="icon_btn">
+      <a target="_blank" href=${link}></a>
+    </div>`
+    icon_button = shadow.querySelector('.icon_btn a')
+  } else {
+    shadow.innerHTML = `<div class="icon_btn"> </div>`
+    icon_button = shadow.querySelector('.icon_btn')
+  }
   // ----------------------------------------
   // ELEMENTS
   // ----------------------------------------
@@ -4449,9 +4464,11 @@ function icon_button (opts = default_opts, protocol) {
     if (svg_active) icon_button.replaceChildren(svg_icon)
   }
   function onactivate () {
-    state.status.active = true
-    icon_button.classList.toggle('active', state.status.active)
-    if (svg_active) icon_button.replaceChildren(svg_active)
+    if(activate){
+      state.status.active = true
+      icon_button.classList.toggle('active', state.status.active)
+      if (svg_active) icon_button.replaceChildren(svg_active)
+    }
   }
   function onclick (e) {
     channel.send({
@@ -6003,7 +6020,7 @@ function get_theme () {
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 150px 0px;
+      padding: 100px 0px;
       background-image: radial-gradient(var(--primary_color) 1px, var(--bg_color) 1px);
       background-size: 10px 10px;
       background-color: var(--bg_color);
@@ -6036,8 +6053,8 @@ function get_theme () {
       color: var(--primary_color);
       text-align: center;
     }
-    .cover_content img {
-      width: 300px;
+    .cover_content .content_wrapper img {
+      width: 400px;
       height: auto;
     }
   `
@@ -7820,7 +7837,7 @@ function navbar (opts = default_opts, protocol) {
   { // nav toggle button
     const on = { 'click': onclick }
     const protocol = use_protocol('navtoggle')({ state, on })
-    const opts = { src: icon_arrow_down, src_active: icon_arrow_up }
+    const opts = { src: icon_arrow_down, src_active: icon_arrow_up, activate: true }
     const element = icon_button(opts, protocol)
     const channel = state.net[state.aka.navtoggle]
     nav_sh.append(element)
@@ -7865,30 +7882,37 @@ function navbar (opts = default_opts, protocol) {
     const socials = [{
       name: 'blog_button',
       src: icon_blogger,
+      activate: false,
+      link: 'https://blog.dat-ecosystem.org/'
     }, {
       name: 'discord_button',
       src: icon_discord,
+      activate: false,
+      link: 'https://discord.com/invite/egsvGc9TkQ'
     }, {
       name: 'twitter_button',
       src: icon_twitter,
+      activate: false,
+      link: 'https://twitter.com/dat_ecosystem'
     }, {
       name: 'github_button',
       src: icon_github,
+      activate: false,
+      link: 'https://github.com/dat-ecosystem'
     }]
-    function make_button ({ name: petname, src }) {
+    function make_button ({ name: petname, src, activate, link }) {
       const on = { 'click': onclick }
       const protocol = use_protocol(petname)({ state, on })
-      const opts = { src }
+      const opts = { src, activate, link }
       const element = shadowfy({ className: '' })(icon_button(opts, protocol))
       return element
       function onclick (message) {
-        const up_channel = state.net[state.aka.up]
+        const up_channel = state.net[state.aka[petname]]
         const [by, to, mid] = [id, up_channel.send.id, up_channel.mid++]
         up_channel.send({
           head: [by, to, mid],
           refs: { cause: message.head },
-          type: 'social',
-          data: petname
+          type: 'activate',
         })
       }
     }
@@ -7923,7 +7947,7 @@ function navbar (opts = default_opts, protocol) {
     const petname = 'theme_button'
     const on = { 'click': onclick }
     const protocol = use_protocol(petname)({ state, on })
-    const opts = { src: icon_theme }
+    const opts = { src: icon_theme, activate: true }
     const element = icon_button(opts, protocol)
     const channel = state.net[state.aka.theme_button]
     icon_wrapper.append(element)
@@ -10421,8 +10445,8 @@ function timeline_card (opts = default_opts) {
     <div class="content_wrapper">
       <div class="icon_wrapper">
         <div> ${icon_calendar} ${date} </div>
-        ${time !== '' ? `<div> ${icon_clock} ${time} </div>` : ''}
-        <div> <a href="${link}">${icon_link}</a> </div>
+        <div> ${time === '00:00' ? '' : icon_clock } ${time === '00:00' ? '' : time} </div>
+        <div> <a target="_blank" href="${link}">${icon_link}</a> </div>
       </div>
       <div class="title"> ${title} </div>
       <div class="desc"> ${desc}</div>
