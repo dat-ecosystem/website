@@ -20,18 +20,19 @@ config().then(() => boot({ themes: { light_theme, dark_theme } }))
   CSS & HTML Defaults
 ******************************************************************************/
 async function config () {
+  const path = path => new URL(`../src/node_modules/${path}`, `file://${__dirname}`).href.slice(8)
+
   const html = document.documentElement
   const meta = document.createElement('meta')
   const favicon = document.createElement('link')
   html.setAttribute('lang', 'en')
   favicon.setAttribute('rel', 'icon')
   favicon.setAttribute('type', 'image/png')
-  favicon.setAttribute('href', 'data:image/png;base64,iVBORw0KGgo=')
+  favicon.setAttribute('href', path('theme/assets/images/logo.png'))
   meta.setAttribute('name', 'viewport')
   meta.setAttribute('content', 'width=device-width,initial-scale=1.0')
   const fonts = new CSSStyleSheet()
   // @TODO: use font api and cache to avoid re-downloading the font data every time
-  const path = path => new URL(`../src/node_modules/${path}`, `file://${__dirname}`).href.slice(8)
   const font1_url = path('theme/assets/fonts/Silkscreen-Regular.ttf')
   const font2_url = path('theme/assets/fonts/Silkscreen-Bold.ttf')
   fonts.replaceSync(`
@@ -137,6 +138,7 @@ function get_theme (opts) {
     --ac-3: ${opts.ac_3};
     --primary_color: ${opts.primary_color};
     --highlight_color: ${opts.highlight_color};
+    --img_robot_3: url(${opts.img_src.img_robot_3});
   }`
 }
 // ----------------------------------------------------------------------------

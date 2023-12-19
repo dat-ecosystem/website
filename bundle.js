@@ -745,18 +745,19 @@ config().then(() => boot({ themes: { light_theme, dark_theme } }))
   CSS & HTML Defaults
 ******************************************************************************/
 async function config () {
+  const path = path => new URL(`../src/node_modules/${path}`, `file://${__dirname}`).href.slice(8)
+
   const html = document.documentElement
   const meta = document.createElement('meta')
   const favicon = document.createElement('link')
   html.setAttribute('lang', 'en')
   favicon.setAttribute('rel', 'icon')
   favicon.setAttribute('type', 'image/png')
-  favicon.setAttribute('href', 'data:image/png;base64,iVBORw0KGgo=')
+  favicon.setAttribute('href', path('theme/assets/images/logo.png'))
   meta.setAttribute('name', 'viewport')
   meta.setAttribute('content', 'width=device-width,initial-scale=1.0')
   const fonts = new CSSStyleSheet()
   // @TODO: use font api and cache to avoid re-downloading the font data every time
-  const path = path => new URL(`../src/node_modules/${path}`, `file://${__dirname}`).href.slice(8)
   const font1_url = path('theme/assets/fonts/Silkscreen-Regular.ttf')
   const font2_url = path('theme/assets/fonts/Silkscreen-Bold.ttf')
   fonts.replaceSync(`
@@ -862,6 +863,7 @@ function get_theme (opts) {
     --ac-3: ${opts.ac_3};
     --primary_color: ${opts.primary_color};
     --highlight_color: ${opts.highlight_color};
+    --img_robot_3: url(${opts.img_src.img_robot_3});
   }`
 }
 // ----------------------------------------------------------------------------
@@ -1039,9 +1041,17 @@ async function desktop (opts = default_opts, protocol) {
     if (has_terminal) return terminal_sh.replaceChildren()
     terminal_sh.append(widget('TERMINAL'))
   }
+  function open_important_documents () {
+    const consortium_channel = state.net[state.aka.consortium_page]
+    consortium_channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'open_important_documents'
+    })
+  }
   function HOME () {
     const on = {
-      'navigate': on_navigate_page
+      'navigate': on_navigate_page,
+      'open_important_documents': open_important_documents
     }
     const protocol = use_protocol('home_page')({ state, on })
     const opts = { data: current_theme }
@@ -1202,8 +1212,7 @@ function app_about_us (opts = default_opts, protocol) {
   const { data } = opts
   // Assigning all the icons
   const { img_src: { 
-    about_us_cover = `${prefix}/about_us_cover.png`,
-    img_robot_1 = `${prefix}/img_robot_1.svg`,
+    about_us_cover,
     icon_pdf_reader_solid = `${prefix}/icon_pdf_reader_solid.svg`,
   } } = data
   // ----------------------------------------
@@ -1225,7 +1234,7 @@ function app_about_us (opts = default_opts, protocol) {
         <img src="${about_us_cover}"/>
       </div>
       <div class="content_wrapper">
-        <img src="${img_robot_1}"/>
+        <div class="img"></div>
         <div class="title"> ABOUT US </div>
       </div>
     </div>
@@ -1250,7 +1259,7 @@ function app_about_us (opts = default_opts, protocol) {
       name:'Learn_about_us.pdf', 
       src: icon_pdf_reader_solid,
       action_buttons: [
-        {text: 'IMPORTANT DOCUMENTS', action: 'open_consortium_page', toggle_able: false}
+        {text: 'IMPORTANT DOCUMENTS', action: 'open_consortium_page', activate: false}
       ],
       data
     }
@@ -1265,6 +1274,11 @@ function app_about_us (opts = default_opts, protocol) {
         head: [id, channel.send.id, channel.mid++],
         type: 'navigate',
         data: 'CONSORTIUM'
+      })
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'open_important_documents',
+        data: ''
       })
     }
   }
@@ -1323,9 +1337,12 @@ function get_theme () {
     color: var(--primary_color);
     text-align: center;
   }
-  .about_us_wrapper .content_wrapper img {
-    width: 100px;
-    height: auto;
+  .about_us_wrapper .content_wrapper .img{
+    background-image: var(--img_robot_3);
+    background-size: cover;
+    background-position: center;
+    width: 122px;
+    height: 190px;
   }
   .about_us_wrapper .content_wrapper .title {
     font-size: 40px;
@@ -1487,7 +1504,7 @@ function cover_app (opts = default_opts, protocol) {
       name: 'Cover.pdf',
       src: icon_pdf_reader_solid,
       action_buttons: [
-        {text: 'TELL ME MORE', action: 'toggle_desc', toggle_able: true}
+      {text: 'TELL ME MORE', action: 'toggle_desc', toggle_able: true}
       ],
       data
     }
@@ -2082,7 +2099,7 @@ function app_projects_mini (opts = default_opts, protocol) {
       name:'OUR PROJECTS', 
       src: icon_folder_solid,
       action_buttons: [
-        {text:'View more (12)', action: 'open_project_page', toggle_able: false}
+        {text:'View more (12)', action: 'open_project_page', activate: false}
       ],
       data
     }
@@ -2884,7 +2901,7 @@ function app_timeline_mini (opts = default_opts, protocol) {
       name:'TIMELINE', 
       src: icon_folder_solid,
       action_buttons: [
-        {text: 'View more (12)', action: 'open_timeline_page', toggle_able: false}
+        {text: 'View more (12)', action: 'open_timeline_page', activate: false}
       ],
       data
     }
@@ -3109,6 +3126,17 @@ function app_timeline (opts = default_opts, protocol) {
   status.MONTH = ''
   status.DATE = ''
   status.card = ''
+  let dates = []
+  let visitor = ''
+  // ----------------------------------------
+  // Local Storage
+  // ----------------------------------------
+  if (localStorage.getItem('visitedBefore')) {
+    visitor = 'old'
+  } else {
+    visitor = 'new'
+    localStorage.setItem('visitedBefore', 'true')
+  }
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
@@ -3178,7 +3206,7 @@ function app_timeline (opts = default_opts, protocol) {
       time: '',
       link: '',
       desc: 'Helps dat to become an US ODI (Open Data Institute) project',
-      tags: ['OpenData'],
+      tags: ['https://usopendata.org/2014/04/02/dat/'],
       data,
       active_state: 'ACTIVE'
     },{
@@ -3751,16 +3779,17 @@ function app_timeline (opts = default_opts, protocol) {
     }].map(card => {
       const date = new Date(card.date + ' ' + convert_time_format(card.time))
       card.date_raw = date.getTime()
+      dates.push(card.date_raw)
       return card
     }).sort(function (a, b) {
-      const dateA = new Date(a.date_raw);
-      const dateB = new Date(b.date_raw);
-      // Compare years in ascending order
+      const dateA = new Date(a.date_raw)
+      const dateB = new Date(b.date_raw)
+      // Compare years in ascending/descending order
       if (dateA.getFullYear() !== dateB.getFullYear()) {
-        return dateB.getFullYear() - dateA.getFullYear();
+        return visitor === 'new' ? dateA.getFullYear() - dateB.getFullYear() : dateB.getFullYear() - dateA.getFullYear()
       }
       // If years are the same, compare months in descending order
-      return dateA.getMonth() - dateB.getMonth();
+      return dateA.getMonth() - dateB.getMonth()
     })
 
   const tags = new Set(cards_data.flatMap(card => card.tags))
@@ -3784,13 +3813,13 @@ function app_timeline (opts = default_opts, protocol) {
     <div class="windowbar"></div>
     <div class="main_wrapper">
       <div class="filter_wrapper">
-        <div class="month_wrapper">
-          <div class="scrollbar_wrapper">
+          <div class="month_wrapper">
             <div class="timeline_wrapper">
-              <div class="filter_container"></div>
+            </div>
+            <div class="empty_wrapper">
+              Nothing is selected
             </div>
           </div>
-        </div>
       </div>
     </div>
   </div>`
@@ -3798,13 +3827,7 @@ function app_timeline (opts = default_opts, protocol) {
   const timeline_wrapper = shadow.querySelector('.timeline_wrapper')
   const filter_wrapper = shadow.querySelector('.filter_wrapper')
   const month_wrapper = shadow.querySelector('.month_wrapper')
-  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
-  
-  // const filter_container = shadow.querySelector('.filter_container')
-  const filter_container = document.createElement('div')
-  filter_container.classList.add('filter_container')
-  timeline_wrapper.append(filter_container);
-
+  const empty_wrapper = shadow.querySelector('.empty_wrapper')
   // ----------------------------------------
   const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
   // ----------------------------------------
@@ -3863,9 +3886,13 @@ function app_timeline (opts = default_opts, protocol) {
     main_wrapper.append(element)
     function on_value (message) { setFilter(message.data) }
     async function toggle_month_filter (message) {
-      if (filter_container.contains(month_filter_wrapper)) {
-        filter_container.removeChild(month_filter_wrapper)
-      } else filter_container.append(month_filter_wrapper)
+      if (month_wrapper.contains(month_filter_wrapper)) {
+        month_wrapper.removeChild(month_filter_wrapper)
+        timeline_wrapper.style.height = '500px'
+      } else {
+        month_wrapper.append(month_filter_wrapper)
+        timeline_wrapper.style.height = '333px'
+      }
     }
     async function toggle_year_filter (message) {
       if (filter_wrapper.contains(year_filter_wrapper)) {
@@ -3877,8 +3904,9 @@ function app_timeline (opts = default_opts, protocol) {
   { // year filter
     const on = { 'set_scroll': on_set_scroll }
     const protocol =  use_protocol('year_filter')({ state, on })
+    
     const opts = {
-      data, latest_date: cards_data[0].date_raw, oldest_date: cards_data.slice(-1)[0].date_raw
+      data, latest_date: Math.max(...dates), oldest_date: Math.min(...dates), visitor
     }
     year_filter_wrapper = shadowfy()(year_filter(opts, protocol))
     function on_set_scroll ({ data }) {
@@ -3893,6 +3921,7 @@ function app_timeline (opts = default_opts, protocol) {
     const protocol = use_protocol('month_filter')({ state, on })
     const opts = { data }
     month_filter_wrapper = shadowfy()(month_filter(opts, protocol))
+    month_filter_wrapper.classList.add('month_filter_wrapper')
     function on_set_scroll ({ data }) {
       set_scroll(data)
       updateCalendar()
@@ -3905,10 +3934,10 @@ function app_timeline (opts = default_opts, protocol) {
     opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_down
     const scroll_opts = { data }
     const element = shadowfy()(scrollbar(scroll_opts, protocol))
-    scrollbar_wrapper.append(element)
+    filter_wrapper.append(element)
 
     const channel = state.net[state.aka.scrollbar]
-    ro.observe(scrollbar_wrapper)
+    ro.observe(timeline_wrapper)
     function on_set_scroll (message) { setScrollTop(message.data) }
     function onstatus (message) {
       channel.send({
@@ -3976,8 +4005,12 @@ function app_timeline (opts = default_opts, protocol) {
         setScrollTop(card.getBoundingClientRect().top - timeline_wrapper.getBoundingClientRect().top + timeline_wrapper.scrollTop)
         if(status.card)
           status.card.classList.remove('active')
-        card.classList.add('active')
-        status.card = card
+        if(status.card === card)
+          status.card = ''
+        else{
+          card.classList.add('active')
+          status.card = card
+        }
         return true
       }
     })
@@ -4017,6 +4050,8 @@ function app_timeline (opts = default_opts, protocol) {
     const card_groups = []
     let year_cache
     let card_group
+    
+    console.error(cardfilter.length)
     timeline_cards.forEach(card => {
       const { idx } = card
       const card_data = cards_data[idx]
@@ -4034,6 +4069,12 @@ function app_timeline (opts = default_opts, protocol) {
     card_groups.forEach((card_group) => {
       timeline_wrapper.append(card_group)
     })
+    if(cardfilter.length === 0){
+      empty_wrapper.classList.add('active')
+    }
+    else{
+      empty_wrapper.classList.remove('active')
+    }
     const channel = state.net[state.aka.scrollbar]
     channel.send({
       head: [id, channel.send.id, channel.mid++],
@@ -4044,7 +4085,6 @@ function app_timeline (opts = default_opts, protocol) {
       filter: 'YEAR',
       value: String(new Date(cardfilter[0].date_raw).getFullYear())
     })
-    timeline_wrapper.append(filter_container)
   }
   async function updateCalendar () {
     let dates = []
@@ -4059,8 +4099,10 @@ function app_timeline (opts = default_opts, protocol) {
         data: dates
       })
       prev_year = String(status.YEAR).slice(0)
-      if(status.card)
+      if(status.card){
           status.card.classList.remove('active')
+          status.card = ''
+      }
     }
     
   }
@@ -4087,47 +4129,23 @@ function get_theme () {
       display: flex;
       width: 100%;
       height: 100%;
-      position:relative;
-    }
+      border :1px solid var(--primary_color);
+      }
     .main_wrapper .filter_wrapper .month_wrapper {
       width: 100%;
       height: 100%;
       overflow: hidden;
       border: 1px solid var(--primary_color);
     }
-    .filter_container{
-      width:auto;
-      height:max-content;
-      position: fixed;
-      left:0;
-      right:31px;
-      bottom: 30px;
-      z-index:1;
-      --s: 15px; /* control the size */
-      --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
-      background:
-        repeating-conic-gradient(at 33% 33%,var(--_g)),
-        repeating-conic-gradient(at 66% 66%,var(--_g)),
-        var(--bg_color_3);  /* second color */  
-      background-size: var(--s) var(--s);  
-      border: 1px solid var(--primary_color);
-    }
-    .main_wrapper .filter_wrapper .scrollbar_wrapper {
-      display: flex;
-      width: 100%;
-      height: 100%;
-      position:relative;
-      z-index:3;
-    }
 
-    .main_wrapper .filter_wrapper .scrollbar_wrapper .timeline_wrapper {
+    .main_wrapper .filter_wrapper .timeline_wrapper {
       --s: 15px; /* control the size */
       --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
       background:
         repeating-conic-gradient(at 33% 33%,var(--_g)),
         repeating-conic-gradient(at 66% 66%,var(--_g)),
         var(--bg_color_3);  /* second color */  
-      background-size: var(--s) var(--s);  
+      background-size: var(--s) var(--s);
       border :1px solid var(--primary_color);
       display: flex;
       flex-direction: column;
@@ -4136,20 +4154,28 @@ function get_theme () {
       overflow: scroll;
       gap: 20px;
       scrollbar-width: none; /* For Firefox */
-      position:relative;
     }
-    .main_wrapper .filter_wrapper .scrollbar_wrapper .timeline_wrapper .card_group {
+    .main_wrapper .filter_wrapper .empty_wrapper {
+      display: none;
+      position: absolute;
+      background-color: white;
+      top: 45%;
+      right: 40%;
+    }
+    .main_wrapper .filter_wrapper .empty_wrapper.active {
+      display: block;
+    }
+    .main_wrapper .filter_wrapper .timeline_wrapper .card_group {
       width: 100%;
       padding: 0px;
       display: grid;
       gap: 20px;
       grid-template-columns: 12fr;
     }
-
-    .main_wrapper .filter_wrapper .scrollbar_wrapper .timeline_wrapper .card_group > .active{
+    .main_wrapper .filter_wrapper .timeline_wrapper .card_group > .active{
       border: 4px solid var(--ac-2);
     }
-    .main_wrapper .filter_wrapper .scrollbar_wrapper .timeline_wrapper::-webkit-scrollbar {
+    .main_wrapper .filter_wrapper .timeline_wrapper::-webkit-scrollbar {
       display: none;
     }
     .main_wrapper .filter_wrapper .year_filter_wrapper{
@@ -4162,18 +4188,28 @@ function get_theme () {
       background-size: var(--s) var(--s);  
       border :1px solid var(--primary_color);
     }
+    .month_filter_wrapper{
+      --s: 15px; /* control the size */
+      --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
+      background:
+        repeating-conic-gradient(at 33% 33%,var(--_g)),
+        repeating-conic-gradient(at 66% 66%,var(--_g)),
+        var(--bg_color_3);  /* second color */  
+      background-size: var(--s) var(--s);  
+      border: 1px solid var(--primary_color);
+    }
     @container(min-width: 400px) {
-      .main_wrapper .filter_wrapper .scrollbar_wrapper .timeline_wrapper .card_group:last-child{
-        margin-bottom: 180px;
+      .main_wrapper .filter_wrapper .timeline_wrapper .card_group:last-child{
+        margin-bottom: 300px;
       }
     }
     @container(min-width: 768px) {
-      .main_wrapper .filter_wrapper .month_wrapper .scrollbar_wrapper .timeline_wrapper .card_group {
+      .main_wrapper .filter_wrapper .timeline_wrapper .card_group {
         grid-template-columns: repeat(2, 6fr);
       }
     }
     @container(min-width: 1200px) {
-      .main_wrapper .filter_wrapper .month_wrapper .scrollbar_wrapper .timeline_wrapper .card_group {
+      .main_wrapper .filter_wrapper .timeline_wrapper .card_group {
         grid-template-columns: repeat(3, 4fr);
       }
     }
@@ -4590,6 +4626,10 @@ function logo_button (opts = default_opts) {
   // OPTS
   // ----------------------------------------
   const { data } = opts
+  // Assigning all the icons
+  const { img_src: { 
+    logo
+  } } = data
   // ----------------------------------------
   // TEMPLATE
   // ----------------------------------------
@@ -4597,7 +4637,7 @@ function logo_button (opts = default_opts) {
   const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `<div class="logo_button">
-    <img src="${prefix}/logo.png" />
+    <img src="${logo}" />
     <span> DAT ECOSYSTEM </span>
   </div>`
   // ----------------------------------------
@@ -4624,6 +4664,10 @@ function get_theme () {
       color: var(--bg_color);
       font-size: 0.875em;
       letter-spacing: 0.25rem;
+    }
+    .logo_button img{
+      width: 30px;
+      aspect-ratio:1/1;
     }
   `
 }
@@ -4773,8 +4817,8 @@ function select_button (opts = default_opts, protocol) {
   select_button_wrapper.onblur = (e) => {
     setTimeout(() => {
       select_button_wrapper.classList.remove('active')
-      shadow.querySelector('.arrow_icon').innerHTML = active_state ? icon_arrow_down : icon_arrow_up
-      active_state = !active_state
+      shadow.querySelector('.arrow_icon').innerHTML = icon_arrow_up
+      active_state = true
     }, 200);
   }
   { // scrollbar
@@ -4798,6 +4842,9 @@ function select_button (opts = default_opts, protocol) {
   // Attach click event listener to each .option div
   options.forEach((option) => {
     option.addEventListener('click', () => {
+      shadow.querySelector('.arrow_icon').innerHTML = active_state ? icon_arrow_down : icon_arrow_up
+      active_state = !active_state
+
       if (active_option) active_option.classList.remove('active')
       if (active_option === option) {
         selected_option.innerHTML = 'ALL'
@@ -4885,13 +4932,14 @@ function get_theme () {
       position: absolute;
       display: none;
       box-sizing: border-box;
-      height: max-content;
+height: max-content;
       max-height: 400px;
       width: 100%;
       background-color: var(--bg_color);
       border: 1px solid var(--primary_color);
       word-break: break-all;
     }
+    
     .select_button_wrapper .option_wrapper .option {
       box-sizing: border-box;
       display: flex;
@@ -4901,6 +4949,7 @@ function get_theme () {
       cursor: pointer;
       word-break: break-all;
       background-color: var(--bg_color);
+      overflow: hidden;
     }
     .select_button_wrapper .option_wrapper .option.active {
       background-color: var(--ac-1);
@@ -4948,7 +4997,7 @@ function get_theme () {
       max-height: 200px;
       min-height: 100px;
       overflow-y: scroll;
-      scrollbar-width: none;
+    scrollbar-width: none;
       width: 100%;
       background-color: var(--bg_color);
       border: 1px solid var(--primary_color);
@@ -5328,7 +5377,7 @@ function sm_text_button (opts = default_opts, protocol) {
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
-  const { data } = opts
+  const { data, text, activate = true } = opts
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
@@ -5340,8 +5389,8 @@ function sm_text_button (opts = default_opts, protocol) {
   const el = document.createElement('div')
   const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
-  shadow.innerHTML = `<div class="sm_text_button" data-toggle_able="${opts.toggle_able}" > 
-    ${opts.text}
+  shadow.innerHTML = `<div class="sm_text_button"> 
+    ${text}
   </div>`
   let sm_text_button = shadow.querySelector('.sm_text_button')
   // ----------------------------------------
@@ -5355,18 +5404,15 @@ function sm_text_button (opts = default_opts, protocol) {
   return el
 
   function toggle_class (e) {
-    let sm_text_button = e.target;
-    let toggle_able = sm_text_button.getAttribute('data-toggle_able');
-    console.log(toggle_able)
-    if (toggle_able === 'true') {
-      let selector = sm_text_button.classList;
-      selector.toggle('active', !selector.contains('active'));
+    if(activate){
+      let selector = e.target.classList
+      selector.toggle('active', !selector.contains('active'))
     }
     channel.send({
       head: [id, channel.send.id, channel.mid++],
       type: 'click',
       data: ''
-    });
+})
   }
 }
 function get_theme () {
@@ -6172,7 +6218,9 @@ function consortium_page (opts = default_opts, protocol) {
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
-  const on = {}
+  const on = {
+    'open_important_documents': open_important_documents
+  }
   const channel = use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
   // TEMPLATE
@@ -6259,6 +6307,22 @@ function consortium_page (opts = default_opts, protocol) {
   // ----------------------------------------
 
   return el
+
+
+  async function open_important_documents () {
+    icons_data.forEach(icon => {
+      const channel = state.net[state.aka[icon.name]]
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'hide'
+      })
+    })
+    const channel = state.net[state.aka.important_documents]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'show'
+    })
+  }
 }
 function get_theme () {
   return `
@@ -6269,10 +6333,10 @@ function get_theme () {
       gap: 20px;
       justify-content: space-between;
       margin: 0;
-      padding:30px 10px;
+      padding: 30px 10px 0;
       opacity: 1;
       background-size: 16px 16px;
-      position: relative;
+position: relative;
       overflow-scroll;
     }
     .main_wrapper .icon_wrapper {
@@ -6296,6 +6360,10 @@ function get_theme () {
       top: 0;
       left: 0;
       z-index: 20;
+      overflow: scroll;
+    }
+    .main_wrapper .popup_wrapper::-webkit-scrollbar {
+      display: none;
     }
     .main_wrapper .popup_wrapper .mini_popup_wrapper {
       display: flex;
@@ -6318,14 +6386,14 @@ function get_theme () {
     }
     @container (min-width: 768px) {
       .main_wrapper .popup_wrapper {
-        margin-left: 100px;
+        padding-left: 100px;
       }
     }
     @container (min-width: 1200px) {
       .main_wrapper .popup_wrapper {
         flex-direction: row;
         gap: 20px;
-        margin-left: 200px;
+        padding-left: 200px;
       }
     }
   `
@@ -6607,7 +6675,8 @@ function home_page (opts = default_opts, protocol) {
   }
   { // app about us
     const on = {
-      'navigate': navigate
+      'navigate': navigate,
+      'open_important_documents': open_important_documents
     }
     const protocol = use_protocol('app_about_us')({ state, on })
     const opts = { data }
@@ -6631,6 +6700,13 @@ function home_page (opts = default_opts, protocol) {
     channel.send({
       head: [id, channel.send.id, channel.mid++],
       type: 'navigate',
+      data
+    })
+  }
+  async function open_important_documents( {data} ){
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'open_important_documents',
       data
     })
   }
@@ -6747,7 +6823,7 @@ function important_documents (opts = default_opts, protocol) {
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
-  const on = { 'show': on_show }
+  const on = { 'show': on_show, 'hide': on_hide }
   const channel = use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
   // TEMPLATE
@@ -6800,6 +6876,9 @@ function important_documents (opts = default_opts, protocol) {
 
   function on_show (message) {
     important_documents_wrapper.style.display = 'inline'
+  }
+  function on_hide (message) {
+    important_documents_wrapper.style.display = 'none'
   }
 }
 function get_theme () {
@@ -6937,7 +7016,7 @@ function manifesto (opts = default_opts, protocol) {
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
-  const on = { 'show': on_show }
+  const on = { 'show': on_show, 'hide': on_hide }
   const channel = use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
   // TEMPLATE
@@ -7074,6 +7153,9 @@ function manifesto (opts = default_opts, protocol) {
 
   function on_show (message) {
     mission_statement_wrapper.style.display = 'inline'
+  }
+  function on_hide (message) {
+    mission_statement_wrapper.style.display = 'none'
   }
 }
 function get_theme () {
@@ -8208,10 +8290,13 @@ function our_member (opts = default_opts, protocol) {
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
-  const on = { 'show': on_show }
+  const on = { 'show': on_show, 'hide': on_hide }
   const channel = use_protocol('up')({ protocol, state, on })
   function on_show (message) {
     our_member_wrapper.style.display = 'inline'
+  }
+  function on_hide (message) {
+    our_member_wrapper.style.display = 'none'
   }
   // ----------------------------------------
   // TEMPLATE
@@ -8440,7 +8525,7 @@ function project_card (opts = default_opts, protocol) {
     <div class="icon_wrapper">
       <div class="project_title">
         <a href="${project_website}" target="_blank">${project_name}</a>
-        <img src="${project_logo}">
+        <img hidden src="${project_logo}">
       </div>
       <div class="socials_wrapper"><socials></socials></div>
     </div>
@@ -9026,7 +9111,7 @@ function scrollbar (opts = default_opts, protocol) {
     if (ratio >= 1) el.style.cssText = 'display: none;'
     else el.style.cssText = 'display: inline;'
     const [prop1, prop2] = horizontal ? ['width', 'left'] : ['height', 'top']
-    const percent1 = Math.max(ratio * 100, 10)
+    const percent1 = ratio * 100
     const percent2 = (size.content_scrollStart / size.content_scrollSize ) * 100
     bar.style.cssText = `${prop1}: ${percent1}%; ${prop2}: ${percent2}%;`
   }
@@ -10283,8 +10368,10 @@ const dark_theme = {
     icon_calendar : `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M47 14H3V45H47V14ZM0 6V48H50V6H46V2H40V6H10V2H4V6H0Z" fill="#293648"/><path d="M15 38V35H12V25H14.9901L15 22H22V25H25V35H22V38H15ZM15 35H22V25H14.9901L15 35Z" fill="#293648"/><path d="M28 38V35H32V25H28V22H35.0098V35H39V38H28Z" fill="#293648"/></svg>`,
     project_logo_1 : `${prefix}/../assets/images/project_logo_1.png`,
     img_robot_1 : `${prefix}/../assets/images/img_robot_1.png`,
+    img_robot_3 : `${prefix}/../assets/images/img_robot_1_dark.png`,
     img_robot_2 : `${prefix}/../assets/images/img_robot_2.png`,
     pattern_img_1 : `${prefix}/../assets/images/pattern_img_1.png`,
+    logo:  `${prefix}/../assets/images/logo.png`,
 
     icon_arrow_right: `<svg transform="rotate(90 0 0)" width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.5789 9H18.4211V17H7.89473V27.6667H0V41H18.4211V33H31.5789V41H50V27.6667H42.1053V17H31.5789V9Z" fill="#293648"/></svg>`,
     icon_arrow_left: `<svg transform="rotate(90 0 0)" width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="#293648"/></svg>`,
@@ -10338,7 +10425,7 @@ const light_theme = {
     icon_opencollective:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2284_208)"><path d="M45.9543 38.6405C48.5129 34.718 50 30.0326 50 25C50 19.9674 48.5129 15.282 45.9543 11.3595L40.1106 17.2031C41.318 19.5385 42 22.1896 42 25C42 27.8104 41.318 30.4615 40.1106 32.7969L45.9543 38.6405Z" fill="#293648"/><path d="M34.8542 11.1458C32.0745 9.16504 28.6733 8 25 8C15.6112 8 8 15.6112 8 25C8 34.3888 15.6112 42 25 42C28.6733 42 32.0745 40.835 34.8542 38.8542L40.5648 44.5648C36.2942 47.9669 30.8845 50 25 50C11.1929 50 0 38.8071 0 25C0 11.1929 11.1929 0 25 0C30.8845 0 36.2942 2.03309 40.5648 5.43515L34.8542 11.1458Z" fill="#293648"/></g><defs><clipPath id="clip0_2284_208"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
     icon_matrix:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2284_206)"><path d="M1.31875 1.15V48.8547H4.75156V50.0031H0V0.003125H4.75156V1.15156L1.31875 1.15ZM15.9922 16.2703V18.6875H16.0563C16.7 17.7578 17.4813 17.0516 18.3828 16.5453C19.2875 16.0406 20.3375 15.7891 21.5078 15.7891C22.6313 15.7891 23.6641 16.0094 24.5937 16.4406C25.5297 16.8797 26.2297 17.6531 26.7172 18.7516C27.2469 17.9703 27.9719 17.2781 28.8734 16.6844C29.7781 16.0906 30.8531 15.7891 32.0969 15.7891C33.0406 15.7891 33.9109 15.9031 34.7172 16.1391C35.5312 16.3656 36.2156 16.7328 36.7922 17.2375C37.3625 17.7516 37.8094 18.4109 38.1359 19.225C38.4531 20.0375 38.6156 21.0234 38.6156 22.1797V34.1094H33.7266V24.0031C33.7266 23.4078 33.7016 22.8391 33.6516 22.3094C33.6203 21.8297 33.4969 21.3656 33.2781 20.9344C33.0734 20.5422 32.7578 20.2172 32.3656 20.0078C31.9672 19.7703 31.4141 19.6578 30.7297 19.6578C30.0375 19.6578 29.4844 19.7875 29.0609 20.0469C28.6469 20.3078 28.2969 20.6656 28.0609 21.0891C27.8094 21.5375 27.6469 22.0328 27.5797 22.5375C27.4984 23.0828 27.4594 23.6297 27.45 24.175V34.1109H22.5578V24.1094C22.5578 23.5797 22.55 23.0594 22.5187 22.5469C22.5016 22.0516 22.4047 21.5719 22.2172 21.1156C22.0547 20.6766 21.7469 20.3094 21.3547 20.0656C20.9562 19.8047 20.3609 19.6672 19.5797 19.6672C19.3438 19.6672 19.0359 19.7156 18.6609 19.8219C18.2859 19.9266 17.9125 20.1219 17.5625 20.4078C17.2047 20.7016 16.8938 21.1156 16.6422 21.6531C16.3906 22.1891 16.2687 22.8969 16.2687 23.7766V34.1203H11.3766V16.275L15.9922 16.2703ZM48.6813 48.8531V1.14844H45.2484V0H50V50H45.2484V48.8516L48.6813 48.8531Z" fill="#293648"/></g><defs><clipPath id="clip0_2284_206"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
     icon_twitter_smooth:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2284_214)"><path fill-rule="evenodd" clip-rule="evenodd" d="M15.7235 45.0005C34.5914 45.0005 44.9117 29.609 44.9117 16.2632C44.9117 15.8251 44.9117 15.3902 44.8817 14.957C46.8893 13.5294 48.6218 11.7568 49.9993 9.72861C48.1293 10.5458 46.1417 11.0817 44.1092 11.318C46.2492 10.0553 47.8518 8.07152 48.6193 5.73071C46.6042 6.90726 44.4017 7.73763 42.1041 8.18316C38.219 4.11688 31.7214 3.91987 27.5888 7.74492C24.9262 10.2113 23.7937 13.8885 24.6212 17.396C16.3735 16.9875 8.68827 13.1526 3.47814 6.84402C0.755567 11.4592 2.1481 17.361 6.65572 20.3246C5.02318 20.2778 3.42564 19.8451 1.9981 19.0623V19.1905C2.0006 23.9977 5.44319 28.1369 10.2283 29.0895C8.71827 29.4956 7.13323 29.5545 5.59819 29.2616C6.94073 33.3771 10.7933 36.1959 15.1809 36.2771C11.5483 39.0881 7.06073 40.6144 2.44061 40.6095C1.62559 40.6071 0.810568 40.5602 -0.00195312 40.4643C4.69067 43.4278 10.1483 45.0006 15.7235 44.9932" fill="#293648"/></g><defs><clipPath id="clip0_2284_214"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
-    icon_github:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2284_195)"><path fill-rule="evenodd" clip-rule="evenodd" d="M25 0C38.8075 0 50 11.4748 50 25.6323C50 36.9548 42.845 46.5599 32.9175 49.9524C31.65 50.2049 31.2 49.4044 31.2 48.7219C31.2 47.8769 31.23 45.117 31.23 41.687C31.23 39.297 30.43 37.7371 29.5325 36.9421C35.1 36.3071 40.95 34.1394 40.95 24.2944C40.95 21.4944 39.98 19.2096 38.375 17.4146C38.635 16.7671 39.4925 14.1599 38.13 10.6299C38.13 10.6299 36.035 9.94306 31.2625 13.2581C29.265 12.6906 27.125 12.405 25 12.395C22.875 12.405 20.7375 12.6906 18.7425 13.2581C13.965 9.94306 11.865 10.6299 11.865 10.6299C10.5075 14.1599 11.365 16.7671 11.6225 17.4146C10.025 19.2096 9.04751 21.4944 9.04751 24.2944C9.04751 34.1144 14.885 36.3154 20.4375 36.9629C19.7225 37.6029 19.075 38.7319 18.85 40.3894C17.425 41.0444 13.805 42.178 11.575 38.2605C11.575 38.2605 10.2525 35.7977 7.7425 35.6177C7.7425 35.6177 5.305 35.5853 7.5725 37.1753C7.5725 37.1753 9.21 37.9628 10.3475 40.9253C10.3475 40.9253 11.815 45.5002 18.77 43.9502C18.7825 46.0927 18.805 48.1119 18.805 48.7219C18.805 49.3994 18.345 50.1923 17.0975 49.9548C7.16249 46.5673 0 36.9573 0 25.6323C0 11.4748 11.195 0 25 0Z" fill="#293648"/></g><defs><clipPath id="clip0_2284_195"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_github_smooth:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2284_195)"><path fill-rule="evenodd" clip-rule="evenodd" d="M25 0C38.8075 0 50 11.4748 50 25.6323C50 36.9548 42.845 46.5599 32.9175 49.9524C31.65 50.2049 31.2 49.4044 31.2 48.7219C31.2 47.8769 31.23 45.117 31.23 41.687C31.23 39.297 30.43 37.7371 29.5325 36.9421C35.1 36.3071 40.95 34.1394 40.95 24.2944C40.95 21.4944 39.98 19.2096 38.375 17.4146C38.635 16.7671 39.4925 14.1599 38.13 10.6299C38.13 10.6299 36.035 9.94306 31.2625 13.2581C29.265 12.6906 27.125 12.405 25 12.395C22.875 12.405 20.7375 12.6906 18.7425 13.2581C13.965 9.94306 11.865 10.6299 11.865 10.6299C10.5075 14.1599 11.365 16.7671 11.6225 17.4146C10.025 19.2096 9.04751 21.4944 9.04751 24.2944C9.04751 34.1144 14.885 36.3154 20.4375 36.9629C19.7225 37.6029 19.075 38.7319 18.85 40.3894C17.425 41.0444 13.805 42.178 11.575 38.2605C11.575 38.2605 10.2525 35.7977 7.7425 35.6177C7.7425 35.6177 5.305 35.5853 7.5725 37.1753C7.5725 37.1753 9.21 37.9628 10.3475 40.9253C10.3475 40.9253 11.815 45.5002 18.77 43.9502C18.7825 46.0927 18.805 48.1119 18.805 48.7219C18.805 49.3994 18.345 50.1923 17.0975 49.9548C7.16249 46.5673 0 36.9573 0 25.6323C0 11.4748 11.195 0 25 0Z" fill="#293648"/></g><defs><clipPath id="clip0_2284_195"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
     icon_cabal:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24.5 50L49 0L24.5 7.54717L0 0L24.5 50Z" fill="#293648"/></svg>`,
     icon_jitsi:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2284_202)"><mask id="path-1-outside-1_2284_202" maskUnits="userSpaceOnUse" x="7" y="-1" width="36" height="53" fill="black"><rect fill="white" x="7" y="-1" width="36" height="53"/><path d="M39.7233 16.309C38.3714 15.4632 36.4876 15.5882 35.9091 15.6486L35.5786 15.6549C35.2925 15.534 35.5871 14.8278 35.6655 14.0861C35.7735 13.0528 35.3879 11.6341 34.6886 10.4987C34.3517 9.95288 34.2309 9.9008 34.481 9.63831C36.3223 7.70501 36.6105 5.56339 36.0257 3.78009C34.8836 0.290578 34.6526 -0.25941 34.6886 0.0905825C34.8327 1.51347 34.5106 3.50093 34.2902 4.30925C33.9766 5.45506 32.9044 6.9092 30.0968 8.23417C29.4378 8.54458 26.7806 9.7758 26.3081 10.3133C25.7232 10.982 25.5791 11.6549 25.3037 12.9862C25.0113 14.3945 24.9032 15.709 25.2465 17.2152C25.3122 17.509 25.38 17.7277 25.4181 17.9006C25.4173 17.897 25.4158 17.8935 25.4139 17.8902C25.4923 18.1965 25.3651 18.3777 25.1914 18.486C25.0189 18.5574 24.8402 18.6132 24.6574 18.6527L24.651 18.6548C24.2209 18.7215 23.8077 18.7944 23.4114 18.8715C20.4894 19.3652 14.0858 20.8672 16.3595 28.6713C17.1668 31.3191 18.7412 33.0003 19.6524 33.3087L19.6842 33.3191C19.8346 33.3857 19.9978 33.4441 20.1567 33.4753C20.1736 33.4795 20.1821 33.7337 20.1482 34.092L20.1249 34.2461C19.9978 35.1503 19.4723 36.5461 18.6988 36.5648C18.3895 36.5732 17.0248 35.7607 16.6392 35.5128C14.4778 34.117 13.7065 33.3295 12.1724 33.1608C10.9074 33.0212 8.0637 35.4378 8.00225 40.5544C7.92809 46.8021 9.71015 49.9083 9.761 50C11.0811 44.1168 12.0325 43.5418 15.4589 41.2398C15.7302 41.0585 18.9489 43.721 19.7223 43.7064C23.5937 43.6355 30.5333 43.8793 33.8961 37.0482C33.9618 36.9169 35.0594 38.0357 35.1569 38.0336C35.1972 38.0315 41.0646 35.4628 41.9355 23.6609C42.3339 18.2715 40.7997 16.9819 39.7233 16.309ZM35.1209 12.4633C35.2904 13.1445 35.2417 13.8528 35.034 14.4361C34.6568 15.3257 34.0805 15.7924 33.36 15.7424C33.1274 15.7108 32.9039 15.6328 32.7031 15.5132C31.9022 15.0528 31.4678 13.8757 31.8089 12.9612C31.8168 12.9477 31.8239 12.9338 31.8301 12.9195C31.9191 12.6862 32.1352 12.4258 32.4128 12.1612C32.9828 11.6654 34.1017 10.8279 34.2224 10.8279C34.375 10.832 34.945 11.7508 35.1209 12.4633ZM35.1124 2.23221C35.1251 2.11138 35.4366 3.03427 35.5383 3.3551C35.9812 4.74049 35.9219 5.35506 35.8223 6.05713C35.5637 7.84459 34.5954 9.01957 33.8643 9.73622C32.718 10.8612 32.4489 11.0237 32.9489 10.1341C34.5445 7.29877 34.8814 4.63216 35.1124 2.23221ZM26.4183 10.9529C26.6238 10.455 27.6557 9.90497 28.5139 9.41331C29.3997 8.90499 32.2158 8.18417 33.9512 5.9363C34.4873 5.24256 33.4977 9.9258 30.9486 12.1903C30.0883 12.9549 27.7235 13.3507 25.683 14.7778C25.4732 14.9257 25.7296 12.3758 26.4183 10.9529ZM25.8716 15.1049C26.3716 14.6965 27.2786 14.1111 30.5524 13.0487C30.9571 12.9174 30.9274 13.0528 31.1245 14.0007C31.3343 15.0132 31.5419 15.9444 33.6821 16.4548C33.8347 16.4923 32.9871 18.0631 32.7434 18.2694C32.2666 19.0194 29.745 21.1693 28.6771 20.9652C27.946 20.8256 26.3738 19.1006 25.9457 18.1486C25.6385 17.4652 25.0875 15.7444 25.8716 15.1049ZM16.7579 24.0359C17.1075 22.4047 18.417 21.5776 18.4552 21.5443C19.1184 20.9777 20.4025 20.4652 21.7396 20.0777C21.9409 20.0256 22.0659 19.9985 22.0955 19.9923C22.9219 19.8256 23.9602 19.5485 24.6468 19.4798C25.1681 19.4277 25.8101 19.161 26.3377 19.5548C26.9099 20.2381 28.1685 21.3693 28.8614 21.4277C29.0966 21.4464 30.6795 20.961 33.2753 18.6756C33.5995 18.3902 33.9406 18.109 34.3008 17.8465L34.4047 17.7715C35.2014 17.2027 36.0829 16.7298 37.0407 16.5215C37.3373 16.4569 35.9812 17.7819 37.1424 20.5548C37.9031 22.3714 40.0051 28.6025 39.6597 29.6004C39.4542 30.1962 39.2677 30.3066 38.7443 30.0691C37.278 29.4004 35.4726 27.4254 32.0039 26.0942C29.2089 25.0213 26.8929 25.0463 25.3927 25.3359C21.9409 26.0046 20.1525 27.4817 19.1502 28.3067C18.9976 28.4338 20.6356 27.7963 22.8245 27.5525C24.8078 27.3317 26.7976 27.5442 29.2598 29.19C30.8321 30.4837 30.4485 30.3837 29.7387 30.5775C27.0264 31.3191 21.8582 32.8524 20.055 32.5941C18.1903 32.3254 15.8891 27.6192 16.7579 24.0359ZM31.2707 30.5983C29.0924 28.0463 26.6068 27.2567 25.024 27.1525C23.0597 27.0234 21.6463 27.2713 20.3071 27.7088C20.163 27.7567 27.4841 22.5651 35.5468 28.7275C36.9983 29.8379 37.865 30.4566 38.6278 30.9483C38.738 31.0191 36.6847 31.5524 36.3372 31.6483C32.9998 32.192 32.0823 31.5483 31.2707 30.5983ZM29.406 31.117C28.6093 31.3983 27.4926 31.7858 26.2763 32.1566C27.315 31.7972 28.3584 31.4506 29.406 31.117ZM13.6091 38.2231C13.7362 36.9711 14.018 35.8357 13.893 34.5711C13.8909 34.5461 17.5249 36.994 18.5102 37.1628C18.6713 37.1898 16.8129 38.8544 14.9143 39.6377C14.2638 39.5544 13.5561 38.7461 13.6091 38.2231ZM9.62115 48.5042C9.4262 48.2355 8.15058 43.2751 8.50445 40.1002C8.99181 35.7253 11.488 34.1753 11.969 34.1191C12.3673 34.0732 13.1556 34.3274 12.7869 38.6981C12.7424 39.2252 15.1538 40.8648 15.1538 40.8648C10.2335 43.7064 10.6277 45.8459 9.62115 48.5042ZM19.6948 43.223C19.4468 43.2126 14.8974 40.1544 15.05 40.096C20.2987 38.0877 20.678 34.9565 21.0403 34.1607C20.9979 34.0941 22.0659 33.6691 23.5195 33.1378C25.8588 32.3129 29.0945 31.2816 30.2112 30.8754L30.2684 30.8587C30.7749 30.715 30.7961 30.8087 30.9317 30.9837C31.3343 31.4983 32.0102 31.842 32.0844 31.8774C33.0803 32.342 34.3644 32.2983 34.3941 32.3379C34.5933 32.6212 34.7204 43.871 19.6948 43.223ZM35.1845 37.6377C35.14 37.6398 34.0656 36.6544 34.0656 36.6544C34.0656 36.6544 34.481 35.7649 34.6907 34.6336C34.8602 33.7128 34.945 32.3483 34.945 32.3483C34.945 32.3483 39.8843 31.7691 40.1047 30.0941C40.3547 28.1817 38.9477 24.2047 38.738 23.5547C38.649 23.2797 37.4221 20.0339 37.242 19.1944C37.0386 18.2486 37.4263 16.7215 38.0048 16.4986C39.3673 15.9715 41.374 18.2236 41.4948 21.5006C41.9546 34.0628 35.229 37.6357 35.1845 37.6377Z"/></mask><path d="M39.7233 16.309C38.3714 15.4632 36.4876 15.5882 35.9091 15.6486L35.5786 15.6549C35.2925 15.534 35.5871 14.8278 35.6655 14.0861C35.7735 13.0528 35.3879 11.6341 34.6886 10.4987C34.3517 9.95288 34.2309 9.9008 34.481 9.63831C36.3223 7.70501 36.6105 5.56339 36.0257 3.78009C34.8836 0.290578 34.6526 -0.25941 34.6886 0.0905825C34.8327 1.51347 34.5106 3.50093 34.2902 4.30925C33.9766 5.45506 32.9044 6.9092 30.0968 8.23417C29.4378 8.54458 26.7806 9.7758 26.3081 10.3133C25.7232 10.982 25.5791 11.6549 25.3037 12.9862C25.0113 14.3945 24.9032 15.709 25.2465 17.2152C25.3122 17.509 25.38 17.7277 25.4181 17.9006C25.4173 17.897 25.4158 17.8935 25.4139 17.8902C25.4923 18.1965 25.3651 18.3777 25.1914 18.486C25.0189 18.5574 24.8402 18.6132 24.6574 18.6527L24.651 18.6548C24.2209 18.7215 23.8077 18.7944 23.4114 18.8715C20.4894 19.3652 14.0858 20.8672 16.3595 28.6713C17.1668 31.3191 18.7412 33.0003 19.6524 33.3087L19.6842 33.3191C19.8346 33.3857 19.9978 33.4441 20.1567 33.4753C20.1736 33.4795 20.1821 33.7337 20.1482 34.092L20.1249 34.2461C19.9978 35.1503 19.4723 36.5461 18.6988 36.5648C18.3895 36.5732 17.0248 35.7607 16.6392 35.5128C14.4778 34.117 13.7065 33.3295 12.1724 33.1608C10.9074 33.0212 8.0637 35.4378 8.00225 40.5544C7.92809 46.8021 9.71015 49.9083 9.761 50C11.0811 44.1168 12.0325 43.5418 15.4589 41.2398C15.7302 41.0585 18.9489 43.721 19.7223 43.7064C23.5937 43.6355 30.5333 43.8793 33.8961 37.0482C33.9618 36.9169 35.0594 38.0357 35.1569 38.0336C35.1972 38.0315 41.0646 35.4628 41.9355 23.6609C42.3339 18.2715 40.7997 16.9819 39.7233 16.309ZM35.1209 12.4633C35.2904 13.1445 35.2417 13.8528 35.034 14.4361C34.6568 15.3257 34.0805 15.7924 33.36 15.7424C33.1274 15.7108 32.9039 15.6328 32.7031 15.5132C31.9022 15.0528 31.4678 13.8757 31.8089 12.9612C31.8168 12.9477 31.8239 12.9338 31.8301 12.9195C31.9191 12.6862 32.1352 12.4258 32.4128 12.1612C32.9828 11.6654 34.1017 10.8279 34.2224 10.8279C34.375 10.832 34.945 11.7508 35.1209 12.4633ZM35.1124 2.23221C35.1251 2.11138 35.4366 3.03427 35.5383 3.3551C35.9812 4.74049 35.9219 5.35506 35.8223 6.05713C35.5637 7.84459 34.5954 9.01957 33.8643 9.73622C32.718 10.8612 32.4489 11.0237 32.9489 10.1341C34.5445 7.29877 34.8814 4.63216 35.1124 2.23221ZM26.4183 10.9529C26.6238 10.455 27.6557 9.90497 28.5139 9.41331C29.3997 8.90499 32.2158 8.18417 33.9512 5.9363C34.4873 5.24256 33.4977 9.9258 30.9486 12.1903C30.0883 12.9549 27.7235 13.3507 25.683 14.7778C25.4732 14.9257 25.7296 12.3758 26.4183 10.9529ZM25.8716 15.1049C26.3716 14.6965 27.2786 14.1111 30.5524 13.0487C30.9571 12.9174 30.9274 13.0528 31.1245 14.0007C31.3343 15.0132 31.5419 15.9444 33.6821 16.4548C33.8347 16.4923 32.9871 18.0631 32.7434 18.2694C32.2666 19.0194 29.745 21.1693 28.6771 20.9652C27.946 20.8256 26.3738 19.1006 25.9457 18.1486C25.6385 17.4652 25.0875 15.7444 25.8716 15.1049ZM16.7579 24.0359C17.1075 22.4047 18.417 21.5776 18.4552 21.5443C19.1184 20.9777 20.4025 20.4652 21.7396 20.0777C21.9409 20.0256 22.0659 19.9985 22.0955 19.9923C22.9219 19.8256 23.9602 19.5485 24.6468 19.4798C25.1681 19.4277 25.8101 19.161 26.3377 19.5548C26.9099 20.2381 28.1685 21.3693 28.8614 21.4277C29.0966 21.4464 30.6795 20.961 33.2753 18.6756C33.5995 18.3902 33.9406 18.109 34.3008 17.8465L34.4047 17.7715C35.2014 17.2027 36.0829 16.7298 37.0407 16.5215C37.3373 16.4569 35.9812 17.7819 37.1424 20.5548C37.9031 22.3714 40.0051 28.6025 39.6597 29.6004C39.4542 30.1962 39.2677 30.3066 38.7443 30.0691C37.278 29.4004 35.4726 27.4254 32.0039 26.0942C29.2089 25.0213 26.8929 25.0463 25.3927 25.3359C21.9409 26.0046 20.1525 27.4817 19.1502 28.3067C18.9976 28.4338 20.6356 27.7963 22.8245 27.5525C24.8078 27.3317 26.7976 27.5442 29.2598 29.19C30.8321 30.4837 30.4485 30.3837 29.7387 30.5775C27.0264 31.3191 21.8582 32.8524 20.055 32.5941C18.1903 32.3254 15.8891 27.6192 16.7579 24.0359ZM31.2707 30.5983C29.0924 28.0463 26.6068 27.2567 25.024 27.1525C23.0597 27.0234 21.6463 27.2713 20.3071 27.7088C20.163 27.7567 27.4841 22.5651 35.5468 28.7275C36.9983 29.8379 37.865 30.4566 38.6278 30.9483C38.738 31.0191 36.6847 31.5524 36.3372 31.6483C32.9998 32.192 32.0823 31.5483 31.2707 30.5983ZM29.406 31.117C28.6093 31.3983 27.4926 31.7858 26.2763 32.1566C27.315 31.7972 28.3584 31.4506 29.406 31.117ZM13.6091 38.2231C13.7362 36.9711 14.018 35.8357 13.893 34.5711C13.8909 34.5461 17.5249 36.994 18.5102 37.1628C18.6713 37.1898 16.8129 38.8544 14.9143 39.6377C14.2638 39.5544 13.5561 38.7461 13.6091 38.2231ZM9.62115 48.5042C9.4262 48.2355 8.15058 43.2751 8.50445 40.1002C8.99181 35.7253 11.488 34.1753 11.969 34.1191C12.3673 34.0732 13.1556 34.3274 12.7869 38.6981C12.7424 39.2252 15.1538 40.8648 15.1538 40.8648C10.2335 43.7064 10.6277 45.8459 9.62115 48.5042ZM19.6948 43.223C19.4468 43.2126 14.8974 40.1544 15.05 40.096C20.2987 38.0877 20.678 34.9565 21.0403 34.1607C20.9979 34.0941 22.0659 33.6691 23.5195 33.1378C25.8588 32.3129 29.0945 31.2816 30.2112 30.8754L30.2684 30.8587C30.7749 30.715 30.7961 30.8087 30.9317 30.9837C31.3343 31.4983 32.0102 31.842 32.0844 31.8774C33.0803 32.342 34.3644 32.2983 34.3941 32.3379C34.5933 32.6212 34.7204 43.871 19.6948 43.223ZM35.1845 37.6377C35.14 37.6398 34.0656 36.6544 34.0656 36.6544C34.0656 36.6544 34.481 35.7649 34.6907 34.6336C34.8602 33.7128 34.945 32.3483 34.945 32.3483C34.945 32.3483 39.8843 31.7691 40.1047 30.0941C40.3547 28.1817 38.9477 24.2047 38.738 23.5547C38.649 23.2797 37.4221 20.0339 37.242 19.1944C37.0386 18.2486 37.4263 16.7215 38.0048 16.4986C39.3673 15.9715 41.374 18.2236 41.4948 21.5006C41.9546 34.0628 35.229 37.6357 35.1845 37.6377Z" fill="#293648"/><path d="M39.7233 16.309C38.3714 15.4632 36.4876 15.5882 35.9091 15.6486L35.5786 15.6549C35.2925 15.534 35.5871 14.8278 35.6655 14.0861C35.7735 13.0528 35.3879 11.6341 34.6886 10.4987C34.3517 9.95288 34.2309 9.9008 34.481 9.63831C36.3223 7.70501 36.6105 5.56339 36.0257 3.78009C34.8836 0.290578 34.6526 -0.25941 34.6886 0.0905825C34.8327 1.51347 34.5106 3.50093 34.2902 4.30925C33.9766 5.45506 32.9044 6.9092 30.0968 8.23417C29.4378 8.54458 26.7806 9.7758 26.3081 10.3133C25.7232 10.982 25.5791 11.6549 25.3037 12.9862C25.0113 14.3945 24.9032 15.709 25.2465 17.2152C25.3122 17.509 25.38 17.7277 25.4181 17.9006C25.4173 17.897 25.4158 17.8935 25.4139 17.8902C25.4923 18.1965 25.3651 18.3777 25.1914 18.486C25.0189 18.5574 24.8402 18.6132 24.6574 18.6527L24.651 18.6548C24.2209 18.7215 23.8077 18.7944 23.4114 18.8715C20.4894 19.3652 14.0858 20.8672 16.3595 28.6713C17.1668 31.3191 18.7412 33.0003 19.6524 33.3087L19.6842 33.3191C19.8346 33.3857 19.9978 33.4441 20.1567 33.4753C20.1736 33.4795 20.1821 33.7337 20.1482 34.092L20.1249 34.2461C19.9978 35.1503 19.4723 36.5461 18.6988 36.5648C18.3895 36.5732 17.0248 35.7607 16.6392 35.5128C14.4778 34.117 13.7065 33.3295 12.1724 33.1608C10.9074 33.0212 8.0637 35.4378 8.00225 40.5544C7.92809 46.8021 9.71015 49.9083 9.761 50C11.0811 44.1168 12.0325 43.5418 15.4589 41.2398C15.7302 41.0585 18.9489 43.721 19.7223 43.7064C23.5937 43.6355 30.5333 43.8793 33.8961 37.0482C33.9618 36.9169 35.0594 38.0357 35.1569 38.0336C35.1972 38.0315 41.0646 35.4628 41.9355 23.6609C42.3339 18.2715 40.7997 16.9819 39.7233 16.309ZM35.1209 12.4633C35.2904 13.1445 35.2417 13.8528 35.034 14.4361C34.6568 15.3257 34.0805 15.7924 33.36 15.7424C33.1274 15.7108 32.9039 15.6328 32.7031 15.5132C31.9022 15.0528 31.4678 13.8757 31.8089 12.9612C31.8168 12.9477 31.8239 12.9338 31.8301 12.9195C31.9191 12.6862 32.1352 12.4258 32.4128 12.1612C32.9828 11.6654 34.1017 10.8279 34.2224 10.8279C34.375 10.832 34.945 11.7508 35.1209 12.4633ZM35.1124 2.23221C35.1251 2.11138 35.4366 3.03427 35.5383 3.3551C35.9812 4.74049 35.9219 5.35506 35.8223 6.05713C35.5637 7.84459 34.5954 9.01957 33.8643 9.73622C32.718 10.8612 32.4489 11.0237 32.9489 10.1341C34.5445 7.29877 34.8814 4.63216 35.1124 2.23221ZM26.4183 10.9529C26.6238 10.455 27.6557 9.90497 28.5139 9.41331C29.3997 8.90499 32.2158 8.18417 33.9512 5.9363C34.4873 5.24256 33.4977 9.9258 30.9486 12.1903C30.0883 12.9549 27.7235 13.3507 25.683 14.7778C25.4732 14.9257 25.7296 12.3758 26.4183 10.9529ZM25.8716 15.1049C26.3716 14.6965 27.2786 14.1111 30.5524 13.0487C30.9571 12.9174 30.9274 13.0528 31.1245 14.0007C31.3343 15.0132 31.5419 15.9444 33.6821 16.4548C33.8347 16.4923 32.9871 18.0631 32.7434 18.2694C32.2666 19.0194 29.745 21.1693 28.6771 20.9652C27.946 20.8256 26.3738 19.1006 25.9457 18.1486C25.6385 17.4652 25.0875 15.7444 25.8716 15.1049ZM16.7579 24.0359C17.1075 22.4047 18.417 21.5776 18.4552 21.5443C19.1184 20.9777 20.4025 20.4652 21.7396 20.0777C21.9409 20.0256 22.0659 19.9985 22.0955 19.9923C22.9219 19.8256 23.9602 19.5485 24.6468 19.4798C25.1681 19.4277 25.8101 19.161 26.3377 19.5548C26.9099 20.2381 28.1685 21.3693 28.8614 21.4277C29.0966 21.4464 30.6795 20.961 33.2753 18.6756C33.5995 18.3902 33.9406 18.109 34.3008 17.8465L34.4047 17.7715C35.2014 17.2027 36.0829 16.7298 37.0407 16.5215C37.3373 16.4569 35.9812 17.7819 37.1424 20.5548C37.9031 22.3714 40.0051 28.6025 39.6597 29.6004C39.4542 30.1962 39.2677 30.3066 38.7443 30.0691C37.278 29.4004 35.4726 27.4254 32.0039 26.0942C29.2089 25.0213 26.8929 25.0463 25.3927 25.3359C21.9409 26.0046 20.1525 27.4817 19.1502 28.3067C18.9976 28.4338 20.6356 27.7963 22.8245 27.5525C24.8078 27.3317 26.7976 27.5442 29.2598 29.19C30.8321 30.4837 30.4485 30.3837 29.7387 30.5775C27.0264 31.3191 21.8582 32.8524 20.055 32.5941C18.1903 32.3254 15.8891 27.6192 16.7579 24.0359ZM31.2707 30.5983C29.0924 28.0463 26.6068 27.2567 25.024 27.1525C23.0597 27.0234 21.6463 27.2713 20.3071 27.7088C20.163 27.7567 27.4841 22.5651 35.5468 28.7275C36.9983 29.8379 37.865 30.4566 38.6278 30.9483C38.738 31.0191 36.6847 31.5524 36.3372 31.6483C32.9998 32.192 32.0823 31.5483 31.2707 30.5983ZM29.406 31.117C28.6093 31.3983 27.4926 31.7858 26.2763 32.1566C27.315 31.7972 28.3584 31.4506 29.406 31.117ZM13.6091 38.2231C13.7362 36.9711 14.018 35.8357 13.893 34.5711C13.8909 34.5461 17.5249 36.994 18.5102 37.1628C18.6713 37.1898 16.8129 38.8544 14.9143 39.6377C14.2638 39.5544 13.5561 38.7461 13.6091 38.2231ZM9.62115 48.5042C9.4262 48.2355 8.15058 43.2751 8.50445 40.1002C8.99181 35.7253 11.488 34.1753 11.969 34.1191C12.3673 34.0732 13.1556 34.3274 12.7869 38.6981C12.7424 39.2252 15.1538 40.8648 15.1538 40.8648C10.2335 43.7064 10.6277 45.8459 9.62115 48.5042ZM19.6948 43.223C19.4468 43.2126 14.8974 40.1544 15.05 40.096C20.2987 38.0877 20.678 34.9565 21.0403 34.1607C20.9979 34.0941 22.0659 33.6691 23.5195 33.1378C25.8588 32.3129 29.0945 31.2816 30.2112 30.8754L30.2684 30.8587C30.7749 30.715 30.7961 30.8087 30.9317 30.9837C31.3343 31.4983 32.0102 31.842 32.0844 31.8774C33.0803 32.342 34.3644 32.2983 34.3941 32.3379C34.5933 32.6212 34.7204 43.871 19.6948 43.223ZM35.1845 37.6377C35.14 37.6398 34.0656 36.6544 34.0656 36.6544C34.0656 36.6544 34.481 35.7649 34.6907 34.6336C34.8602 33.7128 34.945 32.3483 34.945 32.3483C34.945 32.3483 39.8843 31.7691 40.1047 30.0941C40.3547 28.1817 38.9477 24.2047 38.738 23.5547C38.649 23.2797 37.4221 20.0339 37.242 19.1944C37.0386 18.2486 37.4263 16.7215 38.0048 16.4986C39.3673 15.9715 41.374 18.2236 41.4948 21.5006C41.9546 34.0628 35.229 37.6357 35.1845 37.6377Z" stroke="#293648" mask="url(#path-1-outside-1_2284_202)"/></g><defs><clipPath id="clip0_2284_202"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
     icon_discord_smooth:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M42.3201 9.18609C39.0846 7.70961 35.6387 6.62168 32.0086 6C31.5614 6.77709 31.0354 7.83912 30.6934 8.69393C26.8529 8.12406 23.0387 8.12406 19.2771 8.69393C18.9089 7.83912 18.3828 6.77709 17.9356 6C14.3055 6.62168 10.8596 7.70961 7.62408 9.18609C1.10049 18.8739 -0.661938 28.3286 0.206122 37.6278C4.54642 40.8139 8.72888 42.7307 12.8587 44C13.8846 42.6271 14.779 41.1507 15.5681 39.6224C14.0688 39.0784 12.6483 38.379 11.3068 37.576C11.675 37.317 12.017 37.0321 12.3589 36.773C20.5923 40.5549 29.5097 40.5549 37.6379 36.773C37.9798 37.058 38.3218 37.317 38.6901 37.576C37.3485 38.379 35.9017 39.0525 34.4287 39.6224C35.2178 41.1507 36.1122 42.6271 37.1381 44C41.2679 42.7307 45.4767 40.8139 49.7907 37.6278C50.8166 26.8262 48.0283 17.4751 42.3727 9.18609H42.3201ZM16.6729 31.9291C14.2003 31.9291 12.1748 29.6756 12.1748 26.9039C12.1748 24.1323 14.1477 21.8787 16.6729 21.8787C19.1982 21.8787 21.1973 24.1323 21.171 26.9039C21.171 29.6497 19.1982 31.9291 16.6729 31.9291ZM33.2713 31.9291C30.7986 31.9291 28.7731 29.6756 28.7731 26.9039C28.7731 24.1323 30.746 21.8787 33.2713 21.8787C35.7965 21.8787 37.7957 24.1323 37.7694 26.9039C37.7694 29.6497 35.7965 31.9291 33.2713 31.9291Z" fill="#293648"/></svg>`,
@@ -10376,8 +10463,10 @@ const light_theme = {
     icon_calendar : `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M47 14H3V45H47V14ZM0 6V48H50V6H46V2H40V6H10V2H4V6H0Z" fill="#293648"/><path d="M15 38V35H12V25H14.9901L15 22H22V25H25V35H22V38H15ZM15 35H22V25H14.9901L15 35Z" fill="#293648"/><path d="M28 38V35H32V25H28V22H35.0098V35H39V38H28Z" fill="#293648"/></svg>`,
     project_logo_1 : `${prefix}/../assets/images/project_logo_1.png`,
     img_robot_1 : `${prefix}/../assets/images/img_robot_1.png`,
+    img_robot_3 : `${prefix}/../assets/images/img_robot_1_light.png`,
     img_robot_2 : `${prefix}/../assets/images/img_robot_2.png`,
     pattern_img_1 : `${prefix}/../assets/images/pattern_img_1.png`,
+    logo:  `${prefix}/../assets/images/logo.png`,
 
     icon_arrow_right: `<svg transform="rotate(90 0 0)" width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.5789 9H18.4211V17H7.89473V27.6667H0V41H18.4211V33H31.5789V41H50V27.6667H42.1053V17H31.5789V9Z" fill="#293648"/></svg>`,
     icon_arrow_left: `<svg transform="rotate(90 0 0)" width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="#293648"/></svg>`,
@@ -10445,7 +10534,7 @@ function timeline_card (opts = default_opts) {
     <div class="content_wrapper">
       <div class="icon_wrapper">
         <div> ${icon_calendar} ${date} </div>
-        <div> ${time === '00:00' ? '' : icon_clock } ${time === '00:00' ? '' : time} </div>
+        <div> ${time === '' ? '' : icon_clock } ${time} </div>
         <div> <a target="_blank" href="${link}">${icon_link}</a> </div>
       </div>
       <div class="title"> ${title} </div>
@@ -10999,7 +11088,7 @@ function tools (opts = default_opts, protocol) {
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
-  const on = { 'show': on_show }
+  const on = { 'show': on_show, 'hide': on_hide }
   const channel = use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
   // TEMPLATE
@@ -11085,6 +11174,9 @@ function tools (opts = default_opts, protocol) {
 
   function on_show (event) {
     tools_wrapper.style.display = 'inline'
+  }
+  function on_hide (event) {
+    tools_wrapper.style.display = 'none'
   }
 }
 
@@ -11261,11 +11353,10 @@ function window_bar (opts = default_opts, protocol) {
   }
   if (opts.action_buttons) {
     { // action buttons
-      function make_element ({text, action: type, toggle_able}, i) {
-        // console.log(text)
+      function make_element ({text, action: type, activate}, i) {
         const on = { 'click': onclick }
         const protocol = use_protocol(text)({ state, on })
-        const opts = { toggle: true, text, toggle_able }
+        const opts = { toggle: true, text, activate }
         const element = shadowfy()(sm_text_button(opts, protocol))
         return element
         function onclick (message) {
@@ -11482,7 +11573,7 @@ function year_filter (opts = default_opts, protocol) {
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
-  const { latest_date, oldest_date } = opts
+  const { latest_date, oldest_date, visitor } = opts
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
@@ -11513,7 +11604,7 @@ function year_filter (opts = default_opts, protocol) {
   // ----------------------------------------
   // INIT
   // ----------------------------------------
-  const year = new Date(latest_date).getFullYear()
+  const year = new Date(visitor === 'old' ? latest_date : oldest_date).getFullYear()
   on_active_state({ data: year })
   
   return el

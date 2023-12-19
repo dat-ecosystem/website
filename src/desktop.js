@@ -120,9 +120,17 @@ async function desktop (opts = default_opts, protocol) {
     if (has_terminal) return terminal_sh.replaceChildren()
     terminal_sh.append(widget('TERMINAL'))
   }
+  function open_important_documents () {
+    const consortium_channel = state.net[state.aka.consortium_page]
+    consortium_channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'open_important_documents'
+    })
+  }
   function HOME () {
     const on = {
-      'navigate': on_navigate_page
+      'navigate': on_navigate_page,
+      'open_important_documents': open_important_documents
     }
     const protocol = use_protocol('home_page')({ state, on })
     const opts = { data: current_theme }
