@@ -70,9 +70,9 @@ async function desktop (opts = default_opts, protocol) {
   { // navbar
     const on = {
       'social': on_social,
-      'handle_page_change': on_navigate,
+      'handle_page_change': on_navigate_page,
       'handle_theme_change': on_theme,
-      'toggle_terminal': on_toggle,
+      'toggle_terminal': on_toggle_terminal,
     }
     const protocol = use_protocol('navbar')({ state, on })
     const opts = { page, data: current_theme } // @TODO: SET DEFAULTS -> but change to LOAD DEFAULTS
@@ -88,15 +88,14 @@ async function desktop (opts = default_opts, protocol) {
   function on_social (message) {
     console.log('@TODO: open ', message.data)
   }
-  function on_navigate (msg) {
-    const { data: active_page } = msg
-    const page = navigate(active_page)
-    content_sh.replaceChildren(page)
-  }
   function on_navigate_page (msg) {
     const { data: active_page } = msg
     const page = navigate(active_page)
     content_sh.replaceChildren(page)
+  }
+  function on_navigate (msg) {
+    on_navigate_page(msg)
+    const { data: active_page } = msg
     const nav_channel = state.net[state.aka.navbar]
     nav_channel.send({
       head: [id, channel.send.id, channel.mid++],
@@ -114,9 +113,14 @@ async function desktop (opts = default_opts, protocol) {
       data: current_theme
     })
   }
-  function on_toggle () {
+  function on_toggle_terminal () {
     const has_terminal = status.terminal
     status.terminal = !has_terminal
+    const channel = state.net[state.aka.navbar]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'toggle_terminal',
+    })
     if (has_terminal) return terminal_sh.replaceChildren()
     terminal_sh.append(widget('TERMINAL'))
   }
@@ -129,7 +133,7 @@ async function desktop (opts = default_opts, protocol) {
   }
   function HOME () {
     const on = {
-      'navigate': on_navigate_page,
+      'navigate': on_navigate,
       'open_important_documents': open_important_documents
     }
     const protocol = use_protocol('home_page')({ state, on })
@@ -166,7 +170,10 @@ async function desktop (opts = default_opts, protocol) {
     return element
   }
   function TERMINAL () {
-    const on = {}
+    const on = {
+      'toggle_terminal': on_toggle_terminal,
+      'navigate': on_navigate,
+    }
     const protocol = use_protocol('terminal')({ state, on })
     const opts = { data: current_theme }
     const element = terminal(opts, protocol)
