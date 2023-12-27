@@ -991,9 +991,9 @@ async function desktop (opts = default_opts, protocol) {
   { // navbar
     const on = {
       'social': on_social,
-      'handle_page_change': on_navigate,
+      'handle_page_change': on_navigate_page,
       'handle_theme_change': on_theme,
-      'toggle_terminal': on_toggle,
+      'toggle_terminal': on_toggle_terminal,
     }
     const protocol = use_protocol('navbar')({ state, on })
     const opts = { page, data: current_theme } // @TODO: SET DEFAULTS -> but change to LOAD DEFAULTS
@@ -1009,15 +1009,14 @@ async function desktop (opts = default_opts, protocol) {
   function on_social (message) {
     console.log('@TODO: open ', message.data)
   }
-  function on_navigate (msg) {
-    const { data: active_page } = msg
-    const page = navigate(active_page)
-    content_sh.replaceChildren(page)
-  }
   function on_navigate_page (msg) {
     const { data: active_page } = msg
     const page = navigate(active_page)
     content_sh.replaceChildren(page)
+  }
+  function on_navigate (msg) {
+    on_navigate_page(msg)
+    const { data: active_page } = msg
     const nav_channel = state.net[state.aka.navbar]
     nav_channel.send({
       head: [id, channel.send.id, channel.mid++],
@@ -1035,9 +1034,14 @@ async function desktop (opts = default_opts, protocol) {
       data: current_theme
     })
   }
-  function on_toggle () {
+  function on_toggle_terminal () {
     const has_terminal = status.terminal
     status.terminal = !has_terminal
+    const channel = state.net[state.aka.navbar]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'toggle_terminal',
+    })
     if (has_terminal) return terminal_sh.replaceChildren()
     terminal_sh.append(widget('TERMINAL'))
   }
@@ -1050,7 +1054,7 @@ async function desktop (opts = default_opts, protocol) {
   }
   function HOME () {
     const on = {
-      'navigate': on_navigate_page,
+      'navigate': on_navigate,
       'open_important_documents': open_important_documents
     }
     const protocol = use_protocol('home_page')({ state, on })
@@ -1087,7 +1091,10 @@ async function desktop (opts = default_opts, protocol) {
     return element
   }
   function TERMINAL () {
-    const on = {}
+    const on = {
+      'toggle_terminal': on_toggle_terminal,
+      'navigate': on_navigate,
+    }
     const protocol = use_protocol('terminal')({ state, on })
     const opts = { data: current_theme }
     const element = terminal(opts, protocol)
@@ -1241,11 +1248,12 @@ function app_about_us (opts = default_opts, protocol) {
     <div class="about_us_desc">
     Dat projects in its core build tools and infrastructure for distributed data syncronization. But as people and technologists we stand for Sustainable Open Source, Modularity & Technical Inclusion, Local First & Cloudless, Social Impact & Cooperative Ownership, Non-extractive Business Models, Data Sovereignty & Access Control.
     Dat's first project was a protocol which later grew to become the independent project (hypercore protocol). Today Dat ecosystem is a global community of many projects working side by side on open and secure protocols for the web of commons.
-    See <a target=_blank href='https://github.com/dat-ecosystem/dat-ecosystem/issues/link-to-projects-page'>dat-ecosystem visualization</a> to explore the whole universe of dat projects and the relationships between them.
+    See <span class="about_us_link">dat-ecosystem visualization</span> to explore the whole universe of dat projects and the relationships between them.
     </div>
   </div>`
   // ----------------------------------------
   const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
+  const about_us_link = shadow.querySelector('.about_us_link')
   // ----------------------------------------
   // ELEMENTS
   // ----------------------------------------
@@ -1270,11 +1278,7 @@ function app_about_us (opts = default_opts, protocol) {
       if (active_state === 'active') el.style.display = 'none'
     }
     async function open_consortium_page (message){
-      channel.send({
-        head: [id, channel.send.id, channel.mid++],
-        type: 'navigate',
-        data: 'CONSORTIUM'
-      })
+      open_page ('CONSORTIUM')
       channel.send({
         head: [id, channel.send.id, channel.mid++],
         type: 'open_important_documents',
@@ -1282,11 +1286,20 @@ function app_about_us (opts = default_opts, protocol) {
       })
     }
   }
+  about_us_link.onclick = () => open_page ('PROJECTS')
   // ----------------------------------------
   // INIT
   // ----------------------------------------
 
   return el
+
+  async function open_page (page){
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'navigate',
+      data: page
+    })
+  }
 }
 function get_theme () {
   return `
@@ -1357,6 +1370,11 @@ function get_theme () {
     line-height: 18px;
     font-size: 16px;
     margin-bottom: 30px;
+  }
+  .about_us_link {
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
   }
   @container (min-width: 856px) {
     .about_us_wrapper .about_us_cover_image img {
@@ -1713,11 +1731,12 @@ function app_footer (opts = default_opts, protocol) {
   // ELEMENTS
   // ----------------------------------------
   { // join_program_button
-    const on = {}
+    const on = { 'click': click}
     const protocol = use_protocol('join_button')({ state, on })
-    const opts = { text: 'JOIN THE NEWSLETTER' }
+    const opts = { activate: false, text: '<a style="display: block; width: 100%; text-decoration: none; color: var(--primary-color);" href="mailto:dat-ecosystem-subscribe@lists.riseup.net?subject=subscribe&body=You are subscribing to Dat ecosystem mailing list. Each received newsletter will include an unsubscribe link, but you will also be able to unsubscribe send an email to:%0D%0A%0D%0Amailto:dat-ecosystem-unsubscribe@lists.riseup.net" target="_blank"> Join the newsletter </a>' }
     const element = sm_text_button(opts, protocol)
     apply_button_shadow.append(element)
+    async function click( message ){}
   }
   { // footer window
     const on = {
@@ -3125,9 +3144,11 @@ function app_timeline (opts = default_opts, protocol) {
   status.YEAR = ''
   status.MONTH = ''
   status.DATE = ''
-  status.card = ''
+  status.cards = []
+  status.years = []
   let dates = []
   let visitor = ''
+  let cardfilter
   // ----------------------------------------
   // Local Storage
   // ----------------------------------------
@@ -3204,9 +3225,9 @@ function app_timeline (opts = default_opts, protocol) {
       title: 'Alfred P. Sloan Foundation Funding ($260.000)',
       date: 'April 02, 2014',
       time: '',
-      link: '',
+      link: 'https://usopendata.org/2014/04/02/dat/',
       desc: 'Helps dat to become an US ODI (Open Data Institute) project',
-      tags: ['https://usopendata.org/2014/04/02/dat/'],
+      tags: ['Open Data Institute'],
       data,
       active_state: 'ACTIVE'
     },{
@@ -3778,6 +3799,8 @@ function app_timeline (opts = default_opts, protocol) {
       active_state: 'ACTIVE'
     }].map(card => {
       const date = new Date(card.date + ' ' + convert_time_format(card.time))
+      if(!status.years.includes(date.getFullYear()))
+        status.years.push(date.getFullYear())
       card.date_raw = date.getTime()
       dates.push(card.date_raw)
       return card
@@ -3791,7 +3814,7 @@ function app_timeline (opts = default_opts, protocol) {
       // If years are the same, compare months in descending order
       return dateA.getMonth() - dateB.getMonth()
     })
-
+  cardfilter = [...cards_data]
   const tags = new Set(cards_data.flatMap(card => card.tags))
   const card_groups = []
   let year_cache, card_group, prev_year
@@ -3817,7 +3840,9 @@ function app_timeline (opts = default_opts, protocol) {
             <div class="timeline_wrapper">
             </div>
             <div class="empty_wrapper">
-              Nothing is selected
+              <div>
+                No match found
+              <div>
             </div>
           </div>
       </div>
@@ -3995,37 +4020,71 @@ function app_timeline (opts = default_opts, protocol) {
     return temp + time.slice(2, -2)
   }
   async function set_scroll (data) {
-    status[data.filter] = data.value
-    
-    timeline_cards.some(card => {
-      const { idx } = card
-      const card_date = cards_data[idx].date
-
-      if (card_date.includes(data.value) && card_date.includes(status.YEAR)) {
-        setScrollTop(card.getBoundingClientRect().top - timeline_wrapper.getBoundingClientRect().top + timeline_wrapper.scrollTop)
-        if(status.card)
-          status.card.classList.remove('active')
-        if(status.card === card)
-          status.card = ''
-        else{
-          card.classList.add('active')
-          status.card = card
-        }
-        return true
+    if (data.filter === 'YEAR'){
+      if (status.years.includes(Number(data.value))){
+        empty_wrapper.classList.remove('active')
+        timeline_wrapper.classList.remove('hide')
       }
-    })
-    const timeline_channel = state.net[state.aka.timeline_filter]
-    timeline_channel.send({
-      head: [id, timeline_channel.send.id, timeline_channel.mid++],
-      type: 'update_timeline_filter',
-      data: { month: status.MONTH , year: status.YEAR }
-    })
-    const year_channel = state.net[state.aka.year_filter]
-    year_channel.send({
-      head: [id, year_channel.send.id, year_channel.mid++],
-      type: 'update_year_filter',
-      data: status.YEAR
-    })
+      else {
+        empty_wrapper.classList.add('active')
+        timeline_wrapper.classList.add('hide')
+        status.YEAR = data.value
+        updateCalendar()
+        return
+      }
+    }
+    if (data.value){
+      status[data.filter] = data.value
+      let check = true
+      timeline_cards.some(card => {
+        const { idx } = card
+        const card_data = cards_data[idx]
+        if(cardfilter.includes(card_data)){
+          const card_date = card_data.date
+
+          if (card_date.includes(data.value) && card_date.includes(status.YEAR)) {
+            if(check && status.cards){
+              setScrollTop(card.getBoundingClientRect().top - timeline_wrapper.getBoundingClientRect().top + timeline_wrapper.scrollTop)
+
+              check = false
+              status.cards.forEach(status_card => {
+                status_card.classList.remove('active')
+              })
+              if(status.cards[0] === card){
+                status.cards = []
+                return true
+              }
+              status.cards = []
+            }
+            if(data.filter === 'DATE'){
+              card.classList.add('active')
+              status.cards.push(card)
+            }
+          }
+          else if(!check){
+            return true
+          }
+        }
+      })
+      const timeline_channel = state.net[state.aka.timeline_filter]
+      timeline_channel.send({
+        head: [id, timeline_channel.send.id, timeline_channel.mid++],
+        type: 'update_timeline_filter',
+        data: { month: status.MONTH , year: status.YEAR }
+      })
+      const year_channel = state.net[state.aka.year_filter]
+      year_channel.send({
+        head: [id, year_channel.send.id, year_channel.mid++],
+        type: 'update_year_filter',
+        data: status.YEAR
+      })
+    }
+    else if(status.cards){
+      status.cards.forEach(status_card => {
+        status_card.classList.remove('active')
+      })
+      status.cards = []
+    }
   }
   async function setScrollTop (value) {
     timeline_wrapper.scrollTop = value
@@ -4033,29 +4092,31 @@ function app_timeline (opts = default_opts, protocol) {
   async function setFilter (data) {
     status[data.filter] = data.value
     timeline_wrapper.innerHTML = ''
-    let cardfilter = [...cards_data]
-    if (data.value) {
-      if (status.SEARCH) cardfilter = cardfilter.filter((card_data) => {
-        return card_data.title.toLowerCase().match(status.SEARCH.toLowerCase())
+    cardfilter = [...cards_data]
+    if (status.SEARCH) cardfilter = cardfilter.filter((card_data) => {
+      return card_data.title.toLowerCase().match(status.SEARCH.toLowerCase())
+    })
+    if (status.STATUS && status.STATUS !== 'ALL') cardfilter = cardfilter.filter((card_data) => {
+      return card_data.active_state === status.STATUS && card_data
+    })
+    if (status.TAGS && status.TAGS !== 'ALL') {
+      cardfilter = cardfilter.filter((card_data) => {
+        return card_data.tags.includes(status.TAGS) && card_data
       })
-      if (status.STATUS && status.STATUS !== 'ALL') cardfilter = cardfilter.filter((card_data) => {
-        return card_data.active_state === status.STATUS && card_data
-      })
-      if (status.TAGS && status.TAGS !== 'ALL') {
-        cardfilter = cardfilter.filter((card_data) => {
-          return card_data.tags.includes(status.TAGS) && card_data
-        })
-      }
     }
+
+    status.years = []
     const card_groups = []
     let year_cache
     let card_group
     
-    console.error(cardfilter.length)
     timeline_cards.forEach(card => {
       const { idx } = card
       const card_data = cards_data[idx]
       if (cardfilter.includes(card_data)) {
+        const date = new Date(card_data.date)
+        if(!status.years.includes(date.getFullYear()))
+          status.years.push(date.getFullYear())
         const slice = card_data.date.slice(-4)
         if (year_cache !== slice) {
           card_group = document.createElement('div')
@@ -4085,10 +4146,11 @@ function app_timeline (opts = default_opts, protocol) {
       filter: 'YEAR',
       value: String(new Date(cardfilter[0].date_raw).getFullYear())
     })
+    updateCalendar()
   }
   async function updateCalendar () {
     let dates = []
-    if (status.YEAR) cards_data.forEach(card_data => {
+    if (status.YEAR) cardfilter.forEach(card_data => {
       if (card_data.date.includes(status.YEAR)) dates.push(card_data.date)
     })
     const channel = state.net[state.aka.month_filter]
@@ -4096,12 +4158,14 @@ function app_timeline (opts = default_opts, protocol) {
       channel.send({
         head: [id, channel.send.id, channel.mid++],
         type: 'update_calendar',
-        data: dates
+        data: {dates, year: Number(status.YEAR)}
       })
       prev_year = String(status.YEAR).slice(0)
-      if(status.card){
-          status.card.classList.remove('active')
-          status.card = ''
+      if(status.cards){
+        status.cards.forEach(status_card => {
+          status_card.classList.remove('active')
+        })
+        status.cards = []
       }
     }
     
@@ -4136,6 +4200,7 @@ function get_theme () {
       height: 100%;
       overflow: hidden;
       border: 1px solid var(--primary_color);
+      position: relative;
     }
 
     .main_wrapper .filter_wrapper .timeline_wrapper {
@@ -4155,15 +4220,23 @@ function get_theme () {
       gap: 20px;
       scrollbar-width: none; /* For Firefox */
     }
+    .main_wrapper .filter_wrapper .timeline_wrapper.hide > div {
+      display: none;
+    }
     .main_wrapper .filter_wrapper .empty_wrapper {
       display: none;
       position: absolute;
+      width: 100%;
+      height: 100%;
+      justify-content: center;
+      align-items: center;
+      top: 0;
+    }
+    .main_wrapper .filter_wrapper .empty_wrapper > div {
       background-color: white;
-      top: 45%;
-      right: 40%;
     }
     .main_wrapper .filter_wrapper .empty_wrapper.active {
-      display: block;
+      display: flex;
     }
     .main_wrapper .filter_wrapper .timeline_wrapper .card_group {
       width: 100%;
@@ -5412,7 +5485,7 @@ function sm_text_button (opts = default_opts, protocol) {
       head: [id, channel.send.id, channel.mid++],
       type: 'click',
       data: ''
-})
+    })
   }
 }
 function get_theme () {
@@ -6333,7 +6406,7 @@ function get_theme () {
       gap: 20px;
       justify-content: space-between;
       margin: 0;
-      padding: 30px 10px 0;
+      padding: 30px 10px;
       opacity: 1;
       background-size: 16px 16px;
 position: relative;
@@ -6887,7 +6960,7 @@ function get_theme () {
       box-sizing: border-box;
     }
     .important_documents {
-      display: none;
+      display: inline;
     }
     .important_documents .documents_content {
       position: relative;
@@ -6903,6 +6976,13 @@ function get_theme () {
     }
     .important_documents .documents_content h2 {
       margin: 0;
+    }
+    .important_documents a{
+      color: var(--primary_color);
+      text-decoration: none;
+    }
+    .important_documents a:hover{
+      text-decoration: underline;
     }
     @container (min-width: 510px) {
       .important_documents .documents_content {
@@ -7165,7 +7245,7 @@ function get_theme () {
       color: var(--primary_color);
     }
     .mission_statement {
-      display: none;
+      display: inline;
     } 
     .main_wrapper{
       display: flex;
@@ -7543,6 +7623,7 @@ function month_filter (opts = default_opts, protocol) {
   const up_channel = use_protocol('up')({ protocol, state, on })
   
   function update_calendar ({ data }) {
+    const {dates, year} = data
     if (active_day) {
       const key = `month_${new Date(active_day + ', 2000').getMonth()}`
       const channel = state.net[state.aka[key]]
@@ -7573,10 +7654,9 @@ function month_filter (opts = default_opts, protocol) {
         data: { mode: 'remove_highlight', date }
       })
     })
-    active_date_prev = data
+    active_date_prev = dates
 
     //Leap year check
-    const year = Number(data[0].split(' ').slice(-1)[0])
     month_data[1] = ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0) ? 
     { name: 'February', days: 29 } : { name: 'February', days: 28 }
     const petname = 'month_1'
@@ -7587,7 +7667,7 @@ function month_filter (opts = default_opts, protocol) {
       data: month_data[1].days === 29 ? true : false
     })
 
-    data.forEach(date => {
+    dates.forEach(date => {
       const petname = `month_${new Date(date).getMonth()}`
       const channel = state.net[state.aka[petname]]
       channel.send({
@@ -7858,7 +7938,8 @@ function navbar (opts = default_opts, protocol) {
   const on = { 
     'theme': handle_active_change,
     'do_page_change': do_page_change,
-    'change_highlight': change_highlight
+    'change_highlight': change_highlight,
+    'toggle_terminal': on_toggle_terminal
   }
   const channel = use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
@@ -8007,21 +8088,14 @@ function navbar (opts = default_opts, protocol) {
     const protocol = use_protocol(petname)({ state, on })
     const opts = { src: icon_terminal }
     const element = icon_button(opts, protocol)
-    const channel = state.net[state.aka.terminal_button]
     icon_wrapper.append(element)
     function onclick (message) {
-      state.status.terminal_collapsed = !state.status.terminal_collapsed
       const up_channel = state.net[state.aka.up]
       const [by, to, mid] = [id, up_channel.send.id, up_channel.mid++]
       up_channel.send({
         head: [by, to, mid],
         refs: { cause: message.head },
         type: 'toggle_terminal',
-      })
-      channel.send({
-        head: [id, channel.send.id, channel.mid++],
-        refs: { cause: message.head },
-        type: state.status.terminal_collapsed ? 'activate' : 'inactivate',
       })
     }
   }
@@ -8113,6 +8187,14 @@ function navbar (opts = default_opts, protocol) {
       head: [id, ex_channel.send.id, ex_channel.mid++],
       refs: { cause: head },
       type: 'inactivate',
+    })
+  }
+  function on_toggle_terminal () {
+    state.status.terminal_collapsed = !state.status.terminal_collapsed
+    const channel = state.net[state.aka.terminal_button]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: state.status.terminal_collapsed ? 'activate' : 'inactivate',
     })
   }
 }
@@ -9541,6 +9623,7 @@ function resources (pool) {
 }).call(this)}).call(this,require('_process'),"/src/node_modules/svg-element/svg-element.js")
 },{"_process":2}],42:[function(require,module,exports){
 (function (process,__filename){(function (){
+const scrollbar = require('scrollbar')
 /******************************************************************************
   TAB WINDOW COMPONENT
 ******************************************************************************/
@@ -9560,12 +9643,30 @@ module.exports = tab_window
 // ----------------------------------------
 function tab_window (opts = default_opts, protocol) {
   // ----------------------------------------
+  // RESOURCE POOL (can't be serialized)
+  // ----------------------------------------
+  const ro = new ResizeObserver(entries => {
+    console.log('ResizeObserver:terminal:resize')
+    const scroll_channel = state.net[state.aka.scrollbar]
+    scroll_channel.send({
+      head: [id, scroll_channel.send.id, scroll_channel.mid++],
+      refs: { },
+      type: 'handle_scroll',
+    })
+  })
+  // ----------------------------------------
   // ID + JSON STATE
   // ----------------------------------------
   const id = `${ID}:${count++}` // assigns their own name
   const status = {}
   const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
   const cache = resources({})
+  status.commands = {
+    'help': on_help,
+    'list': on_list,
+    'goto': on_goto,
+    'unknown': 'Command not found'
+  }
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
@@ -9573,7 +9674,9 @@ function tab_window (opts = default_opts, protocol) {
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
-  const on = {}
+  const on = { 
+    'toggle_fullscreen': toggle_fullscreen
+  }
   const channel = use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
   // TEMPLATE
@@ -9581,16 +9684,199 @@ function tab_window (opts = default_opts, protocol) {
   const el = document.createElement('div')
   const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
-  shadow.innerHTML = `<div class="main-wrapper">${text}</div>`
+  shadow.innerHTML = `<div class="tab_wrapper">
+    <div class="scrollbar_wrapper">
+      <div>
+        Type help() for more info.
+      </div>
+      <div class="history">
+      </div>
+      <div class="dollar">
+        <textarea type="text" id="input" autocomplete="off"></textarea>
+      </div>
+    </div>
+  </div>`
+  const tab_wrapper = shadow.querySelector('.tab_wrapper')
+  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
+  const history = shadow.querySelector('.history')
+  const input = shadow.querySelector('textarea')
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  input.onkeyup = textAreaAdjust
+  input.onkeydown = submitOnEnter
+  
+  { // scrollbar
+    const on = { 'set_scroll': on_set_scroll, 'status': on_update_size }
+    const protocol = use_protocol('scrollbar')({ state, on })
+    opts.horizontal = false
+    opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_up
+    opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_down
+    const scroll_opts = opts
+    const element = scrollbar(scroll_opts, protocol)
+
+    scrollbar_wrapper.onscroll = on_scroll
+    const scroll_channel = state.net[state.aka.scrollbar]
+    ro.observe(scrollbar_wrapper)
+
+    tab_wrapper.append(element)
+
+    function on_scroll (event) {
+      console.log('scrollbar_wrapper:terminal:scroll')
+      scroll_channel.send({
+        head: [id, scroll_channel.send.id, scroll_channel.mid++],
+        refs: { },
+        type: 'handle_scroll',
+      })
+    }
+    function on_set_scroll (message) {
+      console.log('set_scroll', message) 
+      setScrollTop(message.data)
+    }
+    function on_update_size (message) {
+      const head = [id, scroll_channel.send.id, scroll_channel.mid++]
+      scroll_channel.send({
+        head,
+        refs: { cause: message.head },
+        type: 'update_size',
+        data: {
+          sh: scrollbar_wrapper.scrollHeight,
+          ch: scrollbar_wrapper.clientHeight,
+          st: scrollbar_wrapper.scrollTop
+        }
+      })
+    }
+    async function setScrollTop (value) {
+      scrollbar_wrapper.scrollTop = value
+    }
+  }
   // ----------------------------------------
   // INIT
   // ----------------------------------------
 
   return el
+
+  function textAreaAdjust (e) {
+    e.target.style.height = "1px";
+    e.target.style.height = (25+e.target.scrollHeight)+"px";
+  }
+  function submitOnEnter (e) {
+    if (e.which === 13){
+      if (input.value) {
+        const prompt = document.createElement('div')
+        prompt.innerHTML = `$ ${input.value}`
+        
+        const [command, data] = input.value.toLowerCase().split('(')
+        
+        const response = document.createElement('div')
+        if(status.commands[command])
+          response.innerHTML = status.commands[command](data.replace(/[)'"']/g, ''))
+        else
+          response.innerHTML = status.commands['unknown']
+
+        history.append(...[prompt, response])
+      }
+      else{
+        const prompt = document.createElement('div')
+        prompt.innerHTML = '$'
+        history.append(prompt)
+      }
+      //Clear input
+      setTimeout(() => input.value = '', 2)
+    }
+  }
+  function on_list (data){
+    const command_list = {
+      info: {
+        'mission_statement.md': 'mission_statement',
+        'important_documents.md': 'important_documents',
+        'our_members.md': 'our_members',
+        'tools': {}
+      },
+      home: {},
+      projects: {},
+      timeline: {}
+    }
+    const response = data ? command_list[data] : command_list
+    if(typeof(response) === 'object'){
+      return '[' + Object.entries(response).map(v => {
+        if(typeof(v[1]) === 'string')
+          return v[0]
+        else
+          return v[0] + '/'
+      }).toString().replace(/,/g, ', ') + ']'
+    }
+    else{
+      return response
+    }
+  }
+  function on_help (){
+    const command_list = { 
+      help: 'description of help', 
+      list: 'description of list command', 
+      goto: '...', 
+      read: '...' 
+    }
+
+    return JSON.stringify(command_list, null, 2).replace(/"/g, '')
+  }
+  function on_goto (data){
+    const up_channel = state.net[state.aka.up]
+    up_channel.send({
+      head: [id, up_channel.send.id, up_channel.mid++],
+      type: 'navigate',
+      data: data.slice(0, -1).toUpperCase()
+    })
+    return ''
+  }
+  function toggle_fullscreen (msg){
+    scrollbar_wrapper.classList.toggle('fullscreen')
+  }
+
 }
 
 function get_theme() {
-  return ``
+  return `
+    .tab_wrapper{
+      display: flex;
+    }
+    .tab_wrapper > div:last-child{
+      border-left: 1px solid var(--primary_color);
+    }
+    .scrollbar_wrapper{
+      max-height: 220px;
+      overflow-y: scroll;
+      overflow-x: clip;
+      width: 100%;
+    }
+    .scrollbar_wrapper.fullscreen{
+      max-height: calc(100vh - 80px);
+    }
+    .scrollbar_wrapper::-webkit-scrollbar {
+      display: none;
+    }
+    .tab_wrapper #input{
+      display: inline;
+      background-color: transparent;
+      color: var(--primary-color);
+      border: none;
+      outline: none;
+      width: 100%;
+      text-indent: 20px;
+      font-family: Silkscreen;
+      font-size: 16px;
+      padding: 0;
+      resize: none;
+    }
+    .tab_wrapper .dollar{
+      position: relative;
+    }
+    .tab_wrapper .dollar::before{
+      content: '$';
+      position: absolute;
+      top: 0;
+    }
+  `
 }
 // ----------------------------------------------------------------------------
 function shadowfy (props = {}, sheets = []) {
@@ -9643,7 +9929,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/tab-window/tab-window.js")
-},{"_process":2}],43:[function(require,module,exports){
+},{"_process":2,"scrollbar":39}],43:[function(require,module,exports){
 (function (process,__filename){(function (){
 const tab_window = require('tab-window')
 const tab_button = require('buttons/tab-button')
@@ -9754,6 +10040,15 @@ function terminal (opts = default_opts, protocol) {
         terminal_wrapper.style.position = 'absolute'
         terminal_wrapper.style.bottom = 0
         status.fullscreen = !ismax
+        Object.keys(state.aka).forEach(x => {
+          if(x.includes('win')){
+            const channel = state.net[state.aka[x]]
+            channel.send({
+              head: [id, channel.send.id, channel.mid++],
+              type: 'toggle_fullscreen'
+            })
+          }
+        })
       }
     }
   }
@@ -9764,7 +10059,12 @@ function terminal (opts = default_opts, protocol) {
     const element = shadowfy()(sm_icon_button_alt(opts, protocol))
     buttons.append(element)
     function on_close (message) {
-      console.log('CLOSE')
+      const up_channel = state.net[state.aka.up]
+      up_channel.send({
+        head: [id, up_channel.send.id, up_channel.mid++],
+        refs: { cause: message.head },
+        type: 'toggle_terminal',
+      })
     }
   }
   { // scrollbar
@@ -9844,7 +10144,9 @@ function terminal (opts = default_opts, protocol) {
       }
     }
     { // tab window
-      const on = {}
+      const on = {
+        'navigate': on_navigate
+      }
       const protocol = use_protocol(petname_win)({ state, on })
       const win_opts = { data: opts.data, text: label }
       const element = tab_window(win_opts, protocol)
@@ -9853,6 +10155,14 @@ function terminal (opts = default_opts, protocol) {
       const tab_id = state.status.tab[petname_btn]
       _.viewports[tab_id] = element
       state.status.active_tab = tab_id
+      function on_navigate ({ data }){
+        const up_channel = state.net[state.aka.up]
+        up_channel.send({
+          head: [id, up_channel.send.id, up_channel.mid++],
+          type: 'navigate',
+          data
+        })
+      }
     }
 
     async function switch_tab () {
