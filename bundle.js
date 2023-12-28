@@ -864,6 +864,7 @@ function get_theme (opts) {
     --primary_color: ${opts.primary_color};
     --highlight_color: ${opts.highlight_color};
     --img_robot_3: url(${opts.img_src.img_robot_3});
+    --img_robot_2: url(${opts.img_src.img_robot_2});
   }`
 }
 // ----------------------------------------------------------------------------
@@ -1715,7 +1716,10 @@ function app_footer (opts = default_opts, protocol) {
   <div class="main_wrapper">
     <div class="windowbar"></div>
     <div class="footer_wrapper">
-      <div class="robot_img_2"><img src="${img_robot_2}"></div>
+      <div class="robot_img_2">
+        
+        <div class="img"></div>
+      </div>
       <div class="footer_info_wrapper">
         <div class="title"> Interested in learning more about the Dat Ecosystem? </div>
         <div class="desc"> Join our <a target="_blank" href="https://discord.gg/egsvGc9TkQ">chat</a> and discuss tech, society, funding and your project development with the community. But you can also subscribe to the newsletter updates! </div>
@@ -1773,11 +1777,18 @@ function get_theme () {
       display: flex;
       flex-direction: column-reverse;
       align-items: flex-start;
-      padding: 20px;
-      padding-bottom: 0px !important;
+      padding: 20px 20px 0 0;
     }
-    .main_wrapper .footer_wrapper .robot_img_2 img {
-      width: 150px;
+    
+    .main_wrapper .footer_wrapper .robot_img_2{
+      width:180px;
+    }
+    .main_wrapper .footer_wrapper .robot_img_2 .img{
+      background-image: var(--img_robot_2);
+      background-size: cover;
+      background-position: center;
+      width: 180px;
+      height:200px;
     }
     .main_wrapper .footer_wrapper .footer_info_wrapper{
       margin-bottom: 30px;
@@ -10679,7 +10690,7 @@ const dark_theme = {
     project_logo_1 : `${prefix}/../assets/images/project_logo_1.png`,
     img_robot_1 : `${prefix}/../assets/images/img_robot_1.png`,
     img_robot_3 : `${prefix}/../assets/images/img_robot_1_dark.png`,
-    img_robot_2 : `${prefix}/../assets/images/img_robot_2.png`,
+    img_robot_2 : `${prefix}/../assets/images/img_robot_2_dark.png`,
     pattern_img_1 : `${prefix}/../assets/images/pattern_img_1.png`,
     logo:  `${prefix}/../assets/images/logo.png`,
 
@@ -10774,7 +10785,7 @@ const light_theme = {
     project_logo_1 : `${prefix}/../assets/images/project_logo_1.png`,
     img_robot_1 : `${prefix}/../assets/images/img_robot_1.png`,
     img_robot_3 : `${prefix}/../assets/images/img_robot_1_light.png`,
-    img_robot_2 : `${prefix}/../assets/images/img_robot_2.png`,
+    img_robot_2 : `${prefix}/../assets/images/img_robot_2_light.png`,
     pattern_img_1 : `${prefix}/../assets/images/pattern_img_1.png`,
     logo:  `${prefix}/../assets/images/logo.png`,
 
