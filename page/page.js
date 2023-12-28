@@ -139,6 +139,7 @@ function get_theme (opts) {
     --primary_color: ${opts.primary_color};
     --highlight_color: ${opts.highlight_color};
     --img_robot_3: url(${opts.img_src.img_robot_3});
+    --img_robot_2: url(${opts.img_src.img_robot_2});
   }`
 }
 // ----------------------------------------------------------------------------
