@@ -1737,7 +1737,7 @@ function app_footer (opts = default_opts, protocol) {
   { // join_program_button
     const on = { 'click': click}
     const protocol = use_protocol('join_button')({ state, on })
-    const opts = { activate: false, text: '<a style="display: block; width: 100%; text-decoration: none; color: var(--primary-color);" href="mailto:dat-ecosystem-subscribe@lists.riseup.net?subject=subscribe&body=You are subscribing to Dat ecosystem mailing list. Each received newsletter will include an unsubscribe link, but you will also be able to unsubscribe send an email to:%0D%0A%0D%0Amailto:dat-ecosystem-unsubscribe@lists.riseup.net" target="_blank"> Join the newsletter </a>' }
+    const opts = { activate: false, text: '<a style="display: block; width: 100%; text-decoration: none; color: var(--primary-color);" href="mailto:dat-ecosystem-subscribe@lists.riseup.net?subject=subscribe&body=You are subscribing to Dat ecosystem mailing list. We are glad to have you here! Each received newsletter will include an unsubscribe link, but you can always unsubscribe by sending an email to:%0D%0A%0D%0Amailto:dat-ecosystem-unsubscribe@lists.riseup.net" target="_blank"> Join the newsletter </a>' }
     const element = sm_text_button(opts, protocol)
     apply_button_shadow.append(element)
     async function click( message ){}
