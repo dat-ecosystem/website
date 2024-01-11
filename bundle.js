@@ -2060,37 +2060,35 @@ function app_projects_mini (opts = default_opts, protocol) {
 
   const cards_data = [
     { 
-      project_name: 'Agregore', 
-      project_desc: 'Agregore, a browser for the distributed web, facilitates peer-to-peer data sharing without central servers, supporting protocols like BitTorrent and IPFS for direct loading and sharing of content.', 
+      project_name: 'sher', 
+      project_desc: "It's simple. You create your show and share the link with your audience.", 
       project_logo: project_logo_1,
-      project_website: "https://agregore.mauve.moe/",
+      project_website: 'https://sher.geutstudio.com/',
       project_socials: [
-        {github: 'https://github.com/RangerMauve/agregore-browser'}, 
-        {discord: 'https://discord.com/invite/QMthd4Y'},
+        {twitter: 'https://twitter.com/the_sher_app'},
       ],
-      project_tags: ['Hypercore'],
+      project_tags: ['hypercore', 'live-streaming', 'audio'],
       project_active_state: 'ACTIVE',
     },{ 
-      project_name: 'ahau',
-      project_desc: 'Āhau is a Whānau Data Platform that helps whānau-based communities (whānau, hapū, Iwi) capture, preserve, and share important information and histories into secure, whānau managed databases and servers.', 
+      project_name: 'cabal', 
+      project_desc: 'Cabal is an experimental P2P community chat platform where servers are unnecessary, everything runs locally, and each community is identified by a secret key, offering both internet and local network connectivity.', 
       project_logo: project_logo_1,
-      project_website: 'https://www.ahau.io/',
+      project_website: 'https://cabal.chat/',
       project_socials: [
-        {github: 'https://www.hypercore.com/ahau'}, 
-        {discord: 'https://chat.ahau.io/'},
+        {github: 'https://github.com/cabal-club'},
       ],
-      project_tags: ['Hypercore'],
+      project_tags: ['hypercore', 'cable', 'p2p', 'chat', 'desktop', 'terminal'],
       project_active_state: 'ACTIVE',
     },{ 
-      project_name: 'ara', 
-      project_desc: "Ara represents a new era for content on the internet. Where we get our voices back. Where what's ours is ours. All content, decentralized, secure, owned, distributed, paid for, and rewarded between peers.", 
+      project_name: 'hypercore-protocol', 
+      project_desc: 'Hypercore is a secure, distributed append-only log built for sharing large datasets and streams of real-time data.', 
       project_logo: project_logo_1,
-      project_website: 'https://ara.one/',
+      project_website: 'https://docs.holepunch.to/building-blocks/hypercore',
       project_socials: [
-        {github: 'https://github.com/AraBlocks'}, 
-        {discord: 'https://discord.gg/eUMzA4Y'},
+        {github: 'https://github.com/holepunchto/hypercore'}, 
+        {discord: 'https://discord.gg/qkV4YMwHgZ'},
       ],
-      project_tags: ['Hypercore'],
+      project_tags: ['hypercore', 'p2p', 'protocol'],
       project_active_state: 'ACTIVE',
     }
   ]
@@ -2842,60 +2840,61 @@ function app_timeline_mini (opts = default_opts, protocol) {
   } } = data
     const cards_data = [
     {
-      title: 'socket sdk',
-      date: 'June 07, 2022',
+      title: 'interview series',
+      date: 'May 3, 2023',
       time: '',
-      link: 'https://socketsupply.co/download/',
-      desc: 'socket sdk early access is available',
+      link: 'https://blog.dat-ecosystem.org/staying-connected/',
+      desc: 'video interviews launch',
+      tags: ['presentation'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'dxos',
+      date: 'May 15, 2023',
+      time: '',
+      link: 'https://dxos.org/',
+      desc: 'dxos joins the ecosystem',
       tags: ['project'],
       data,
       active_state: 'ACTIVE'
     },{
-      title: 'peershare',
-      date: 'June 16, 2022',
+      title: 'hyper-nostr',
+      date: 'July 5, 2023',
       time: '',
-      link: 'https://peershare.lone-wolf.software/#/',
-      desc: 'peershare, a peer-to-peer file sharing over an encrypted noise connection joins the ecosystem',
+      link: 'https://github.com/Ruulul/hyper-nostr',
+      desc: 'hypercore-nostr relay is published and project joins the ecosystem',
       tags: ['project'],
       data,
       active_state: 'ACTIVE'
     },{
-      title: 'void',
-      date: 'July 08, 2022',
+      title: 'demo & AMA sessions',
+      date: 'August 27, 2023',
       time: '',
-      link: 'https://screamingvoid.me/',
-      desc: 'functional prototype of messenger app, built with hypercore, hyperswarm, and react-native joins the ecosystem',
-      tags: ['project'],
+      link: 'https://blog.dat-ecosystem.org/tags/demo/',
+      desc: 'demo sessions and AMA commm comm calls launch',
+      tags: ['presentation'],
       data,
       active_state: 'ACTIVE'
     },{
-      title: 'keet',
-      date: 'July 25, 2022',
+      title: 'wizard amigos code camp',
+      date: 'October 1, 2023',
       time: '',
-      link: 'https://keet.io/',
-      desc: 'hypercore protocol team releases Keet',
-      tags: ['project'],
+      link: 'https://wizardamigos.com/codecamp2023/',
+      desc: 'wizard amigos code camp is organized in Portugal',
+      tags: ['event'],
       data,
       active_state: 'ACTIVE'
     },{
-      title: 'hyperpubee',
-      date: 'August 20, 2022',
+      title: 'new dat ecosystem web page is released',
+      date: 'January 11, 2024',
       time: '',
-      link: 'https://www.hyperpubee.org/#/read',
-      desc: 'hyperpubee, a platform for decentralised publishing joins the ecosystem',
-      tags: ['project'],
+      link: 'https://dat-ecosystem.org',
+      desc: 'Dat ecosystem releases new web page',
+      tags: ['organization'],
       data,
       active_state: 'ACTIVE'
-    },{
-      title: 'wizard amigos',
-      date: 'August 27, 2022',
-      time: '',
-      link: 'https://wizardamigos.com',
-      desc: 'wizard amigos join the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    }]
+    }
+  ]
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
@@ -6347,7 +6346,7 @@ function consortium_page (opts = default_opts, protocol) {
     type: '.md',
     img: icon_pdf_reader,
   },{
-    name: 'our_member',
+    name: 'our_members',
     type: '.md',
     img: icon_pdf_reader,
   },{
@@ -8400,7 +8399,7 @@ module.exports=[
 },{}],35:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
-const our_members = require('./members.json');
+const members = require('./members.json');
 
 /******************************************************************************
   OUR MEMBERS COMPONENT
@@ -8417,9 +8416,9 @@ sheet.replaceSync(get_theme())
 const default_opts = { }
 const shopts = { mode: 'closed' }
 // ----------------------------------------
-module.exports = our_member
+module.exports = our_members
 // ----------------------------------------
-function our_member (opts = default_opts, protocol) {
+function our_members (opts = default_opts, protocol) {
   // ----------------------------------------
   // ID + JSON STATE
   // ----------------------------------------
@@ -8442,10 +8441,10 @@ function our_member (opts = default_opts, protocol) {
   const on = { 'show': on_show, 'hide': on_hide }
   const channel = use_protocol('up')({ protocol, state, on })
   function on_show (message) {
-    our_member_wrapper.style.display = 'inline'
+    our_members_wrapper.style.display = 'inline'
   }
   function on_hide (message) {
-    our_member_wrapper.style.display = 'none'
+    our_members_wrapper.style.display = 'none'
   }
   // ----------------------------------------
   // TEMPLATE
@@ -8471,7 +8470,7 @@ function our_member (opts = default_opts, protocol) {
     return table
   }
 
-  const tableHTML = createTable(our_members)
+  const tableHTML = createTable(members)
   const tempContainer = document.createElement('div')
   tempContainer.innerHTML = tableHTML
   const tableElement = tempContainer.querySelector('table')
@@ -8480,7 +8479,7 @@ function our_member (opts = default_opts, protocol) {
 
 
 
-  const our_member_wrapper = shadow.querySelector('.our_member')
+  const our_members_wrapper = shadow.querySelector('.our_member')
   // ----------------------------------------
   const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
   // ----------------------------------------
@@ -8492,7 +8491,7 @@ function our_member (opts = default_opts, protocol) {
     }
     const protocol = use_protocol('windowbar')({ state,  on })
     const opts = {
-      name:'our_member.md', 
+      name:'our_members.md', 
       src: icon_pdf_reader,
       data
     }
@@ -8500,7 +8499,7 @@ function our_member (opts = default_opts, protocol) {
     windowbar_shadow.append(element)
     async function toggle_active_state (message) {
       const { active_state } = message.data
-      if (active_state === 'active') our_member_wrapper.style.display = 'none'
+      if (active_state === 'active') our_members_wrapper.style.display = 'none'
     }
   }
   // ----------------------------------------
@@ -9879,7 +9878,8 @@ function tab_window (opts = default_opts, protocol) {
   }
   function on_help (){
     const command_list = { 
-      help: 'description of help', 
+      help: `DAT bash, version 0.0.1. These shell commands are defined internally
+      `, 
       list: 'description of list command', 
       goto: '...', 
       read: '...' 
