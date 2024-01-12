@@ -2060,37 +2060,35 @@ function app_projects_mini (opts = default_opts, protocol) {
 
   const cards_data = [
     { 
-      project_name: 'Agregore', 
-      project_desc: 'Agregore, a browser for the distributed web, facilitates peer-to-peer data sharing without central servers, supporting protocols like BitTorrent and IPFS for direct loading and sharing of content.', 
+      project_name: 'sher', 
+      project_desc: "It's simple. You create your show and share the link with your audience.", 
       project_logo: project_logo_1,
-      project_website: "https://agregore.mauve.moe/",
+      project_website: 'https://sher.geutstudio.com/',
       project_socials: [
-        {github: 'https://github.com/RangerMauve/agregore-browser'}, 
-        {discord: 'https://discord.com/invite/QMthd4Y'},
+        {twitter: 'https://twitter.com/the_sher_app'},
       ],
-      project_tags: ['Hypercore'],
+      project_tags: ['hypercore', 'live-streaming', 'audio'],
       project_active_state: 'ACTIVE',
     },{ 
-      project_name: 'ahau',
-      project_desc: 'Āhau is a Whānau Data Platform that helps whānau-based communities (whānau, hapū, Iwi) capture, preserve, and share important information and histories into secure, whānau managed databases and servers.', 
+      project_name: 'cabal', 
+      project_desc: 'Cabal is an experimental P2P community chat platform where servers are unnecessary, everything runs locally, and each community is identified by a secret key, offering both internet and local network connectivity.', 
       project_logo: project_logo_1,
-      project_website: 'https://www.ahau.io/',
+      project_website: 'https://cabal.chat/',
       project_socials: [
-        {github: 'https://www.hypercore.com/ahau'}, 
-        {discord: 'https://chat.ahau.io/'},
+        {github: 'https://github.com/cabal-club'},
       ],
-      project_tags: ['Hypercore'],
+      project_tags: ['hypercore', 'cable', 'p2p', 'chat', 'desktop', 'terminal'],
       project_active_state: 'ACTIVE',
     },{ 
-      project_name: 'ara', 
-      project_desc: "Ara represents a new era for content on the internet. Where we get our voices back. Where what's ours is ours. All content, decentralized, secure, owned, distributed, paid for, and rewarded between peers.", 
+      project_name: 'hypercore-protocol', 
+      project_desc: 'Hypercore is a secure, distributed append-only log built for sharing large datasets and streams of real-time data.', 
       project_logo: project_logo_1,
-      project_website: 'https://ara.one/',
+      project_website: 'https://docs.holepunch.to/building-blocks/hypercore',
       project_socials: [
-        {github: 'https://github.com/AraBlocks'}, 
-        {discord: 'https://discord.gg/eUMzA4Y'},
+        {github: 'https://github.com/holepunchto/hypercore'}, 
+        {discord: 'https://discord.gg/qkV4YMwHgZ'},
       ],
-      project_tags: ['Hypercore'],
+      project_tags: ['hypercore', 'p2p', 'protocol'],
       project_active_state: 'ACTIVE',
     }
   ]
@@ -2327,7 +2325,7 @@ function app_projects (opts = default_opts, protocol) {
         {github: 'https://github.com/RangerMauve/agregore-browser'}, 
         {discord: 'https://discord.com/invite/QMthd4Y'},
       ],
-      project_tags: ['Hypercore', 'Hypercore', 'Hypercore', 'Hypercore'],
+      project_tags: ['hypercore', 'browser', 'p2p', 'electron'],
       project_active_state: 'ACTIVE',
     },{ 
       project_name: 'ahau',
@@ -2338,7 +2336,7 @@ function app_projects (opts = default_opts, protocol) {
         {github: 'https://www.hypercore.com/ahau'}, 
         {discord: 'https://chat.ahau.io/'},
       ],
-      project_tags: ['Hypercore'],
+      project_tags: ['hypercore', 'māori', 'genealogy'],
       project_active_state: 'ACTIVE',
     },{ 
       project_name: 'ara', 
@@ -2349,7 +2347,7 @@ function app_projects (opts = default_opts, protocol) {
         {github: 'https://github.com/AraBlocks'}, 
         {discord: 'https://discord.gg/eUMzA4Y'},
       ],
-      project_tags: ['Hypercore'],
+      project_tags: ['hypercore', 'nft', 'subscription'],
       project_active_state: 'ACTIVE',
     },{ 
       project_name: 'cabal', 
@@ -2359,7 +2357,7 @@ function app_projects (opts = default_opts, protocol) {
       project_socials: [
         {github: 'https://github.com/cabal-club'},
       ],
-      project_tags: ['Hypercore'],
+      project_tags: ['hypercore', 'cable', 'p2p', 'chat', 'desktop', 'terminal'],
       project_active_state: 'ACTIVE',
     },{ 
       project_name: 'datdot', 
@@ -2371,7 +2369,7 @@ function app_projects (opts = default_opts, protocol) {
         {twitter: 'https://twitter.com/datdotorg'}, 
         {discord: 'https://discord.com/invite/3CJuGxkyyE'},
       ],
-      project_tags: ['Hypercore'],
+      project_tags: ['hypercore', 'p2p', 'hosting network', 'backup'],
       project_active_state: 'ACTIVE',
     },{ 
       project_name: 'dxos', 
@@ -2382,7 +2380,7 @@ function app_projects (opts = default_opts, protocol) {
         {github: 'https://github.com/dxos/dxos'}, 
         {discord: 'https://discord.gg/eXVfryv3sW'},
       ],
-      project_tags: ['Hypercore'],
+      project_tags: ['hypercore', 'p2p', 'offline', 'platform'],
       project_active_state: 'ACTIVE',
     },{ 
       project_name: 'earthstar', 
@@ -2393,7 +2391,7 @@ function app_projects (opts = default_opts, protocol) {
         {github: 'https://github.com/earthstar-project/earthstar'}, 
         {discord: 'https://discord.gg/5b8q7VtunU'},
       ],
-      project_tags: ['Hypercore'],
+      project_tags: ['p2p', 'key-value database', 'offline'],
       project_active_state: 'ACTIVE',
     },{ 
       project_name: 'gatewaybrowser', 
@@ -2404,8 +2402,8 @@ function app_projects (opts = default_opts, protocol) {
         {github: 'https://hypercore.com/gateway-browser/gateway'},
         {twitter: 'https://twitter.com/GatewayBrowser'},
       ],
-      project_tags: ['Hypercore'],
-      project_active_state: 'ACTIVE',
+      project_tags: ['hypercore', 'mobile', 'browser'],
+      project_active_state: 'PAUSED',
     },{ 
       project_name: 'hop', 
       project_desc: 'We are building a choherence protocol based on peer to peer open source software and toolkit that empower everyone to have sovereignity over data that shapes the health of the world. ', 
@@ -2415,7 +2413,7 @@ function app_projects (opts = default_opts, protocol) {
         {github: 'https://github.com/healthscience'}, 
         {discord: 'https://discord.gg/UZWgrjZZXK'},
       ],
-      project_tags: ['Hypercore'],
+      project_tags: ['hypercore', 'health oracle'],
       project_active_state: 'ACTIVE',
     },{ 
       project_name: 'hyper-nostr', 
@@ -2426,21 +2424,21 @@ function app_projects (opts = default_opts, protocol) {
         {github: 'https://github.com/Ruulul/hyper-nostr'}, 
         {discord: 'https://discord.gg/8jvhQYKnwQ'},
       ],
-      project_tags: ['Hypercore'],
+      project_tags: ['hypercore', 'nostr', 'relay'],
       project_active_state: 'ACTIVE',
     },{ 
       project_name: 'hypercore-protocol', 
-      project_desc: 'Holepunch equips developers with a powerful suite of independent components to effortlessly construct peer-to-peer applications.', 
+      project_desc: 'Hypercore is a secure, distributed append-only log built for sharing large datasets and streams of real-time data.', 
       project_logo: project_logo_1,
-      project_website: 'https://hypercore-protocol.org/',
+      project_website: 'https://docs.holepunch.to/building-blocks/hypercore',
       project_socials: [
-        {github: 'https://github.com/hypercore-protocol'}, 
+        {github: 'https://github.com/holepunchto/hypercore'}, 
         {discord: 'https://discord.gg/qkV4YMwHgZ'},
       ],
-      project_tags: ['Hypercore'],
+      project_tags: ['hypercore', 'p2p', 'protocol'],
       project_active_state: 'ACTIVE',
     },{ 
-      project_name: 'keet-holepunch', 
+      project_name: 'keet', 
       project_desc: 'Keet only shares end-to-end encrypted data between the participants in every call. Without middlemen, third-parties, or servers, there’s nobody left who can snoop on calls, leak or collect data.', 
       project_logo: project_logo_1,
       project_website: 'https://keet.io/',
@@ -2448,7 +2446,7 @@ function app_projects (opts = default_opts, protocol) {
         {twitter: 'https://twitter.com/keet_io'}, 
         {discord: 'https://discord.gg/znw6KfTyw8'},
       ],
-      project_tags: ['Hypercore'],
+      project_tags: ['hypercore', 'p2p', 'chat', 'video', 'electron'],
       project_active_state: 'ACTIVE',
     },{ 
       project_name: 'peermaps', 
@@ -2458,8 +2456,8 @@ function app_projects (opts = default_opts, protocol) {
       project_socials: [
         {github: 'https://github.com/peermaps'},
       ],
-      project_tags: ['Hypercore'],
-      project_active_state: 'ACTIVE',
+      project_tags: ['hypercore', 'p2p', 'OpenStreetMap', 'offline'],
+      project_active_state: 'PAUSED',
     },{ 
       project_name: 'peershare',
       project_desc: 'PeerShare enables you to share files to your friends, family, colleagues etc, using peer-to-peer technology. With a clean, easy to read interface, you can share your files right away.',
@@ -2470,18 +2468,18 @@ function app_projects (opts = default_opts, protocol) {
         {twitter: 'https://twitter.com/PeerShareApp'}, 
         {discord: 'https://discord.gg/U8sYVMts4W'},
       ],
-      project_tags: ['Hypercore'],
-      project_active_state: 'ACTIVE',
+      project_tags: ['hypercore'],
+      project_active_state: 'INACTIVE',
     },{ 
       project_name: 'picostack', 
-      project_desc: "We are an independent consultancy agency. And we're kinda nerdy about building a new internet.", 
+      project_desc: "0% Backend, 10'000% Frontend", 
       project_logo: project_logo_1,
-      project_website: 'https://decentlabs.se/',
+      project_website: 'https://pico-todo.surge.sh/',
       project_socials: [
         {github: 'https://github.com/telamon/picostack'}, 
         {discord: 'https://discord.com/invite/8RMRUPZ9RS'},
       ],
-      project_tags: ['Hypercore'],
+      project_tags: ['hypercore', 'pico', 'blockend'],
       project_active_state: 'ACTIVE',
     },{ 
       project_name: 'sher', 
@@ -2491,10 +2489,10 @@ function app_projects (opts = default_opts, protocol) {
       project_socials: [
         {twitter: 'https://twitter.com/the_sher_app'},
       ],
-      project_tags: ['Hypercore_2'],
+      project_tags: ['hypercore', 'live-streaming', 'audio'],
       project_active_state: 'ACTIVE',
     },{ 
-      project_name: 'socketsupply', 
+      project_name: 'socket supply', 
       project_desc: 'Build mobile and destkop apps for any OS using HTML, CSS, and JavaScript. Connect users with modern P2P that can make the cloud entirely optional.', 
       project_logo: project_logo_1,
       project_website: 'https://socketsupply.co/',
@@ -2503,7 +2501,7 @@ function app_projects (opts = default_opts, protocol) {
         {twitter: 'https://twitter.com/socketsupply'}, 
         {discord: 'https://discord.gg/YPV32gKCsH'},
       ],
-      project_tags: ['Hypercore'],
+      project_tags: ['runtime', 'web', 'p2p', 'native apps'],
       project_active_state: 'ACTIVE',
     },{ 
       project_name: 'sonar', 
@@ -2513,18 +2511,18 @@ function app_projects (opts = default_opts, protocol) {
       project_socials: [
         {github: 'https://github.com/arso-project'},
       ],
-      project_tags: ['Hypercore_2'],
+      project_tags: ['hypercore', 'kappa', 'p2p', 'search', 'database'],
       project_active_state: 'ACTIVE',
     },{ 
       project_name: 'webscape-wanderer', 
-      project_desc: '', 
+      project_desc: 'An interactive visualization engine for open source ecosystems', 
       project_logo: project_logo_1,
       project_website: 'https://micahscopes.github.io/webscape-wanderer/',
       project_socials: [
         {github: 'https://github.com/micahscopes/webscape-wanderer/'}, 
         {twitter: 'https://twitter.com/micahscopes'},
       ],
-      project_tags: ['Hypercore_2'],
+      project_tags: ['hypercore', 'web-gl', 'three-js', '3D'],
       project_active_state: 'ACTIVE',
     },{ 
       project_name: 'wizardamigos',
@@ -2535,7 +2533,7 @@ function app_projects (opts = default_opts, protocol) {
         {twitter: 'https://twitter.com/wizardamigos'},
         {discord: ''},
       ],
-      project_tags: ['Hypercore_2'],
+      project_tags: ['p2p', 'workshop', 'code camp'],
       project_active_state: 'ACTIVE',
     },]
   const tags = new Set(cards_data.flatMap(card => card.project_tags))
@@ -2842,60 +2840,61 @@ function app_timeline_mini (opts = default_opts, protocol) {
   } } = data
     const cards_data = [
     {
-      title: 'socket sdk',
-      date: 'June 07, 2022',
+      title: 'interview series',
+      date: 'May 3, 2023',
       time: '',
-      link: 'https://socketsupply.co/download/',
-      desc: 'socket sdk early access is available',
+      link: 'https://blog.dat-ecosystem.org/staying-connected/',
+      desc: 'video interviews launch',
+      tags: ['presentation'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'dxos',
+      date: 'May 15, 2023',
+      time: '',
+      link: 'https://dxos.org/',
+      desc: 'dxos joins the ecosystem',
       tags: ['project'],
       data,
       active_state: 'ACTIVE'
     },{
-      title: 'peershare',
-      date: 'June 16, 2022',
+      title: 'hyper-nostr',
+      date: 'July 5, 2023',
       time: '',
-      link: 'https://peershare.lone-wolf.software/#/',
-      desc: 'peershare, a peer-to-peer file sharing over an encrypted noise connection joins the ecosystem',
+      link: 'https://github.com/Ruulul/hyper-nostr',
+      desc: 'hypercore-nostr relay is published and project joins the ecosystem',
       tags: ['project'],
       data,
       active_state: 'ACTIVE'
     },{
-      title: 'void',
-      date: 'July 08, 2022',
+      title: 'demo & AMA sessions',
+      date: 'August 27, 2023',
       time: '',
-      link: 'https://screamingvoid.me/',
-      desc: 'functional prototype of messenger app, built with hypercore, hyperswarm, and react-native joins the ecosystem',
-      tags: ['project'],
+      link: 'https://blog.dat-ecosystem.org/tags/demo/',
+      desc: 'demo sessions and AMA commm comm calls launch',
+      tags: ['presentation'],
       data,
       active_state: 'ACTIVE'
     },{
-      title: 'keet',
-      date: 'July 25, 2022',
+      title: 'wizard amigos code camp',
+      date: 'October 1, 2023',
       time: '',
-      link: 'https://keet.io/',
-      desc: 'hypercore protocol team releases Keet',
-      tags: ['project'],
+      link: 'https://wizardamigos.com/codecamp2023/',
+      desc: 'wizard amigos code camp is organized in Portugal',
+      tags: ['event'],
       data,
       active_state: 'ACTIVE'
     },{
-      title: 'hyperpubee',
-      date: 'August 20, 2022',
+      title: 'new dat ecosystem web page is released',
+      date: 'January 11, 2024',
       time: '',
-      link: 'https://www.hyperpubee.org/#/read',
-      desc: 'hyperpubee, a platform for decentralised publishing joins the ecosystem',
-      tags: ['project'],
+      link: 'https://dat-ecosystem.org',
+      desc: 'Dat ecosystem releases new web page',
+      tags: ['organization'],
       data,
       active_state: 'ACTIVE'
-    },{
-      title: 'wizard amigos',
-      date: 'August 27, 2022',
-      time: '',
-      link: 'https://wizardamigos.com',
-      desc: 'wizard amigos join the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    }]
+    }
+  ]
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
@@ -3249,7 +3248,7 @@ function app_timeline (opts = default_opts, protocol) {
       desc: 'Peermaps is born (peer to peer cartography)',
       tags: ['project'],
       data,
-      active_state: 'ACTIVE'
+      active_state: 'PAUSED'
     },{
       title: 'dat - alpha',
       date: 'August 19, 2014',
@@ -3366,7 +3365,7 @@ function app_timeline (opts = default_opts, protocol) {
       desc: 'Beaker browser pre-release',
       tags: ['project'],
       data,
-      active_state: 'ACTIVE'
+      active_state: 'INACTIVE'
     },{
       title: 'dat desktop',
       date: 'February 12, 2017',
@@ -3481,7 +3480,7 @@ function app_timeline (opts = default_opts, protocol) {
       time: '',
       link: 'https://dat-ecosystem-archive.github.io/how-dat-works/',
       desc: 'How dat works visualization project is started',
-      tags: ['project'],
+      tags: ['asset'],
       data,
       active_state: 'ACTIVE'
     },{
@@ -3638,15 +3637,6 @@ function app_timeline (opts = default_opts, protocol) {
       data,
       active_state: 'ACTIVE'
     },{
-      title: 'tradle',
-      date: 'November 09, 2020',
-      time: '',
-      link: 'https://tradle.io/',
-      desc: 'Tradle joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
       title: 'gateway browser',
       date: 'January 11, 2020',
       time: '',
@@ -3680,6 +3670,15 @@ function app_timeline (opts = default_opts, protocol) {
       link: 'https://github.com/dat-ecosystem/organization/blob/main/MANIFESTO.md',
       desc: 'Dat consortium forms Dat Ecosystem and consoritum members sign a manifesto',
       tags: ['organization'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'Code for Science and Society grant ($20.000)',
+      date: 'December 21, 2021',
+      time: '',
+      link: 'https://blog.dat-ecosystem.org/dat-ecosystem-relaunch/',
+      desc: 'Archiving and ecosystem launch grant',
+      tags: ['grant'],
       data,
       active_state: 'ACTIVE'
     },{
@@ -3728,56 +3727,11 @@ function app_timeline (opts = default_opts, protocol) {
       data,
       active_state: 'ACTIVE'
     },{
-      title: 'telios',
-      date: 'November 01, 2021',
-      time: '',
-      link: 'https://www.telios.io/#/',
-      desc: 'telios joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'telios - email desktop client',
-      date: 'March 14, 2022',
-      time: '',
-      link: 'https://www.telios.io/#/',
-      desc: 'telios releases their email desktop client',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
       title: 'ahau',
       date: 'April 30, 2022',
       time: '',
       link: 'https://ahau.io/',
       desc: 'ahau joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'socket sdk',
-      date: 'June 07, 2022',
-      time: '',
-      link: 'https://socketsupply.co/download/',
-      desc: 'socket sdk early access is available',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'peershare',
-      date: 'June 16, 2022',
-      time: '',
-      link: 'https://peershare.lone-wolf.software/#/',
-      desc: 'peershare, a peer-to-peer file sharing over an encrypted noise connection joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'void',
-      date: 'July 08, 2022',
-      time: '',
-      link: 'https://screamingvoid.me/',
-      desc: 'functional prototype of messenger app, built with hypercore, hyperswarm, and react-native joins the ecosystem',
       tags: ['project'],
       data,
       active_state: 'ACTIVE'
@@ -3791,11 +3745,11 @@ function app_timeline (opts = default_opts, protocol) {
       data,
       active_state: 'ACTIVE'
     },{
-      title: 'hyperpubee',
+      title: 'dcent reads',
       date: 'August 20, 2022',
       time: '',
-      link: 'https://www.hyperpubee.org/#/read',
-      desc: 'hyperpubee, a platform for decentralised publishing joins the ecosystem',
+      link: 'https://www.dcent-reads.org/#/read',
+      desc: 'Dcent Reads, a platform for decentralised publishing joins the ecosystem',
       tags: ['project'],
       data,
       active_state: 'ACTIVE'
@@ -3808,7 +3762,107 @@ function app_timeline (opts = default_opts, protocol) {
       tags: ['project'],
       data,
       active_state: 'ACTIVE'
-    }].map(card => {
+    },{
+      title: 'lumeweb',
+      date: 'September 4, 2022',
+      time: '',
+      link: 'https://lumeweb.com/',
+      desc: 'lumeweb join the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'wizard amigos code camp',
+      date: 'September 26, 2022',
+      time: '',
+      link: 'https://wizardamigos.com/codecamp2022/',
+      desc: 'wizard amigos code camp is organized in Wales',
+      tags: ['event'],
+      data,
+      active_state: 'ACTIVE'
+    }, {
+      title: 'HOP',
+      date: 'November 23, 2022',
+      time: '',
+      link: 'https://www.healthscience.network/',
+      desc: 'HOP (health oracle protocol) joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'dat ecosystem visualized',
+      date: 'January 7, 2023',
+      time: '',
+      link: 'https://micahscopes.github.io/webscape-wanderer/',
+      desc: 'webscape wanderer visualizer engine is created to visualize dat ecosystem',
+      tags: ['presentation'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'webscape wanderer',
+      date: 'January 8, 2023',
+      time: '',
+      link: 'https://github.com/micahscopes/webscape-wanderer/',
+      desc: 'webscape wanderer joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'interview series',
+      date: 'May 3, 2023',
+      time: '',
+      link: 'https://blog.dat-ecosystem.org/staying-connected/',
+      desc: 'video interviews launch',
+      tags: ['presentation'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'dxos',
+      date: 'May 15, 2023',
+      time: '',
+      link: 'https://dxos.org/',
+      desc: 'dxos joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'hyper-nostr',
+      date: 'July 5, 2023',
+      time: '',
+      link: 'https://github.com/Ruulul/hyper-nostr',
+      desc: 'hypercore-nostr relay is published and project joins the ecosystem',
+      tags: ['project'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'demo & AMA sessions',
+      date: 'August 27, 2023',
+      time: '',
+      link: 'https://blog.dat-ecosystem.org/tags/demo/',
+      desc: 'demo sessions and AMA commm comm calls launch',
+      tags: ['presentation'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'wizard amigos code camp',
+      date: 'October 1, 2023',
+      time: '',
+      link: 'https://wizardamigos.com/codecamp2023/',
+      desc: 'wizard amigos code camp is organized in Portugal',
+      tags: ['event'],
+      data,
+      active_state: 'ACTIVE'
+    },{
+      title: 'new dat ecosystem web page is released',
+      date: 'January 11, 2024',
+      time: '',
+      link: 'https://dat-ecosystem.org',
+      desc: 'Dat ecosystem releases new web page',
+      tags: ['organization'],
+      data,
+      active_state: 'ACTIVE'
+    }
+  ].map(card => {
       const date = new Date(card.date + ' ' + convert_time_format(card.time))
       if(!status.years.includes(date.getFullYear()))
         status.years.push(date.getFullYear())
@@ -3820,7 +3874,8 @@ function app_timeline (opts = default_opts, protocol) {
       const dateB = new Date(b.date_raw)
       // Compare years in ascending/descending order
       if (dateA.getFullYear() !== dateB.getFullYear()) {
-        return visitor === 'new' ? dateA.getFullYear() - dateB.getFullYear() : dateB.getFullYear() - dateA.getFullYear()
+        return dateA.getFullYear() - dateB.getFullYear()
+        // return visitor === 'new' ? dateA.getFullYear() - dateB.getFullYear() : dateB.getFullYear() - dateA.getFullYear()
       }
       // If years are the same, compare months in descending order
       return dateA.getMonth() - dateB.getMonth()
@@ -6291,7 +6346,7 @@ function consortium_page (opts = default_opts, protocol) {
     type: '.md',
     img: icon_pdf_reader,
   },{
-    name: 'our_member',
+    name: 'our_members',
     type: '.md',
     img: icon_pdf_reader,
   },{
@@ -8344,7 +8399,7 @@ module.exports=[
 },{}],35:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
-const our_members = require('./members.json');
+const members = require('./members.json');
 
 /******************************************************************************
   OUR MEMBERS COMPONENT
@@ -8361,9 +8416,9 @@ sheet.replaceSync(get_theme())
 const default_opts = { }
 const shopts = { mode: 'closed' }
 // ----------------------------------------
-module.exports = our_member
+module.exports = our_members
 // ----------------------------------------
-function our_member (opts = default_opts, protocol) {
+function our_members (opts = default_opts, protocol) {
   // ----------------------------------------
   // ID + JSON STATE
   // ----------------------------------------
@@ -8386,10 +8441,10 @@ function our_member (opts = default_opts, protocol) {
   const on = { 'show': on_show, 'hide': on_hide }
   const channel = use_protocol('up')({ protocol, state, on })
   function on_show (message) {
-    our_member_wrapper.style.display = 'inline'
+    our_members_wrapper.style.display = 'inline'
   }
   function on_hide (message) {
-    our_member_wrapper.style.display = 'none'
+    our_members_wrapper.style.display = 'none'
   }
   // ----------------------------------------
   // TEMPLATE
@@ -8415,7 +8470,7 @@ function our_member (opts = default_opts, protocol) {
     return table
   }
 
-  const tableHTML = createTable(our_members)
+  const tableHTML = createTable(members)
   const tempContainer = document.createElement('div')
   tempContainer.innerHTML = tableHTML
   const tableElement = tempContainer.querySelector('table')
@@ -8424,7 +8479,7 @@ function our_member (opts = default_opts, protocol) {
 
 
 
-  const our_member_wrapper = shadow.querySelector('.our_member')
+  const our_members_wrapper = shadow.querySelector('.our_member')
   // ----------------------------------------
   const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
   // ----------------------------------------
@@ -8436,7 +8491,7 @@ function our_member (opts = default_opts, protocol) {
     }
     const protocol = use_protocol('windowbar')({ state,  on })
     const opts = {
-      name:'our_member.md', 
+      name:'our_members.md', 
       src: icon_pdf_reader,
       data
     }
@@ -8444,7 +8499,7 @@ function our_member (opts = default_opts, protocol) {
     windowbar_shadow.append(element)
     async function toggle_active_state (message) {
       const { active_state } = message.data
-      if (active_state === 'active') our_member_wrapper.style.display = 'none'
+      if (active_state === 'active') our_members_wrapper.style.display = 'none'
     }
   }
   // ----------------------------------------
@@ -8804,7 +8859,7 @@ function project_filter (opts = default_opts, protocol) {
   { // status button
     const on = { 'value': on_value }
     const protocol = use_protocol('status_button')({ state, on })
-    const opts = { data, name: 'STATUS', choices: ['ACTIVE', 'UNACTIVE', 'PAUSED'] }
+    const opts = { data, name: 'STATUS', choices: ['ACTIVE', 'INACTIVE', 'PAUSED'] }
     const element = shadowfy()(select_button(opts, protocol))
     project_filter.append(element)
   }
@@ -9823,7 +9878,8 @@ function tab_window (opts = default_opts, protocol) {
   }
   function on_help (){
     const command_list = { 
-      help: 'description of help', 
+      help: `DAT bash, version 0.0.1. These shell commands are defined internally
+      `, 
       list: 'description of list command', 
       goto: '...', 
       read: '...' 
@@ -11079,7 +11135,7 @@ function timeline_filter (opts = default_opts, protocol) {
   { // status button
     const on = { 'value': on_value }
     const protocol = use_protocol('status_button')({ state, on })
-    const status_opts = { data: opts.data, name: 'STATUS', choices: ['ACTIVE', 'UNACTIVE', 'PAUSED'] }
+    const status_opts = { data: opts.data, name: 'STATUS', choices: ['ACTIVE', 'INACTIVE', 'PAUSED'] }
     const element = shadowfy()(select_button(status_opts, protocol))
     timeline_filter.prepend(element)
     function on_value (message) {
