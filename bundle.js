@@ -719,9 +719,9 @@ process.umask = function() { return 0; };
 
 },{}],3:[function(require,module,exports){
 module.exports = require('../../../src/node_modules/theme/dark-theme')
-},{"../../../src/node_modules/theme/dark-theme":46}],4:[function(require,module,exports){
+},{"../../../src/node_modules/theme/dark-theme":48}],4:[function(require,module,exports){
 module.exports = require('../../../src/node_modules/theme/lite-theme')
-},{"../../../src/node_modules/theme/lite-theme":47}],5:[function(require,module,exports){
+},{"../../../src/node_modules/theme/lite-theme":49}],5:[function(require,module,exports){
 (function (process,__filename,__dirname){(function (){
 const desktop = require('..')
 const light_theme = require('theme/lite-theme')
@@ -1186,7 +1186,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/desktop.js")
-},{"_process":2,"consortium-page":26,"dat-garden":27,"home-page":28,"navbar":33,"projects-page":38,"terminal":43,"timeline-page":50}],7:[function(require,module,exports){
+},{"_process":2,"consortium-page":26,"dat-garden":27,"home-page":28,"navbar":33,"projects-page":40,"terminal":45,"timeline-page":52}],7:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 /******************************************************************************
@@ -1437,7 +1437,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-about-us/app-about-us.js")
-},{"_process":2,"window-bar":52}],8:[function(require,module,exports){
+},{"_process":2,"window-bar":54}],8:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 /******************************************************************************
@@ -1662,7 +1662,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-cover/app-cover.js")
-},{"_process":2,"window-bar":52}],9:[function(require,module,exports){
+},{"_process":2,"window-bar":54}],9:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const sm_text_button = require('buttons/sm-text-button')
@@ -1884,7 +1884,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-footer/app-footer.js")
-},{"_process":2,"buttons/sm-text-button":21,"window-bar":52}],10:[function(require,module,exports){
+},{"_process":2,"buttons/sm-text-button":21,"window-bar":54}],10:[function(require,module,exports){
 (function (process,__filename){(function (){
 const svg_element = require('svg-element')
 /******************************************************************************
@@ -2016,7 +2016,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-icon/app-icon.js")
-},{"_process":2,"svg-element":41}],11:[function(require,module,exports){
+},{"_process":2,"svg-element":43}],11:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const project_card = require('project-card')
@@ -2259,7 +2259,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-projects-mini/app-projects-mini.js")
-},{"_process":2,"project-card":36,"window-bar":52}],12:[function(require,module,exports){
+},{"_process":2,"project-card":38,"window-bar":54}],12:[function(require,module,exports){
 (function (process,__filename){(function (){
 const project_card = require('project-card')
 const window_bar = require('window-bar')
@@ -2788,7 +2788,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-projects/app-projects.js")
-},{"_process":2,"project-card":36,"project-filter":37,"scrollbar":39,"window-bar":52}],13:[function(require,module,exports){
+},{"_process":2,"project-card":38,"project-filter":39,"scrollbar":41,"window-bar":54}],13:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const timeline_card = require('timeline-card')
@@ -3106,7 +3106,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-timeline-mini/app-timeline-mini.js")
-},{"_process":2,"scrollbar":39,"timeline-card":48,"window-bar":52}],14:[function(require,module,exports){
+},{"_process":2,"scrollbar":41,"timeline-card":50,"window-bar":54}],14:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const timeline_card = require('timeline-card')
@@ -4405,7 +4405,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-timeline/app-timeline.js")
-},{"_process":2,"month-filter":32,"scrollbar":39,"timeline-card":48,"timeline-filter":49,"window-bar":52,"year-filter":53}],15:[function(require,module,exports){
+},{"_process":2,"month-filter":32,"scrollbar":41,"timeline-card":50,"timeline-filter":51,"window-bar":54,"year-filter":55}],15:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   DAY BUTTON COMPONENT
@@ -5200,7 +5200,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/buttons/select-button.js")
-},{"_process":2,"scrollbar":39}],19:[function(require,module,exports){
+},{"_process":2,"scrollbar":41}],19:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   SM ICON BUTTON ALT COMPONENT
@@ -6295,11 +6295,12 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/comingsoon/comingsoon.js")
-},{"_process":2,"window-bar":52}],26:[function(require,module,exports){
+},{"_process":2,"window-bar":54}],26:[function(require,module,exports){
 (function (process,__filename){(function (){
 const mission_statement = require('manifesto/manifesto')
 const important_documents = require('important-documents')
 const our_members = require('our-members')
+const our_alumni = require('our-alumni/our-alumni')
 const tools = require('tools')
 const app_icon = require('app-icon')
 /******************************************************************************
@@ -6347,6 +6348,10 @@ function consortium_page (opts = default_opts, protocol) {
     img: icon_pdf_reader,
   },{
     name: 'our_members',
+    type: '.md',
+    img: icon_pdf_reader,
+  },{
+    name: 'our_alumni',
     type: '.md',
     img: icon_pdf_reader,
   },{
@@ -6423,6 +6428,13 @@ function consortium_page (opts = default_opts, protocol) {
     const protocol = use_protocol(petname)({ state })
     const opts = { data }
     const element = shadowfy()(our_members(opts, protocol))
+    mini_popup_wrapper.append(element)
+  }
+  { // our alumni
+    const { name: petname } = our_alumni
+    const protocol = use_protocol(petname)({ state })
+    const opts = { data }
+    const element = shadowfy()(our_alumni(opts, protocol))
     mini_popup_wrapper.append(element)
   }
   { // tools
@@ -6588,7 +6600,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/consortium-page/consortium-page.js")
-},{"_process":2,"app-icon":10,"important-documents":29,"manifesto/manifesto":30,"our-members":35,"tools":51}],27:[function(require,module,exports){
+},{"_process":2,"app-icon":10,"important-documents":29,"manifesto/manifesto":30,"our-alumni/our-alumni":35,"our-members":37,"tools":53}],27:[function(require,module,exports){
 (function (process,__filename){(function (){
 const comingsoon = require('comingsoon')
 const app_footer = require('app-footer')
@@ -7109,7 +7121,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/important-documents/important-documents.js")
-},{"_process":2,"window-bar":52}],30:[function(require,module,exports){
+},{"_process":2,"window-bar":54}],30:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const scrollbar = require('scrollbar')
@@ -7410,7 +7422,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/manifesto/manifesto.js")
-},{"_process":2,"scrollbar":39,"window-bar":52}],31:[function(require,module,exports){
+},{"_process":2,"scrollbar":41,"window-bar":54}],31:[function(require,module,exports){
 (function (process,__filename){(function (){
 const day_button = require('buttons/day-button')
 /******************************************************************************
@@ -7952,7 +7964,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/month-filter/month-filter.js")
-},{"_process":2,"month-card":31,"scrollbar":39}],33:[function(require,module,exports){
+},{"_process":2,"month-card":31,"scrollbar":41}],33:[function(require,module,exports){
 (function (process,__filename){(function (){
 const icon_button = require('buttons/icon-button')
 const logo_button = require('buttons/logo-button')
@@ -8389,6 +8401,236 @@ function resources (pool) {
 }).call(this)}).call(this,require('_process'),"/src/node_modules/navbar/navbar.js")
 },{"_process":2,"buttons/icon-button":16,"buttons/logo-button":17,"buttons/text-button":23}],34:[function(require,module,exports){
 module.exports=[
+  {"name": "Andrew Osheroff", "link": "https://github.com/andrewosh"},
+  {"name": "Bruno Vieira", "link": "https://twitter.com/bmpvieira"},
+  {"name": "Chia-liang Kao", "link": "http://github.com/clkao"},
+  {"name": "Danielle Robinson", "link": "https://github.com/daniellecrobinson"},
+  {"name": "David Clements", "link": "http://github.com/davidmarkclements"},
+  {"name": "Finn Pauls", "link": "http://github.com/finnp"},
+  {"name": "Georgiy Shibaev", "link": "http://github.com/RangerMauve"},
+  {"name": "Jim Pick", "link": "http://github.com/jimpick"},
+  {"name": "Joe Hand", "link": "http://github.com/joehand"},
+  {"name": "Juan Batiz-Benet", "link": "http://github.com/jbenet"},
+  {"name": "Julian Gruber", "link": "http://github.com/juliangruber"},
+  {"name": "Kira Oakley", "link": "https://github.com/hackergrrl"},
+  {"name": "Kristina Schneider", "link": "http://github.com/kriesse"},
+  {"name": "Martin Heidegger", "link": "https://github.com/martinheidegger"},
+  {"name": "Mathias Buus", "link": "https://github.com/mafintosh"},
+  {"name": "Max Ogden", "link": "http://twitter.com/maxogden"},
+  {"name": "Melanie Cebula", "link": "http://github.com/melaniecebula"},
+  {"name": "Paul Frazee", "link": "https://github.com/pfrazee"},
+  {"name": "Portia Burton", "link": "http://github.com/pkafei"},
+  {"name": "Rae McKelvey", "link": "https://github.com/okdistribute"},
+  {"name": "Tara Vancil", "link": "http://github.com/taravancil"},
+  {"name": "Yoshua Wuyts", "link": "https://github.com/yoshuawuyts"},
+  {"name": "Yuhong Wang", "link": "http://github.com/ywyw"}
+]
+},{}],35:[function(require,module,exports){
+(function (process,__filename){(function (){
+const window_bar = require('window-bar')
+const members = require('./members.json');
+
+/******************************************************************************
+  OUR MEMBERS COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = our_alumni
+// ----------------------------------------
+function our_alumni (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  const { data } = opts
+  // Assigning all the icons
+  const { img_src } = data
+  const {
+    icon_pdf_reader
+  } = img_src
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = { 'show': on_show, 'hide': on_hide }
+  const channel = use_protocol('up')({ protocol, state, on })
+  function on_show (message) {
+    our_alumni_wrapper.style.display = 'inline'
+  }
+  function on_hide (message) {
+    our_alumni_wrapper.style.display = 'none'
+  }
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="our_member">
+    <div class="windowbar"></div>
+    <div class="member_content">
+      <h2>## our members</h2>
+    </div>
+  </div>`
+
+  // Function to create a table from the members data
+  function createTable(data) {
+    const tableHeader = '<thead><tr><td> no. </td><td> name </td></tr></thead>'
+    const tableRows = data.map((member, index) => {
+      const anchorLink = `<a href="${member.link}" target="_blank">${member.name}</a>`
+      return `<tr><td> ${index + 1} </td><td> ${anchorLink} </td></tr>`
+    })
+    const table = `<table>${tableHeader}<tbody>${tableRows}</tbody></table>`
+    return table
+  }
+
+  const tableHTML = createTable(members)
+  const tempContainer = document.createElement('div')
+  tempContainer.innerHTML = tableHTML
+  const tableElement = tempContainer.querySelector('table')
+  const memberContent = shadow.querySelector('.member_content')
+  memberContent.appendChild(tableElement)
+
+
+
+  const our_alumni_wrapper = shadow.querySelector('.our_member')
+  // ----------------------------------------
+  const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // windowbar
+    const on = {
+      'toggle_active_state': toggle_active_state
+    }
+    const protocol = use_protocol('windowbar')({ state,  on })
+    const opts = {
+      name:'our_alumni.md', 
+      src: icon_pdf_reader,
+      data
+    }
+    const element = window_bar(opts, protocol)
+    windowbar_shadow.append(element)
+    async function toggle_active_state (message) {
+      const { active_state } = message.data
+      if (active_state === 'active') our_alumni_wrapper.style.display = 'none'
+    }
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+
+  return el
+}
+function get_theme () {
+  return `
+    * {
+      box-sizing: border-box;
+    }
+    .our_member {
+      display: none;
+    }
+    .member_content {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100vh;
+      padding: 10px;
+      background-size: 10px 10px;
+      background-color: var(--bg_color);
+      border: 1px solid var(--primary_color);
+      margin-bottom: 30px;
+    }
+    .member_content h2 {
+      margin: 0;
+    }
+    .member_content table {
+      border-collapse: collapse;
+    }
+    .member_content table thead {
+      font-weight: bold;
+    }
+    .member_content table td {
+      border: 1px solid var(--primary_color);
+      padding: 8px;
+    }
+    @container (min-width: 510px) {
+      .our_member .member_content {
+        width: auto;
+        height: auto;
+      }
+    }
+  `
+}
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/our-alumni/our-alumni.js")
+},{"./members.json":34,"_process":2,"window-bar":54}],36:[function(require,module,exports){
+module.exports=[
     { "name": "Alexander Cobleigh", "organization": "Cabal", "link": "https://github.com/cblgh" },
     { "name": "Alexander Praetorius", "organization": "DatDot & WizardAmigos", "link": "https://github.com/serapath" },
     { "name": "Diego Paez", "organization": "Geut Studio", "link": "https://github.com/dpaez" },
@@ -8396,7 +8638,7 @@ module.exports=[
     { "name": "Kevin Faaborg", "organization": "Ara", "link": "https://github.com/zootella" },
     { "name": "Nina Breznik", "organization": "DatDot & WizardAmigos", "link": "https://github.com/nbreznik" }
   ]  
-},{}],35:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const members = require('./members.json');
@@ -8600,7 +8842,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/our-members/our-members.js")
-},{"./members.json":34,"_process":2,"window-bar":52}],36:[function(require,module,exports){
+},{"./members.json":36,"_process":2,"window-bar":54}],38:[function(require,module,exports){
 (function (process,__filename){(function (){
 const sm_icon_button = require('buttons/sm-icon-button')
 /******************************************************************************
@@ -8805,7 +9047,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/project-card/project-card.js")
-},{"_process":2,"buttons/sm-icon-button":20}],37:[function(require,module,exports){
+},{"_process":2,"buttons/sm-icon-button":20}],39:[function(require,module,exports){
 (function (process,__filename){(function (){
 const search_input = require('search-input')
 const select_button = require('buttons/select-button')
@@ -8960,7 +9202,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/project-filter/project-filter.js")
-},{"_process":2,"buttons/select-button":18,"search-input":40}],38:[function(require,module,exports){
+},{"_process":2,"buttons/select-button":18,"search-input":42}],40:[function(require,module,exports){
 (function (process,__filename){(function (){
 const app_projects = require('app-projects')
 const the_dat = require('the-dat')
@@ -9116,7 +9358,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/projects-page/projects-page.js")
-},{"_process":2,"app-footer":9,"app-projects":12,"the-dat":44}],39:[function(require,module,exports){
+},{"_process":2,"app-footer":9,"app-projects":12,"the-dat":46}],41:[function(require,module,exports){
 (function (process,__filename){(function (){
 const sm_icon_button = require('buttons/sm-icon-button')
 /******************************************************************************
@@ -9408,7 +9650,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/scrollbar/scrollbar.js")
-},{"_process":2,"buttons/sm-icon-button":20}],40:[function(require,module,exports){
+},{"_process":2,"buttons/sm-icon-button":20}],42:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   SEARCH INPUT COMPONENT
@@ -9569,7 +9811,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/search-input/search-input.js")
-},{"_process":2}],41:[function(require,module,exports){
+},{"_process":2}],43:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   WINDOW BAR COMPONENT
@@ -9687,7 +9929,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/svg-element/svg-element.js")
-},{"_process":2}],42:[function(require,module,exports){
+},{"_process":2}],44:[function(require,module,exports){
 (function (process,__filename){(function (){
 const scrollbar = require('scrollbar')
 /******************************************************************************
@@ -9996,7 +10238,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/tab-window/tab-window.js")
-},{"_process":2,"scrollbar":39}],43:[function(require,module,exports){
+},{"_process":2,"scrollbar":41}],45:[function(require,module,exports){
 (function (process,__filename){(function (){
 const tab_window = require('tab-window')
 const tab_button = require('buttons/tab-button')
@@ -10413,7 +10655,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/terminal/terminal.js")
-},{"_process":2,"buttons/sm-icon-button-alt":19,"buttons/tab-button":22,"scrollbar":39,"tab-window":42}],44:[function(require,module,exports){
+},{"_process":2,"buttons/sm-icon-button-alt":19,"buttons/tab-button":22,"scrollbar":41,"tab-window":44}],46:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 /******************************************************************************
@@ -10604,7 +10846,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/the-dat/the-dat.js")
-},{"_process":2,"window-bar":52}],45:[function(require,module,exports){
+},{"_process":2,"window-bar":54}],47:[function(require,module,exports){
 const white = {} // hsla(0, 0%, 100%, 1)
 white.hue = 0
 white.saturation = '0%'
@@ -10667,7 +10909,7 @@ purple.opacity = 1
 purple.color = `hsla(${purple.hue}, ${purple.saturation}, ${purple.lightness}, ${purple.opacity})`
 
 module.exports = { white, isabelline, gray, black, eerie_black, night_black, darkblue, green, pink, purple }
-},{}],46:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const brand = require('theme/brand')
 const path = require('path')
@@ -10762,7 +11004,7 @@ const dark_theme = {
 
 module.exports = dark_theme
 }).call(this)}).call(this,require('_process'),"/src/node_modules/theme/dark-theme")
-},{"_process":2,"path":1,"theme/brand":45}],47:[function(require,module,exports){
+},{"_process":2,"path":1,"theme/brand":47}],49:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const brand = require('theme/brand')
 const path = require('path')
@@ -10857,7 +11099,7 @@ const light_theme = {
 
 module.exports = light_theme
 }).call(this)}).call(this,require('_process'),"/src/node_modules/theme/lite-theme")
-},{"_process":2,"path":1,"theme/brand":45}],48:[function(require,module,exports){
+},{"_process":2,"path":1,"theme/brand":47}],50:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   TIMELINE CARD COMPONENT
@@ -11046,7 +11288,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/timeline-card/timeline-card.js")
-},{"_process":2}],49:[function(require,module,exports){
+},{"_process":2}],51:[function(require,module,exports){
 (function (process,__filename){(function (){
 const search_input = require('search-input')
 const select_button = require('buttons/select-button')
@@ -11266,7 +11508,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/timeline-filter/timeline-filter.js")
-},{"_process":2,"buttons/select-button":18,"buttons/sm-icon-button":20,"buttons/year-button":24,"search-input":40}],50:[function(require,module,exports){
+},{"_process":2,"buttons/select-button":18,"buttons/sm-icon-button":20,"buttons/year-button":24,"search-input":42}],52:[function(require,module,exports){
 (function (process,__filename){(function (){
 const app_timeline = require('app-timeline')
 const app_footer = require('app-footer')
@@ -11409,7 +11651,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/timeline-page/timeline-page.js")
-},{"_process":2,"app-footer":9,"app-timeline":14}],51:[function(require,module,exports){
+},{"_process":2,"app-footer":9,"app-timeline":14}],53:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 /******************************************************************************
@@ -11655,7 +11897,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/tools/tools.js")
-},{"_process":2,"window-bar":52}],52:[function(require,module,exports){
+},{"_process":2,"window-bar":54}],54:[function(require,module,exports){
 (function (process,__filename){(function (){
 const sm_icon_button_alt = require('buttons/sm-icon-button-alt')
 const sm_text_button = require('buttons/sm-text-button')
@@ -11917,7 +12159,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/window-bar/window-bar.js")
-},{"_process":2,"buttons/sm-icon-button-alt":19,"buttons/sm-text-button":21}],53:[function(require,module,exports){
+},{"_process":2,"buttons/sm-icon-button-alt":19,"buttons/sm-text-button":21}],55:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   YEAR FILTER COMPONENT
