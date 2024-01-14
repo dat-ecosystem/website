@@ -719,9 +719,9 @@ process.umask = function() { return 0; };
 
 },{}],3:[function(require,module,exports){
 module.exports = require('../../../src/node_modules/theme/dark-theme')
-},{"../../../src/node_modules/theme/dark-theme":48}],4:[function(require,module,exports){
+},{"../../../src/node_modules/theme/dark-theme":49}],4:[function(require,module,exports){
 module.exports = require('../../../src/node_modules/theme/lite-theme')
-},{"../../../src/node_modules/theme/lite-theme":49}],5:[function(require,module,exports){
+},{"../../../src/node_modules/theme/lite-theme":50}],5:[function(require,module,exports){
 (function (process,__filename,__dirname){(function (){
 const desktop = require('..')
 const light_theme = require('theme/lite-theme')
@@ -1186,7 +1186,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/desktop.js")
-},{"_process":2,"consortium-page":26,"dat-garden":27,"home-page":28,"navbar":33,"projects-page":40,"terminal":45,"timeline-page":52}],7:[function(require,module,exports){
+},{"_process":2,"consortium-page":26,"dat-garden":27,"home-page":29,"navbar":34,"projects-page":41,"terminal":46,"timeline-page":53}],7:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 /******************************************************************************
@@ -1437,7 +1437,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-about-us/app-about-us.js")
-},{"_process":2,"window-bar":54}],8:[function(require,module,exports){
+},{"_process":2,"window-bar":55}],8:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 /******************************************************************************
@@ -1662,7 +1662,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-cover/app-cover.js")
-},{"_process":2,"window-bar":54}],9:[function(require,module,exports){
+},{"_process":2,"window-bar":55}],9:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const sm_text_button = require('buttons/sm-text-button')
@@ -1884,7 +1884,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-footer/app-footer.js")
-},{"_process":2,"buttons/sm-text-button":21,"window-bar":54}],10:[function(require,module,exports){
+},{"_process":2,"buttons/sm-text-button":21,"window-bar":55}],10:[function(require,module,exports){
 (function (process,__filename){(function (){
 const svg_element = require('svg-element')
 /******************************************************************************
@@ -2016,7 +2016,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-icon/app-icon.js")
-},{"_process":2,"svg-element":43}],11:[function(require,module,exports){
+},{"_process":2,"svg-element":44}],11:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const project_card = require('project-card')
@@ -2051,47 +2051,14 @@ function app_projects_mini (opts = default_opts, protocol) {
   const { data } = opts
   // Assigning all the icons
   const { img_src: {
-    icon_discord = `${prefix}/icon_discord.png`,
-    icon_twitter = `${prefix}/icon_twitter.png`,
-    icon_github = `${prefix}/icon_github.png`,
     icon_folder_solid = `${prefix}/icon_folder_solid.svg`,
-    project_logo_1 = `${prefix}/project_logo_1.png`,
   } } = data
 
-  const cards_data = [
-    { 
-      project_name: 'sher', 
-      project_desc: "It's simple. You create your show and share the link with your audience.", 
-      project_logo: project_logo_1,
-      project_website: 'https://sher.geutstudio.com/',
-      project_socials: [
-        {twitter: 'https://twitter.com/the_sher_app'},
-      ],
-      project_tags: ['hypercore', 'live-streaming', 'audio'],
-      project_active_state: 'ACTIVE',
-    },{ 
-      project_name: 'cabal', 
-      project_desc: 'Cabal is an experimental P2P community chat platform where servers are unnecessary, everything runs locally, and each community is identified by a secret key, offering both internet and local network connectivity.', 
-      project_logo: project_logo_1,
-      project_website: 'https://cabal.chat/',
-      project_socials: [
-        {github: 'https://github.com/cabal-club'},
-      ],
-      project_tags: ['hypercore', 'cable', 'p2p', 'chat', 'desktop', 'terminal'],
-      project_active_state: 'ACTIVE',
-    },{ 
-      project_name: 'hypercore-protocol', 
-      project_desc: 'Hypercore is a secure, distributed append-only log built for sharing large datasets and streams of real-time data.', 
-      project_logo: project_logo_1,
-      project_website: 'https://docs.holepunch.to/building-blocks/hypercore',
-      project_socials: [
-        {github: 'https://github.com/holepunchto/hypercore'}, 
-        {discord: 'https://discord.gg/qkV4YMwHgZ'},
-      ],
-      project_tags: ['hypercore', 'p2p', 'protocol'],
-      project_active_state: 'ACTIVE',
-    }
-  ]
+  let cards_data = require(`../data/data.json`).projects.slice(0).sort(() => 0.5 - Math.random()).slice(0, 3)
+  cards_data = cards_data.map(card => {
+    card.data = data
+    return card
+  })
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
@@ -2259,7 +2226,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-projects-mini/app-projects-mini.js")
-},{"_process":2,"project-card":38,"window-bar":54}],12:[function(require,module,exports){
+},{"../data/data.json":28,"_process":2,"project-card":39,"window-bar":55}],12:[function(require,module,exports){
 (function (process,__filename){(function (){
 const project_card = require('project-card')
 const window_bar = require('window-bar')
@@ -2315,227 +2282,7 @@ function app_projects (opts = default_opts, protocol) {
     project_logo_1 = `${prefix}/project_logo_1.png`,
   } } = data
 
-  const cards_data = [
-    { 
-      project_name: 'Agregore', 
-      project_desc: 'Agregore, a browser for the distributed web, facilitates peer-to-peer data sharing without central servers, supporting protocols like BitTorrent and IPFS for direct loading and sharing of content.', 
-      project_logo: project_logo_1,
-      project_website: "https://agregore.mauve.moe/",
-      project_socials: [
-        {github: 'https://github.com/RangerMauve/agregore-browser'}, 
-        {discord: 'https://discord.com/invite/QMthd4Y'},
-      ],
-      project_tags: ['hypercore', 'browser', 'p2p', 'electron'],
-      project_active_state: 'ACTIVE',
-    },{ 
-      project_name: 'ahau',
-      project_desc: 'Āhau is a Whānau Data Platform that helps whānau-based communities (whānau, hapū, Iwi) capture, preserve, and share important information and histories into secure, whānau managed databases and servers.', 
-      project_logo: project_logo_1,
-      project_website: 'https://www.ahau.io/',
-      project_socials: [
-        {github: 'https://www.hypercore.com/ahau'}, 
-        {discord: 'https://chat.ahau.io/'},
-      ],
-      project_tags: ['hypercore', 'māori', 'genealogy'],
-      project_active_state: 'ACTIVE',
-    },{ 
-      project_name: 'ara', 
-      project_desc: "Ara represents a new era for content on the internet. Where we get our voices back. Where what's ours is ours. All content, decentralized, secure, owned, distributed, paid for, and rewarded between peers.", 
-      project_logo: project_logo_1,
-      project_website: 'https://ara.one/',
-      project_socials: [
-        {github: 'https://github.com/AraBlocks'}, 
-        {discord: 'https://discord.gg/eUMzA4Y'},
-      ],
-      project_tags: ['hypercore', 'nft', 'subscription'],
-      project_active_state: 'ACTIVE',
-    },{ 
-      project_name: 'cabal', 
-      project_desc: 'Cabal is an experimental P2P community chat platform where servers are unnecessary, everything runs locally, and each community is identified by a secret key, offering both internet and local network connectivity.', 
-      project_logo: project_logo_1,
-      project_website: 'https://cabal.chat/',
-      project_socials: [
-        {github: 'https://github.com/cabal-club'},
-      ],
-      project_tags: ['hypercore', 'cable', 'p2p', 'chat', 'desktop', 'terminal'],
-      project_active_state: 'ACTIVE',
-    },{ 
-      project_name: 'datdot', 
-      project_desc: 'DatDot enables peer-to-peer sharing of storage space and data seeding to make data sovereignity and portability more accessible and reliable for users.', 
-      project_logo: project_logo_1,
-      project_website: 'https://datdot.org/',
-      project_socials: [
-        {github: 'https://github.com/datdotorg'},
-        {twitter: 'https://twitter.com/datdotorg'}, 
-        {discord: 'https://discord.com/invite/3CJuGxkyyE'},
-      ],
-      project_tags: ['hypercore', 'p2p', 'hosting network', 'backup'],
-      project_active_state: 'ACTIVE',
-    },{ 
-      project_name: 'dxos', 
-      project_desc: 'DXOS provides developers with everything they need to build real-time, collaborative apps which run entirely on the client, and communicate peer-to-peer, without servers.', 
-      project_logo: project_logo_1,
-      project_website: 'https://dxos.org/',
-      project_socials: [
-        {github: 'https://github.com/dxos/dxos'}, 
-        {discord: 'https://discord.gg/eXVfryv3sW'},
-      ],
-      project_tags: ['hypercore', 'p2p', 'offline', 'platform'],
-      project_active_state: 'ACTIVE',
-    },{ 
-      project_name: 'earthstar', 
-      project_desc: 'Earthstar is a small and resilient distributed storage protocol designed with a strong focus on simplicity and versatility, with the social realities of peer-to-peer computing kept in mind.', 
-      project_logo: project_logo_1,
-      project_website: 'https://github.com/earthstar-project/earthstar',
-      project_socials: [
-        {github: 'https://github.com/earthstar-project/earthstar'}, 
-        {discord: 'https://discord.gg/5b8q7VtunU'},
-      ],
-      project_tags: ['p2p', 'key-value database', 'offline'],
-      project_active_state: 'ACTIVE',
-    },{ 
-      project_name: 'gatewaybrowser', 
-      project_desc: 'An experimental mobile browser that aims to help build a sustainable community-owned P2P web.', 
-      project_logo: project_logo_1,
-      project_website: 'https://twitter.com/GatewayBrowser',
-      project_socials: [
-        {github: 'https://hypercore.com/gateway-browser/gateway'},
-        {twitter: 'https://twitter.com/GatewayBrowser'},
-      ],
-      project_tags: ['hypercore', 'mobile', 'browser'],
-      project_active_state: 'PAUSED',
-    },{ 
-      project_name: 'hop', 
-      project_desc: 'We are building a choherence protocol based on peer to peer open source software and toolkit that empower everyone to have sovereignity over data that shapes the health of the world. ', 
-      project_logo: project_logo_1,
-      project_website: 'https://www.healthscience.network/',
-      project_socials: [
-        {github: 'https://github.com/healthscience'}, 
-        {discord: 'https://discord.gg/UZWgrjZZXK'},
-      ],
-      project_tags: ['hypercore', 'health oracle'],
-      project_active_state: 'ACTIVE',
-    },{ 
-      project_name: 'hyper-nostr', 
-      project_desc: 'The goal of this tool is to behave as a public relay; think of the chosen topic as a public relay, where you can send and receive notes from your peers!', 
-      project_logo: project_logo_1,
-      project_website: 'https://github.com/Ruulul/hyper-nostr',
-      project_socials: [
-        {github: 'https://github.com/Ruulul/hyper-nostr'}, 
-        {discord: 'https://discord.gg/8jvhQYKnwQ'},
-      ],
-      project_tags: ['hypercore', 'nostr', 'relay'],
-      project_active_state: 'ACTIVE',
-    },{ 
-      project_name: 'hypercore-protocol', 
-      project_desc: 'Hypercore is a secure, distributed append-only log built for sharing large datasets and streams of real-time data.', 
-      project_logo: project_logo_1,
-      project_website: 'https://docs.holepunch.to/building-blocks/hypercore',
-      project_socials: [
-        {github: 'https://github.com/holepunchto/hypercore'}, 
-        {discord: 'https://discord.gg/qkV4YMwHgZ'},
-      ],
-      project_tags: ['hypercore', 'p2p', 'protocol'],
-      project_active_state: 'ACTIVE',
-    },{ 
-      project_name: 'keet', 
-      project_desc: 'Keet only shares end-to-end encrypted data between the participants in every call. Without middlemen, third-parties, or servers, there’s nobody left who can snoop on calls, leak or collect data.', 
-      project_logo: project_logo_1,
-      project_website: 'https://keet.io/',
-      project_socials: [
-        {twitter: 'https://twitter.com/keet_io'}, 
-        {discord: 'https://discord.gg/znw6KfTyw8'},
-      ],
-      project_tags: ['hypercore', 'p2p', 'chat', 'video', 'electron'],
-      project_active_state: 'ACTIVE',
-    },{ 
-      project_name: 'peermaps', 
-      project_desc: 'Peermaps is a distributed, offline-friendly alternative to commercial map providers such as google maps. Instead of fetching data from a centralized tile service, your computer fetches map data from other peers across the network.', 
-      project_logo: project_logo_1,
-      project_website: 'https://peermaps.org/',
-      project_socials: [
-        {github: 'https://github.com/peermaps'},
-      ],
-      project_tags: ['hypercore', 'p2p', 'OpenStreetMap', 'offline'],
-      project_active_state: 'PAUSED',
-    },{ 
-      project_name: 'peershare',
-      project_desc: 'PeerShare enables you to share files to your friends, family, colleagues etc, using peer-to-peer technology. With a clean, easy to read interface, you can share your files right away.',
-      project_logo: project_logo_1,
-      project_website: 'https://peershare.lone-wolf.software/',
-      project_socials: [
-        {github: 'https://github.com/connor-davis/peershare'},
-        {twitter: 'https://twitter.com/PeerShareApp'}, 
-        {discord: 'https://discord.gg/U8sYVMts4W'},
-      ],
-      project_tags: ['hypercore'],
-      project_active_state: 'INACTIVE',
-    },{ 
-      project_name: 'picostack', 
-      project_desc: "0% Backend, 10'000% Frontend", 
-      project_logo: project_logo_1,
-      project_website: 'https://pico-todo.surge.sh/',
-      project_socials: [
-        {github: 'https://github.com/telamon/picostack'}, 
-        {discord: 'https://discord.com/invite/8RMRUPZ9RS'},
-      ],
-      project_tags: ['hypercore', 'pico', 'blockend'],
-      project_active_state: 'ACTIVE',
-    },{ 
-      project_name: 'sher', 
-      project_desc: "It's simple. You create your show and share the link with your audience.", 
-      project_logo: project_logo_1,
-      project_website: 'https://sher.geutstudio.com/',
-      project_socials: [
-        {twitter: 'https://twitter.com/the_sher_app'},
-      ],
-      project_tags: ['hypercore', 'live-streaming', 'audio'],
-      project_active_state: 'ACTIVE',
-    },{ 
-      project_name: 'socket supply', 
-      project_desc: 'Build mobile and destkop apps for any OS using HTML, CSS, and JavaScript. Connect users with modern P2P that can make the cloud entirely optional.', 
-      project_logo: project_logo_1,
-      project_website: 'https://socketsupply.co/',
-      project_socials: [
-        {github: 'https://github.com/socketsupply'},
-        {twitter: 'https://twitter.com/socketsupply'}, 
-        {discord: 'https://discord.gg/YPV32gKCsH'},
-      ],
-      project_tags: ['runtime', 'web', 'p2p', 'native apps'],
-      project_active_state: 'ACTIVE',
-    },{ 
-      project_name: 'sonar', 
-      project_desc: 'Sonar is based on the Hypercore Protocol and part of the Dat ecosystem of peer-to-peer tools.', 
-      project_logo: project_logo_1,
-      project_website: 'https://sonar.dev.arso.xyz/',
-      project_socials: [
-        {github: 'https://github.com/arso-project'},
-      ],
-      project_tags: ['hypercore', 'kappa', 'p2p', 'search', 'database'],
-      project_active_state: 'ACTIVE',
-    },{ 
-      project_name: 'webscape-wanderer', 
-      project_desc: 'An interactive visualization engine for open source ecosystems', 
-      project_logo: project_logo_1,
-      project_website: 'https://micahscopes.github.io/webscape-wanderer/',
-      project_socials: [
-        {github: 'https://github.com/micahscopes/webscape-wanderer/'}, 
-        {twitter: 'https://twitter.com/micahscopes'},
-      ],
-      project_tags: ['hypercore', 'web-gl', 'three-js', '3D'],
-      project_active_state: 'ACTIVE',
-    },{ 
-      project_name: 'wizardamigos',
-      project_desc: 'Wizard Amigos is a global community of self-employed nomadic developers, technologists, creators, problem solvers, thinkers, activists, researchers, artists, and individuals from diverse backgrounds who share a common passion for technology and open collaboration.',
-      project_logo: project_logo_1,
-      project_website: 'https://wizardamigos.com/',
-      project_socials: [
-        {twitter: 'https://twitter.com/wizardamigos'},
-        {discord: ''},
-      ],
-      project_tags: ['p2p', 'workshop', 'code camp'],
-      project_active_state: 'ACTIVE',
-    },]
+  const cards_data = require(`../data/data.json`)['projects']
   const tags = new Set(cards_data.flatMap(card => card.project_tags))
   // ----------------------------------------
   // PROTOCOL
@@ -2788,7 +2535,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-projects/app-projects.js")
-},{"_process":2,"project-card":38,"project-filter":39,"scrollbar":41,"window-bar":54}],13:[function(require,module,exports){
+},{"../data/data.json":28,"_process":2,"project-card":39,"project-filter":40,"scrollbar":42,"window-bar":55}],13:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const timeline_card = require('timeline-card')
@@ -3106,7 +2853,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-timeline-mini/app-timeline-mini.js")
-},{"_process":2,"scrollbar":41,"timeline-card":50,"window-bar":54}],14:[function(require,module,exports){
+},{"_process":2,"scrollbar":42,"timeline-card":51,"window-bar":55}],14:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const timeline_card = require('timeline-card')
@@ -3155,6 +2902,7 @@ function app_timeline (opts = default_opts, protocol) {
   status.MONTH = ''
   status.DATE = ''
   status.cards = []
+  status.separators = []
   status.years = []
   let dates = []
   let visitor = ''
@@ -3163,9 +2911,9 @@ function app_timeline (opts = default_opts, protocol) {
   // Local Storage
   // ----------------------------------------
   if (localStorage.getItem('visitedBefore')) {
-    visitor = 'old'
+    visitor = true // old
   } else {
-    visitor = 'new'
+    visitor = false // new
     localStorage.setItem('visitedBefore', 'true')
   }
   // ----------------------------------------
@@ -3176,710 +2924,27 @@ function app_timeline (opts = default_opts, protocol) {
   const { img_src: {
       icon_folder_solid= `${prefix}/icon_folder_solid.svg`,
   } } = data
-  const cards_data = [
-    {
-      title: 'dat - brainstorming an idea', 
-      date: 'October 12, 2011', 
-      time: '', 
-      link: 'https://rufuspollock.com/2011/10/17/weekly-update-rufus-pollock-2/', 
-      desc: 'Max Ogden chats with Rufus Pollock about a changes protocol for data to allow diffing/merging and supports micro-schemas at the Open Government Data Camp', 
-      tags: ['article'], 
-      data, 
-      active_state: 'ACTIVE'
-    },{
-      title: 'Knight Foundation Funding ($50.000)',
-      date: 'June 23, 2013',
-      time: '',
-      link: 'https://web.archive.org/web/20130810075932/http://www.knightfoundation.org/grants/201346305/',
-      desc: 'Brings dat (as http://dat-data.com) from an idea to the pre-alpha stage',
-      tags: ['grant'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'dat - initial readme',
-      date: 'June 27, 2013',
-      time: '',
-      link: 'https://github.com/dat-ecosystem/dat/tree/464679267049899eafa345125a0f2212f91be456',
-      desc: 'Dat is created by Max Ogden in 2013 to standardize the way data analysts collaborate on the changes they make to data sets. Rufus Pollock from the Open Knowledge Foundation describes it as git (and github) for data',
-      tags: ['milestone'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'dat-data website',
-      date: 'October 12, 2023',
-      time: '',
-      link: 'https://dat-ecosystem-archive.github.io/dat-data.com/',
-      desc: 'First website is released',
-      tags: ['website'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'twitter account',
-      date: 'November 01, 2013',
-      time: '',
-      link: 'https://twitter.com/dat_ecosystem',
-      desc: '@dat_protocol twitter account is created (later renamed to @dat_ecosystem)',
-      tags: ['asset'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'introducing dat',
-      date: 'November 11, 2013',
-      time: '',
-      link: 'https://www.youtube.com/watch?v=FX7qSwz3SCk',
-      desc: 'Max Ogden presents Dat at the Strata Conference in London',
-      tags: ['talk'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'Alfred P. Sloan Foundation Funding ($260.000)',
-      date: 'April 02, 2014',
-      time: '',
-      link: 'https://usopendata.org/2014/04/02/dat/',
-      desc: 'Helps dat to become an US ODI (Open Data Institute) project',
-      tags: ['Open Data Institute'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'peermaps',
-      date: 'May 22, 2014',
-      time: '',
-      link: 'https://peermaps.org/',
-      desc: 'Peermaps is born (peer to peer cartography)',
-      tags: ['project'],
-      data,
-      active_state: 'PAUSED'
-    },{
-      title: 'dat - alpha',
-      date: 'August 19, 2014',
-      time: '',
-      link: 'https://usopendata.org/2014/08/19/dat-alpha/',
-      desc: 'Dat Alpha version is released',
-      tags: ['milestone'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'Alfred P. Sloan',
-      date: 'April 03, 2015',
-      time: '',
-      link: 'https://donations.vipulnaik.com/donor.php?donor=Sloan+Foundation',
-      desc: 'Alfred P. Sloan Foundation Funding ($640.000)',
-      tags: ['grant'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'dat - beta',
-      date: 'July 29, 2015',
-      time: '',
-      link: 'https://usopendata.org/2015/07/29/dat-beta/',
-      desc: 'Dat Beta version is released -  the version focused on tabular datasets. It turns out to be too complex for typical use cases',
-      tags: ['milestone'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'designing dat 1.0',
-      date: 'December 04, 2015',
-      time: '',
-      link: 'https://vimeo.com/147914258',
-      desc: 'Designing dat 1.0, rOpenSci Community Call v8',
-      tags: ['presentation'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'hyperdrive release',
-      date: 'December 02, 2015',
-      time: '',
-      link: 'https://github.com/hypercore-protocol/hyperdrive/releases/tag/v1.0.1',
-      desc: 'Hyperdrive v1.0.0 is released',
-      tags: ['milestone'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'hypercore release',
-      date: 'December 20, 2015',
-      time: '',
-      link: 'https://github.com/hypercore-protocol/hypercore/releases/tag/v1.0.0',
-      desc: 'Hypercore v1.0.0 is released',
-      tags: ['milestone'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'alpha testing',
-      date: 'December 21, 2015',
-      time: '',
-      link: '/',
-      desc: 'Alpha testing with pilot projects in science, including Sloan Digital Sky Survey (Astronomy), iRNA-Seq (Bioinformatics – RNA), and Bionode (Bioinformatics – DNA)Hypercore v1.0.0 is released',
-      tags: ['milestone'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'dat 1.0.',
-      date: 'February 01, 2016',
-      time: '',
-      link: 'https://blog.dat-ecosystem.org/dat-1-0-is-ready/',
-      desc: 'Dat 1.0. is ready',
-      tags: ['milestone'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'Knight Foundation Funding ($420.000)',
-      date: 'February 01, 2016',
-      time: '',
-      link: 'https://blog.dat-ecosystem.org/announcing-publicbits-org/',
-      desc: 'Knight Foundation Grant ($420.000) for Publicbeats project',
-      tags: ['grant'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'Code for Science and Society',
-      date: 'September 01, 2016',
-      time: '',
-      link: 'https://codeforscience.org/about/',
-      desc: 'Code for Science and Society is founded - to support the Dat Project as a fiscal sponsor bundled with strategic project support',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'first meetups',
-      date: 'December 01, 2016',
-      time: '',
-      link: 'https://blog.datproject.org/tag/community/',
-      desc: 'The first meetups for ‘Coding for Science & Society’ are held in Berlin, Oakland, and Portland; organized by the Dat team',
-      tags: ['community'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'cli tool',
-      date: 'January 09, 2017',
-      time: '',
-      link: 'https://blog.dat-ecosystem.org/preview-the-new-dat-cli/',
-      desc: 'New Dat CLI is released',
-      tags: ['milestone'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'beaker browser',
-      date: 'February 07, 2017',
-      time: '',
-      link: 'https://www.electronjs.org/blog/beaker-browser',
-      desc: 'Beaker browser pre-release',
-      tags: ['project'],
-      data,
-      active_state: 'INACTIVE'
-    },{
-      title: 'dat desktop',
-      date: 'February 12, 2017',
-      time: '',
-      link: 'https://blog.dat-ecosystem.org/dat-desktop-is-here/',
-      desc: 'Dat desktop is released',
-      tags: ['milestone'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'dat 2.0',
-      date: 'June 01, 2017',
-      time: '',
-      link: 'https://blog.dat-ecosystem.org/dat-sleep-release/',
-      desc: 'Dat 2.0 is released',
-      tags: ['milestone'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'dat whitepaper',
-      date: 'June 01, 2017',
-      time: '',
-      link: 'https://github.com/dat-ecosystem-archive/whitepaper/blob/master/dat-paper.pdf',
-      desc: 'Dat whitepaper is released',
-      tags: ['whitepaper'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'Moore Foundation Grant ($110.000)',
-      date: 'September 14, 2017',
-      time: '',
-      link: 'https://blog.dat-ecosystem.org/dat-in-the-lab/',
-      desc: 'Moore Foundation grant for collaboration of dat and California Digital Library (CDL)',
-      tags: ['grant'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'organizational changes',
-      date: 'December 20, 2017',
-      time: '',
-      link: 'https://blog.datproject.org/2017/12/20/organization-changes-dat-css/',
-      desc: 'Organizational Changes for Dat and Code for Science & Society',
-      tags: ['organization'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'arso',
-      date: 'March 02, 2018',
-      time: '',
-      link: 'https://arso.xyz/',
-      desc: 'arso joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'multifeed',
-      date: 'April 12, 2018',
-      time: '',
-      link: 'https://github.com/kappa-db/multifeed/releases/tag/v1.0.0',
-      desc: 'Multi-writer hypercore (multifeed) is released',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'Beaker browser and the Dat protocol analysis',
-      date: 'May 01, 2018',
-      time: '',
-      link: 'https://bernsteinbear.com/dat-paper/',
-      desc: 'Beaker browser and the Dat protocol: An analysis for COMP 117: Internet-scale Distributed Systems is released',
-      tags: ['scientific article'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'kappa core',
-      date: 'May 13, 2018',
-      time: '',
-      link: 'https://github.com/kappa-db/kappa-core/releases/tag/v1.0.0',
-      desc: 'Kappa Core 1.0 is released (minimal append only DB)',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'cabal',
-      date: 'May 13, 2018',
-      time: '',
-      link: 'https://github.com/cabal-club/cabal-core/releases/tag/v1.0.0',
-      desc: 'Cabal core 1.0 is release',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'Mozila Open Source Support Grant ($34,000)',
-      date: 'September 05, 2018',
-      time: '',
-      link: 'https://blog.dat-ecosystem.org/moss-2019-summary/',
-      desc: 'Dat Project Receives Mozilla Open Source Support Grant',
-      tags: ['grant'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'dat open collective',
-      date: 'October 05, 2018',
-      time: '',
-      link: 'https://opencollective.com/dat',
-      desc: 'Dat Open Collective page is set up for recurring donations',
-      tags: ['donations'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'how dat works',
-      date: 'November 01, 2018',
-      time: '',
-      link: 'https://dat-ecosystem-archive.github.io/how-dat-works/',
-      desc: 'How dat works visualization project is started',
-      tags: ['asset'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'Handshake Grant ($100.000)',
-      date: 'December 01, 2018',
-      time: '',
-      link: 'https://blog.dat-ecosystem.org/dat-receives-two-new-grants/',
-      desc: 'Handshake Grant is received',
-      tags: ['grant'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'Samsung NEXT Stack Zero Grant ($63.000)',
-      date: 'December 02, 2018',
-      time: '',
-      link: 'https://blog.dat-ecosystem.org/dat-receives-two-new-grants/',
-      desc: 'Samsung NEXT Stack Zero grant is received',
-      tags: ['grant'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'dat hack unconference',
-      date: 'May 19, 2019',
-      time: '',
-      link: 'https://events.dat.foundation/2019/',
-      desc: 'Dat Hack Unconference in Berlin',
-      tags: ['event'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'Wireline Donation ($50,000)',
-      date: 'June 01, 2019',
-      time: '',
-      link: 'https://github.com/datproject/organization#2019',
-      desc: 'Dat Project receives donation from Wireline',
-      tags: ['donation'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'dat consortium',
-      date: 'December 01, 2019',
-      time: '',
-      link: 'https://hackmd.io/@T6Wf5EsOQKe-6wyPjJPtuw/Hycn0F63r/%2FHbu0ffkwQS6KIO_97fH-Mw',
-      desc: 'Dat consortium is formed',
-      tags: ['organization'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'ara',
-      date: 'December 01, 2019',
-      time: '',
-      link: 'https://ara.one/',
-      desc: 'Ara joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'consento',
-      date: 'December 01, 2019',
-      time: '',
-      link: 'https://consento.org/',
-      desc: 'Consento joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'datdot',
-      date: 'December 01, 2019',
-      time: '',
-      link: 'https://datdot.org/',
-      desc: 'DatDot joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'decentlabs',
-      date: 'December 01, 2019',
-      time: '',
-      link: 'https://decentlabs.se/',
-      desc: 'Decentlabs joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'geut',
-      date: 'December 01, 2019',
-      time: '',
-      link: 'https://www.geutstudio.com/',
-      desc: 'Geut joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'digital democracy',
-      date: 'December 01, 2019',
-      time: '',
-      link: 'https://www.digital-democracy.org/',
-      desc: 'Digital Democracy joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'arso - sonar release',
-      date: 'December 17, 2019',
-      time: '',
-      link: 'https://arso.xyz/blog/2019-12-17-introducing-sonar',
-      desc: 'Arso introduces Sonar',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'Hypercore protocol graduates from Dat Ecosystem',
-      date: 'May 15, 2020',
-      time: '',
-      link: 'https://blog.dat-ecosystem.org/dat-protocol-renamed-hypercore-protocol/',
-      desc: 'Dat protocol is renamed to Hypercore protocol',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'NLnet grant ($50.000)',
-      date: 'July 01, 2020',
-      time: '',
-      link: 'https://github.com/datproject/organization#2020',
-      desc: 'NLnet grant is recieved for a Rust port',
-      tags: ['grant'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'agregore',
-      date: 'June 19, 2020',
-      time: '',
-      link: 'https://github.com/AgregoreWeb/agregore-browser/releases/tag/v1.0.1-0',
-      desc: 'Agregore browser is pre-released',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'dat conference',
-      date: 'July 30, 2020',
-      time: '',
-      link: 'https://www.youtube.com/channel/UCbLY5Qg3t3OJbxZZUioqMOQ',
-      desc: 'Dat online conference is organized',
-      tags: ['event'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'agregore',
-      date: 'October 14, 2020',
-      time: '',
-      link: 'https://agregore.mauve.moe/',
-      desc: 'Agregore joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'gateway browser',
-      date: 'January 11, 2020',
-      time: '',
-      link: 'https://gitlab.com/gateway-browser/gateway',
-      desc: 'Gateway browser joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'hyperbee',
-      date: 'December 03, 2020',
-      time: '',
-      link: 'https://github.com/hypercore-protocol/hyperbee/releases/tag/v1.0.0',
-      desc: 'Hyperbee 1.0 is released',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'earthstar',
-      date: 'January 10, 2021',
-      time: '',
-      link: 'https://github.com/earthstar-project/earthstar',
-      desc: 'Earthstar joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'dat manifesto',
-      date: 'March 09, 2021',
-      time: '',
-      link: 'https://github.com/dat-ecosystem/organization/blob/main/MANIFESTO.md',
-      desc: 'Dat consortium forms Dat Ecosystem and consoritum members sign a manifesto',
-      tags: ['organization'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'Code for Science and Society grant ($20.000)',
-      date: 'December 21, 2021',
-      time: '',
-      link: 'https://blog.dat-ecosystem.org/dat-ecosystem-relaunch/',
-      desc: 'Archiving and ecosystem launch grant',
-      tags: ['grant'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'socket supply',
-      date: 'April 15, 2022',
-      time: '',
-      link: 'https://socketsupply.co/',
-      desc: 'Socket Supply joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'hyperswarm',
-      date: 'July 02, 2021',
-      time: '',
-      link: 'https://github.com/hyperswarm/hyperswarm/releases/tag/v3.0.0-beta2',
-      desc: 'Hyperswarm v3.0.0-beta is released',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'autobase',
-      date: 'July 02, 2021',
-      time: '',
-      link: 'https://github.com/hypercore-protocol/autobase/releases/tag/v1.0.0-alpha.0',
-      desc: 'Autobase v3.0.0-beta is released',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'dat ecosystem archive',
-      date: 'August 01, 2021',
-      time: '',
-      link: 'https://github.com/dat-ecosystem-archive',
-      desc: 'Dat ecosystem archive is created to archive all the historic repositories',
-      tags: ['organization'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'geut - sher',
-      date: 'October 08, 2021',
-      time: '',
-      link: 'https://sher.geutstudio.com/',
-      desc: 'Geut studio introduces new project Sher',
-      tags: ['organization'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'ahau',
-      date: 'April 30, 2022',
-      time: '',
-      link: 'https://ahau.io/',
-      desc: 'ahau joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'keet',
-      date: 'July 25, 2022',
-      time: '',
-      link: 'https://keet.io/',
-      desc: 'hypercore protocol team releases Keet',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'dcent reads',
-      date: 'August 20, 2022',
-      time: '',
-      link: 'https://www.dcent-reads.org/#/read',
-      desc: 'Dcent Reads, a platform for decentralised publishing joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'wizard amigos',
-      date: 'August 27, 2022',
-      time: '',
-      link: 'https://wizardamigos.com',
-      desc: 'wizard amigos join the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'lumeweb',
-      date: 'September 4, 2022',
-      time: '',
-      link: 'https://lumeweb.com/',
-      desc: 'lumeweb join the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'wizard amigos code camp',
-      date: 'September 26, 2022',
-      time: '',
-      link: 'https://wizardamigos.com/codecamp2022/',
-      desc: 'wizard amigos code camp is organized in Wales',
-      tags: ['event'],
-      data,
-      active_state: 'ACTIVE'
-    }, {
-      title: 'HOP',
-      date: 'November 23, 2022',
-      time: '',
-      link: 'https://www.healthscience.network/',
-      desc: 'HOP (health oracle protocol) joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'dat ecosystem visualized',
-      date: 'January 7, 2023',
-      time: '',
-      link: 'https://micahscopes.github.io/webscape-wanderer/',
-      desc: 'webscape wanderer visualizer engine is created to visualize dat ecosystem',
-      tags: ['presentation'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'webscape wanderer',
-      date: 'January 8, 2023',
-      time: '',
-      link: 'https://github.com/micahscopes/webscape-wanderer/',
-      desc: 'webscape wanderer joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'interview series',
-      date: 'May 3, 2023',
-      time: '',
-      link: 'https://blog.dat-ecosystem.org/staying-connected/',
-      desc: 'video interviews launch',
-      tags: ['presentation'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'dxos',
-      date: 'May 15, 2023',
-      time: '',
-      link: 'https://dxos.org/',
-      desc: 'dxos joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'hyper-nostr',
-      date: 'July 5, 2023',
-      time: '',
-      link: 'https://github.com/Ruulul/hyper-nostr',
-      desc: 'hypercore-nostr relay is published and project joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'demo & AMA sessions',
-      date: 'August 27, 2023',
-      time: '',
-      link: 'https://blog.dat-ecosystem.org/tags/demo/',
-      desc: 'demo sessions and AMA commm comm calls launch',
-      tags: ['presentation'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'wizard amigos code camp',
-      date: 'October 1, 2023',
-      time: '',
-      link: 'https://wizardamigos.com/codecamp2023/',
-      desc: 'wizard amigos code camp is organized in Portugal',
-      tags: ['event'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'new dat ecosystem web page is released',
-      date: 'January 11, 2024',
-      time: '',
-      link: 'https://dat-ecosystem.org',
-      desc: 'Dat ecosystem releases new web page',
-      tags: ['organization'],
-      data,
-      active_state: 'ACTIVE'
-    }
-  ].map(card => {
+
+  let cards_data = require(`../data/data.json`)['timeline']
+  cards_data = cards_data.map(card => {
       const date = new Date(card.date + ' ' + convert_time_format(card.time))
       if(!status.years.includes(date.getFullYear()))
         status.years.push(date.getFullYear())
       card.date_raw = date.getTime()
+      card.data = data
       dates.push(card.date_raw)
       return card
     }).sort(function (a, b) {
       const dateA = new Date(a.date_raw)
       const dateB = new Date(b.date_raw)
-      // Compare years in ascending/descending order
-      if (dateA.getFullYear() !== dateB.getFullYear()) {
-        return dateA.getFullYear() - dateB.getFullYear()
-        // return visitor === 'new' ? dateA.getFullYear() - dateB.getFullYear() : dateB.getFullYear() - dateA.getFullYear()
-      }
-      // If years are the same, compare months in descending order
-      return dateA.getMonth() - dateB.getMonth()
+      // // Compare years in ascending/descending order
+      // if (dateA.getFullYear() !== dateB.getFullYear()) {
+      //   return visitor ? dateB.getFullYear() - dateA.getFullYear() : dateA.getFullYear() - dateB.getFullYear()
+      // }
+      // If years are the same, compare dates in ascending/descending order
+      return visitor ? dateB.getTime() - dateA.getTime() : dateA.getTime() - dateB.getTime()
     })
+  status.years_max = [...status.years]
   cardfilter = [...cards_data]
   const tags = new Set(cards_data.flatMap(card => card.tags))
   const card_groups = []
@@ -3903,6 +2968,8 @@ function app_timeline (opts = default_opts, protocol) {
     <div class="main_wrapper">
       <div class="filter_wrapper">
           <div class="month_wrapper">
+            <div class="current_separator">
+            </div>
             <div class="timeline_wrapper">
             </div>
             <div class="empty_wrapper">
@@ -3919,6 +2986,7 @@ function app_timeline (opts = default_opts, protocol) {
   const filter_wrapper = shadow.querySelector('.filter_wrapper')
   const month_wrapper = shadow.querySelector('.month_wrapper')
   const empty_wrapper = shadow.querySelector('.empty_wrapper')
+  const current_separator = shadow.querySelector('.current_separator')
   // ----------------------------------------
   const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
   // ----------------------------------------
@@ -3947,7 +3015,32 @@ function app_timeline (opts = default_opts, protocol) {
       const opts = card_data
       const element = shadowfy()(timeline_card(opts, protocol))          
       const slice = card_data.date.slice(-4)
+      
+      // if(i === Object.keys(cards_data).length - 1){
+      //   const latest = visitor ? Math.min(...status.years) : Math.max(...status.years)
+      //   let oldest = Number(year_cache) - 1
+        
+      //   while(visitor ? latest <= oldest : latest >= oldest){
+      //     const separator = document.createElement('div')
+      //     separator.innerHTML = oldest
+      //     separator.classList.add('separator')
+      //     card_groups.push(separator)
+      //     visitor ? oldest-- : oldest++
+      //   }
+      // }
       if (year_cache !== slice) {
+        const latest = Number(slice)
+        let oldest = year_cache ? visitor ? Number(year_cache) - 1 : Number(year_cache) + 1 : Number(slice)
+        
+        while(visitor ? latest <= oldest : latest >= oldest){
+          const separator = document.createElement('div')
+          separator.innerHTML = oldest
+          separator.classList.add('separator')
+          status.separators.push(separator)
+          card_groups.push(separator)
+          visitor ? oldest-- : oldest++
+        }
+  
         card_group = document.createElement('div')
         card_group.classList.add('card_group')
         card_groups.push(card_group)
@@ -3997,7 +3090,7 @@ function app_timeline (opts = default_opts, protocol) {
     const protocol =  use_protocol('year_filter')({ state, on })
     
     const opts = {
-      data, latest_date: Math.max(...dates), oldest_date: Math.min(...dates), visitor
+      data, latest_year: Math.max(...status.years), oldest_year: Math.min(...status.years), visitor
     }
     year_filter_wrapper = shadowfy()(year_filter(opts, protocol))
     function on_set_scroll ({ data }) {
@@ -4047,21 +3140,23 @@ function app_timeline (opts = default_opts, protocol) {
   // INIT
   // ----------------------------------------
   updateCalendar()
+  current_separator.innerHTML = visitor ? Math.max(...status.years) : Math.min(...status.years)
 
   return el
 
   function onscroll (event) {
     const scroll_channel = state.net[state.aka.scrollbar]
+    current_separator.innerHTML = status.YEAR
     scroll_channel.send({
       head: [id, scroll_channel.send.id, scroll_channel.mid++],
       type: 'handle_scroll'
     })
+    let check = true
     const parent_top = timeline_wrapper.getBoundingClientRect().top
-    timeline_cards.some(card => {
-      const { idx } = card
-      const child_top = card.getBoundingClientRect().top
-      if (child_top >= parent_top -100 && child_top < parent_top + 200) {
-        const year = cards_data[idx].date.slice(-4)
+    status.separators.some(separator => {
+      const child_top = separator.getBoundingClientRect().top
+      if (child_top && child_top >= parent_top && child_top < parent_top + 10) {
+        const year = separator.innerHTML
         status.YEAR = year
         updateCalendar()
         const channel = state.net[state.aka.year_filter]
@@ -4070,9 +3165,27 @@ function app_timeline (opts = default_opts, protocol) {
           type: 'update_year_filter',
           data: year
         })
+        check = false
         return true
       }
     })
+    if (check)
+      timeline_cards.some(card => {
+        const { idx } = card
+        const child_top = card.getBoundingClientRect().top
+        if (child_top && child_top >= parent_top - 180 && child_top < parent_top + 40) {
+          const year = cards_data[idx].date.slice(-4)
+          status.YEAR = year
+          updateCalendar()
+          const channel = state.net[state.aka.year_filter]
+          channel.send({
+            head: [id, channel.send.id, channel.mid++],
+            type: 'update_year_filter',
+            data: year
+          })
+          return true
+        }
+      })
     const channel = state.net[state.aka.timeline_filter]
     channel.send({
       head: [id, channel.send.id, channel.mid++],
@@ -4087,19 +3200,16 @@ function app_timeline (opts = default_opts, protocol) {
   }
   async function set_scroll (data) {
     if (data.filter === 'YEAR'){
-      if (status.years.includes(Number(data.value))){
-        empty_wrapper.classList.remove('active')
-        timeline_wrapper.classList.remove('hide')
-      }
-      else {
-        empty_wrapper.classList.add('active')
-        timeline_wrapper.classList.add('hide')
-        status.YEAR = data.value
-        updateCalendar()
-        return
-      }
+      status[data.filter] = data.value
+      status.separators.some(separator => {
+        const year = separator.innerHTML
+        if(year.includes(data.value)){
+          setScrollTop(separator.getBoundingClientRect().top - timeline_wrapper.getBoundingClientRect().top + timeline_wrapper.scrollTop)
+          return true
+        }
+      })
     }
-    if (data.value){
+    else if (data.value){
       status[data.filter] = data.value
       let check = true
       timeline_cards.some(card => {
@@ -4138,19 +3248,23 @@ function app_timeline (opts = default_opts, protocol) {
         type: 'update_timeline_filter',
         data: { month: status.MONTH , year: status.YEAR }
       })
-      const year_channel = state.net[state.aka.year_filter]
-      year_channel.send({
-        head: [id, year_channel.send.id, year_channel.mid++],
-        type: 'update_year_filter',
-        data: status.YEAR
-      })
     }
     else if(status.cards){
-      status.cards.forEach(status_card => {
+      status.cards.forEach(status_card => {value
         status_card.classList.remove('active')
       })
       status.cards = []
+      return
     }
+    
+    
+    const year_channel = state.net[state.aka.year_filter]
+    year_channel.send({
+      head: [id, year_channel.send.id, year_channel.mid++],
+      type: 'update_year_filter',
+      data: status.YEAR
+    })
+
   }
   async function setScrollTop (value) {
     timeline_wrapper.scrollTop = value
@@ -4170,21 +3284,48 @@ function app_timeline (opts = default_opts, protocol) {
         return card_data.tags.includes(status.TAGS) && card_data
       })
     }
-
+    status.separators = []
     status.years = []
     const card_groups = []
-    let year_cache
-    let card_group
+    let year_cache, card_group
     
-    timeline_cards.forEach(card => {
+    timeline_cards.forEach((card, i) => {
       const { idx } = card
       const card_data = cards_data[idx]
+      
+      if(i === Object.keys(cards_data).length - 1){
+        const latest = visitor ? Math.min(...status.years_max) : Math.max(...status.years_max)
+        let oldest = year_cache ? visitor ? Number(year_cache) - 1 : Number(year_cache) + 1 : visitor ? Math.max(...status.years_max) : Math.min(...status.years_max)
+        while(visitor ? latest <= oldest : latest >= oldest){
+          const separator = document.createElement('div')
+          separator.innerHTML = oldest
+          separator.classList.add('separator')
+          status.separators.push(separator)
+          card_groups.push(separator)
+          visitor ? oldest-- : oldest++
+        }
+      }
       if (cardfilter.includes(card_data)) {
         const date = new Date(card_data.date)
         if(!status.years.includes(date.getFullYear()))
           status.years.push(date.getFullYear())
         const slice = card_data.date.slice(-4)
+        
         if (year_cache !== slice) {
+          if(i < Object.keys(cards_data).length - 1){
+            const latest = Number(slice)
+            let oldest = year_cache ? visitor ? Number(year_cache) - 1 : Number(year_cache) + 1 :  visitor ? Math.max(...status.years_max) : Math.min(...status.years_max)
+            
+            while(visitor ? latest <= oldest : latest >= oldest){
+              const separator = document.createElement('div')
+              separator.innerHTML = oldest
+              separator.classList.add('separator')
+              status.separators.push(separator)
+              card_groups.push(separator)
+              visitor ? oldest-- : oldest++
+            }
+          }
+        
           card_group = document.createElement('div')
           card_group.classList.add('card_group')
           card_groups.push(card_group)
@@ -4196,12 +3337,6 @@ function app_timeline (opts = default_opts, protocol) {
     card_groups.forEach((card_group) => {
       timeline_wrapper.append(card_group)
     })
-    if(cardfilter.length === 0){
-      empty_wrapper.classList.add('active')
-    }
-    else{
-      empty_wrapper.classList.remove('active')
-    }
     const channel = state.net[state.aka.scrollbar]
     channel.send({
       head: [id, channel.send.id, channel.mid++],
@@ -4268,7 +3403,6 @@ function get_theme () {
       border: 1px solid var(--primary_color);
       position: relative;
     }
-
     .main_wrapper .filter_wrapper .timeline_wrapper {
       --s: 15px; /* control the size */
       --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
@@ -4310,12 +3444,32 @@ function get_theme () {
       display: grid;
       gap: 20px;
       grid-template-columns: 12fr;
+      border: 4px solid transparent;
     }
     .main_wrapper .filter_wrapper .timeline_wrapper .card_group > .active{
-      border: 4px solid var(--ac-2);
+      outline: 4px solid var(--ac-1);
     }
     .main_wrapper .filter_wrapper .timeline_wrapper::-webkit-scrollbar {
       display: none;
+    }
+    .main_wrapper .filter_wrapper .timeline_wrapper .separator{
+      background-color: var(--ac-1);
+      text-align: center;
+      margin: 0 4px;
+      border: 1px solid var(--primary_color);
+      position: relative;
+      z-index: 2;
+    }
+    .main_wrapper .filter_wrapper .month_wrapper .current_separator{
+      position: absolute;
+      display: block;
+      top: 0;
+      width: calc(100% - 9px);
+      background-color: var(--ac-1);
+      text-align: center;
+      margin: 0 4px;
+      border: 1px solid var(--primary_color);
+      z-index: 1;
     }
     .main_wrapper .filter_wrapper .year_filter_wrapper{
       --s: 15px; /* control the size */
@@ -4338,7 +3492,8 @@ function get_theme () {
       border: 1px solid var(--primary_color);
     }
     @container(min-width: 400px) {
-      .main_wrapper .filter_wrapper .timeline_wrapper .card_group:last-child{
+      .main_wrapper .filter_wrapper .timeline_wrapper .card_group:last-child,
+      .main_wrapper .filter_wrapper .timeline_wrapper .separator:last-child{
         margin-bottom: 300px;
       }
     }
@@ -4405,7 +3560,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-timeline/app-timeline.js")
-},{"_process":2,"month-filter":32,"scrollbar":41,"timeline-card":50,"timeline-filter":51,"window-bar":54,"year-filter":55}],15:[function(require,module,exports){
+},{"../data/data.json":28,"_process":2,"month-filter":33,"scrollbar":42,"timeline-card":51,"timeline-filter":52,"window-bar":55,"year-filter":56}],15:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   DAY BUTTON COMPONENT
@@ -5200,7 +4355,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/buttons/select-button.js")
-},{"_process":2,"scrollbar":41}],19:[function(require,module,exports){
+},{"_process":2,"scrollbar":42}],19:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   SM ICON BUTTON ALT COMPONENT
@@ -6295,7 +5450,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/comingsoon/comingsoon.js")
-},{"_process":2,"window-bar":54}],26:[function(require,module,exports){
+},{"_process":2,"window-bar":55}],26:[function(require,module,exports){
 (function (process,__filename){(function (){
 const mission_statement = require('manifesto/manifesto')
 const important_documents = require('important-documents')
@@ -6600,7 +5755,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/consortium-page/consortium-page.js")
-},{"_process":2,"app-icon":10,"important-documents":29,"manifesto/manifesto":30,"our-alumni/our-alumni":35,"our-members":37,"tools":53}],27:[function(require,module,exports){
+},{"_process":2,"app-icon":10,"important-documents":30,"manifesto/manifesto":31,"our-alumni/our-alumni":36,"our-members":38,"tools":54}],27:[function(require,module,exports){
 (function (process,__filename){(function (){
 const comingsoon = require('comingsoon')
 const app_footer = require('app-footer')
@@ -6744,6 +5899,1239 @@ function resources (pool) {
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/dat-garden/dat-garden.js")
 },{"_process":2,"app-footer":9,"comingsoon":25}],28:[function(require,module,exports){
+module.exports={
+    "info": {
+      "mission_statement.md": "<p>We, the \"Dat Ecosystem\" members, come together to achieve the following goals:</p>       <ul>         <li>Share our knowledge on building decentralized systems.</li>         <li>Publish our work under permissive, open culture, licenses.</li>         <li>Build decentralized systems that profit the general public and empower users.</li>         <li>Have dat protocols (e.g. <a href=\"https://hypercore-protocol.org/\" target=\"_blank\">hypercore-protocol</a> or similar) as a foundation of our work.</li>         <li>Promote our shared goals with the public.</li>         <li>Develop solutions to shared technical problems.</li>         <li>Find and invite new members that share our goals.</li>         <li>Promote the adoption of shared technology through documentation or standardization.</li>       </ul>       <p>This group is <b>governed by individuals</b> that form together \"<i>the Consortium</i>\". The Consortium works to:</p>       <ul>         <li>Enact our <a href=\"https://github.com/dat-ecosystem/organization/blob/main/code-of-conduct.md\" targer=\"_blank\">code of conduct</a>.</li>         <li>Raise and maintain funds and assets to fulfill the goals.</li>         <li>Use decentralized systems wherever feasible.</li>         <li>Publicly and transparently document the process and offer the public a means to comment.</li>         <li>Coordinate efforts by members.</li>         <li>Communicate on <a href=\"https://github.com/dat-ecosystem/dat-ecosystem.github.io#join-the-dat-ecosystem-chat-network\" target=\"_blank\">discord/cabal</a> </li>       </ul>       <p>         Proposals are submitted as pull requests to /consortium/decisions/{YYY}.{MM}.{DD}-{proposal_name}.md in <a href=\"https://github.com/dat-ecosystem/organization/tree/main\" target=\"_blank\">organization repository.</a><br>         Proposals to change the manifesto are submitted as pull requests to change the manifesto itself.<br>         Proposer needs to tag all consortium members in the pull request and notify consortium members in the active consortium communication channel.<br>       </p>        <p>         Decisions will be done through voting by consortium members. The voting period lasts 2 weeks.<br>         Regular voting items are accepted unless there is opposition by at least one Consortium member. Members may state opposition beforehands.<br>       </p>          <p>         The addition of a member or changes to this Manifesto requires unanimous support by all Consortium members.<br>         The removal of one member requires unanimous support by all Consortium members except by the member in question.<br>         After a consortium member is tagged in a proposals pull request and the consortium communication channel and that member does not respond within 3 months, their consortium membership becomes dormant, which means they do not count as consortium member in the context of deciding about any proposals.<br>         Dormant consortium members can reactivate themselves at any given time to become normal consortium members again unilateraly.<br>         Consortium Members can end their consortium membership and remove themselves from the consortium membership list at any given time unilateraly.<br>       </p>       <p>Consortium members <i>(alphabetic order)</i>:</p>       <ul>         <li><a href=\"https://github.com/cblgh\" target=\"_blank\">Alexander Cobleigh</a></li>         <li><a href=\"https://github.com/serapath\" target=\"_blank\">Alexander Praetorius</a></li>         <li><a href=\"https://github.com/dpaez\" target=\"_blank\">Diego Paez</a></li>         <li><a href=\"https://github.com/frando\" target=\"_blank\">Franz Heinzmann</a></li>         <li><a href=\"https://github.com/zootella\" target=\"_blank\">Kevin Faaborg</a></li>         <li><a href=\"https://github.com/nbreznik\" target=\"_blank\">Nina Breznik</a></li>       <ul>",
+      "important_documents.md": "<ol type=\"1\"> <li> <a href=\"https://github.com/dat-ecosystem/organization/blob/main/code-of-conduct.md\" target=\"_blank\">code of conduct</a> </li><li> <a href=\"https://github.com/dat-ecosystem/organization/blob/main/code-of-conduct-contact.md\" target=\"_blank\">code of conduct - reporting guide</a> </li> <li> <a href=\"https://github.com/dat-ecosystem/comm-comm#readme\" target=\"_blank\">comm comm calls</a> </li><li> <a href=\"https://github.com/dat-ecosystem/organization/tree/main/consortium/meeting%20notes\" target=\"_blank\">consortium meeting notes</a> </li><li> <a href=\"https://github.com/dat-ecosystem/organization/tree/main/assets/logo%20%26%20visuals%20final\" target=\"_blank\">visuals</a> </li><li> <a href=\"https://github.com/dat-ecosystem/organization\" target=\"_blank\">organization repository</a> </li></ol>",
+      "our_members.md": "<table><thead><tr><td> no. </td><td> name </td><td> organization </td></tr></thead><tbody><tr><td> 1 </td><td> <a href=\"https://github.com/cblgh\" target=\"_blank\">Alexander Cobleigh</a> </td><td> Cabal  </td></tr><tr><td> 2 </td><td> <a href=\"https://github.com/serapath\" target=\"_blank\">Alexander Praetorius</a> </td><td> DatDot &amp; WizardAmigos  </td></tr><tr><td> 3 </td><td> <a href=\"https://github.com/dpaez\" target=\"_blank\">Diego Paez</a> </td><td> Geut Studio  </td></tr><tr><td> 4 </td><td> <a href=\"https://github.com/frando\" target=\"_blank\">Franz Heinzmann</a> </td><td> Sonar  </td></tr><tr><td> 5 </td><td> <a href=\"https://github.com/zootella\" target=\"_blank\">Kevin Faaborg</a> </td><td> Ara  </td></tr><tr><td> 6 </td><td> <a href=\"https://github.com/nbreznik\" target=\"_blank\">Nina Breznik</a> </td><td> DatDot &amp; WizardAmigos  </td></tr></tbody></table>",
+      "our_alumni.md": "<table><thead><tr><td> no. </td><td> name </td></tr></thead><tbody><tr><td> 1 </td><td> <a href=\"https://github.com/andrewosh\" target=\"_blank\">Andrew Osheroff</a> </td></tr><tr><td> 2 </td><td> <a href=\"https://twitter.com/bmpvieira\" target=\"_blank\">Bruno Vieira</a> </td></tr><tr><td> 3 </td><td> <a href=\"http://github.com/clkao\" target=\"_blank\">Chia-liang Kao</a> </td></tr><tr><td> 4 </td><td> <a href=\"https://github.com/daniellecrobinson\" target=\"_blank\">Danielle Robinson</a> </td></tr><tr><td> 5 </td><td> <a href=\"http://github.com/davidmarkclements\" target=\"_blank\">David Clements</a> </td></tr><tr><td> 6 </td><td> <a href=\"http://github.com/finnp\" target=\"_blank\">Finn Pauls</a> </td></tr><tr><td> 7 </td><td> <a href=\"http://github.com/RangerMauve\" target=\"_blank\">Georgiy Shibaev</a> </td></tr><tr><td> 8 </td><td> <a href=\"http://github.com/jimpick\" target=\"_blank\">Jim Pick</a> </td></tr><tr><td> 9 </td><td> <a href=\"http://github.com/joehand\" target=\"_blank\">Joe Hand</a> </td></tr><tr><td> 10 </td><td> <a href=\"http://github.com/jbenet\" target=\"_blank\">Juan Batiz-Benet</a> </td></tr><tr><td> 11 </td><td> <a href=\"http://github.com/juliangruber\" target=\"_blank\">Julian Gruber</a> </td></tr><tr><td> 12 </td><td> <a href=\"https://github.com/hackergrrl\" target=\"_blank\">Kira Oakley</a> </td></tr><tr><td> 13 </td><td> <a href=\"http://github.com/kriesse\" target=\"_blank\">Kristina Schneider</a> </td></tr><tr><td> 14 </td><td> <a href=\"https://github.com/martinheidegger\" target=\"_blank\">Martin Heidegger</a> </td></tr><tr><td> 15 </td><td> <a href=\"https://github.com/mafintosh\" target=\"_blank\">Mathias Buus</a> </td></tr><tr><td> 16 </td><td> <a href=\"http://twitter.com/maxogden\" target=\"_blank\">Max Ogden</a> </td></tr><tr><td> 17 </td><td> <a href=\"http://github.com/melaniecebula\" target=\"_blank\">Melanie Cebula</a> </td></tr><tr><td> 18 </td><td> <a href=\"https://github.com/pfrazee\" target=\"_blank\">Paul Frazee</a> </td></tr><tr><td> 19 </td><td> <a href=\"http://github.com/pkafei\" target=\"_blank\">Portia Burton</a> </td></tr><tr><td> 20 </td><td> <a href=\"https://github.com/okdistribute\" target=\"_blank\">Rae McKelvey</a> </td></tr><tr><td> 21 </td><td> <a href=\"http://github.com/taravancil\" target=\"_blank\">Tara Vancil</a> </td></tr><tr><td> 22 </td><td> <a href=\"https://github.com/yoshuawuyts\" target=\"_blank\">Yoshua Wuyts</a> </td></tr><tr><td> 23 </td><td> <a href=\"http://github.com/ywyw\" target=\"_blank\">Yuhong Wang</a> </td></tr></tbody></table>",
+      "tools": {
+        "mastodon": "<a target=\"_blank\" href=\"https://fosstodon.org/@dat_ecosystem\">mastodon</a>",
+        "opencollective": "<a target=\"_blank\" href=\"https://opencollective.com/dat\">opencollective</a>",
+        "matrix": "<a target=\"_blank\" href=\"https://matrix.to/#/%23datproject_discussions:gitter.im\">matrix</a>",
+        "twitter": "<a target=\"_blank\" href=\"https://twitter.com/dat_ecosystem\">twitter</a>",
+        "github": "<a target=\"_blank\" href=\"https://github.com/dat-ecosystem\">github</a>",
+        "cabal": "<a target=\"_blank\" href=\"https://github.com/dat-ecosystem/dat-ecosystem.github.io/blob/main/README.md#connect-to-cabal-with-cli-or-download-cabal-desktop\">cabal</a>",
+        "Jitsi": "<a target=\"_blank\" href=\"https://meet.jit.si/dat-ecosystem\">Jitsi</a>",
+        "discord": "<a target=\"_blank\" href=\"https://discord.gg/egsvGc9TkQ\">discord</a>",
+        "bigbluebutton": "<a target=\"_blank\" href=\"https://bigbluebutton.org/\">bigbluebutton</a>",
+        "youtube": "<a target=\"_blank\" href=\"https://www.youtube.com/@DatEcosystem\">youtube</a>",
+        "hackmd": "<a target=\"_blank\" href=\"https://hackmd.io/@T6Wf5EsOQKe-6wyPjJPtuw/Hycn0F63r/%2Fx_4tQHwtT3u7vrksrposHw\">hackmd</a>",
+        "protonmail": "<a target=\"_blank\" href=\"dat-ecosystem@protonmail.com\">protonmail</a>",
+        "reddit": "<a target=\"_blank\" href=\"https://www.reddit.com/r/dat_ecosystem/\">reddit</a>",
+        "keet": "<a target=\"_blank\" href=\"https://keet.io/\">keet</a>"
+      }
+    },
+    "home" : [],
+    "timeline": [
+      {
+        "title": "dat - brainstorming an idea",
+        "date": "October 12, 2011",
+        "time": "",
+        "link": "https://rufuspollock.com/2011/10/17/weekly-update-rufus-pollock-2/",
+        "desc": "Max Ogden chats with Rufus Pollock about a changes protocol for data to allow diffing/merging and supports micro-schemas at the Open Government Data Camp",
+        "tags": [
+          "article"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "Knight Foundation Funding ($50.000)",
+        "date": "June 23, 2013",
+        "time": "",
+        "link": "https://web.archive.org/web/20130810075932/http://www.knightfoundation.org/grants/201346305/",
+        "desc": "Brings dat (as http://dat-data.com) from an idea to the pre-alpha stage",
+        "tags": [
+          "grant"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "dat - initial readme",
+        "date": "June 27, 2013",
+        "time": "",
+        "link": "https://github.com/dat-ecosystem/dat/tree/464679267049899eafa345125a0f2212f91be456",
+        "desc": "Dat is created by Max Ogden in 2013 to standardize the way data analysts collaborate on the changes they make to data sets. Rufus Pollock from the Open Knowledge Foundation describes it as git (and github) for data",
+        "tags": [
+          "milestone"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "dat-data website",
+        "date": "October 12, 2023",
+        "time": "",
+        "link": "https://dat-ecosystem-archive.github.io/dat-data.com/",
+        "desc": "First website is released",
+        "tags": [
+          "website"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "twitter account",
+        "date": "November 01, 2013",
+        "time": "",
+        "link": "https://twitter.com/dat_ecosystem",
+        "desc": "@dat_protocol twitter account is created (later renamed to @dat_ecosystem)",
+        "tags": [
+          "asset"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "introducing dat",
+        "date": "November 11, 2013",
+        "time": "",
+        "link": "https://www.youtube.com/watch?v=FX7qSwz3SCk",
+        "desc": "Max Ogden presents Dat at the Strata Conference in London",
+        "tags": [
+          "talk"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "Alfred P. Sloan Foundation Funding ($260.000)",
+        "date": "April 02, 2014",
+        "time": "",
+        "link": "https://usopendata.org/2014/04/02/dat/",
+        "desc": "Helps dat to become an US ODI (Open Data Institute) project",
+        "tags": [
+          "Open Data Institute"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "peermaps",
+        "date": "May 22, 2014",
+        "time": "",
+        "link": "https://peermaps.org/",
+        "desc": "Peermaps is born (peer to peer cartography)",
+        "tags": [
+          "project"
+        ],
+        "active_state": "PAUSED"
+      },
+      {
+        "title": "dat - alpha",
+        "date": "August 19, 2014",
+        "time": "",
+        "link": "https://usopendata.org/2014/08/19/dat-alpha/",
+        "desc": "Dat Alpha version is released",
+        "tags": [
+          "milestone"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "Alfred P. Sloan",
+        "date": "April 03, 2015",
+        "time": "",
+        "link": "https://donations.vipulnaik.com/donor.php?donor=Sloan+Foundation",
+        "desc": "Alfred P. Sloan Foundation Funding ($640.000)",
+        "tags": [
+          "grant"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "dat - beta",
+        "date": "July 29, 2015",
+        "time": "",
+        "link": "https://usopendata.org/2015/07/29/dat-beta/",
+        "desc": "Dat Beta version is released -  the version focused on tabular datasets. It turns out to be too complex for typical use cases",
+        "tags": [
+          "milestone"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "designing dat 1.0",
+        "date": "December 04, 2015",
+        "time": "",
+        "link": "https://vimeo.com/147914258",
+        "desc": "Designing dat 1.0, rOpenSci Community Call v8",
+        "tags": [
+          "presentation"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "hyperdrive release",
+        "date": "December 02, 2015",
+        "time": "",
+        "link": "https://github.com/hypercore-protocol/hyperdrive/releases/tag/v1.0.1",
+        "desc": "Hyperdrive v1.0.0 is released",
+        "tags": [
+          "milestone"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "hypercore release",
+        "date": "December 20, 2015",
+        "time": "",
+        "link": "https://github.com/hypercore-protocol/hypercore/releases/tag/v1.0.0",
+        "desc": "Hypercore v1.0.0 is released",
+        "tags": [
+          "milestone"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "alpha testing",
+        "date": "December 21, 2015",
+        "time": "",
+        "link": "/",
+        "desc": "Alpha testing with pilot projects in science, including Sloan Digital Sky Survey (Astronomy), iRNA-Seq (Bioinformatics – RNA), and Bionode (Bioinformatics – DNA)Hypercore v1.0.0 is released",
+        "tags": [
+          "milestone"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "dat 1.0.",
+        "date": "February 01, 2016",
+        "time": "",
+        "link": "https://blog.dat-ecosystem.org/dat-1-0-is-ready/",
+        "desc": "Dat 1.0. is ready",
+        "tags": [
+          "milestone"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "Knight Foundation Funding ($420.000)",
+        "date": "February 01, 2016",
+        "time": "",
+        "link": "https://blog.dat-ecosystem.org/announcing-publicbits-org/",
+        "desc": "Knight Foundation Grant ($420.000) for Publicbeats project",
+        "tags": [
+          "grant"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "Code for Science and Society",
+        "date": "September 01, 2016",
+        "time": "",
+        "link": "https://codeforscience.org/about/",
+        "desc": "Code for Science and Society is founded - to support the Dat Project as a fiscal sponsor bundled with strategic project support",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "first meetups",
+        "date": "December 01, 2016",
+        "time": "",
+        "link": "https://blog.datproject.org/tag/community/",
+        "desc": "The first meetups for ‘Coding for Science & Society’ are held in Berlin, Oakland, and Portland; organized by the Dat team",
+        "tags": [
+          "community"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "cli tool",
+        "date": "January 09, 2017",
+        "time": "",
+        "link": "https://blog.dat-ecosystem.org/preview-the-new-dat-cli/",
+        "desc": "New Dat CLI is released",
+        "tags": [
+          "milestone"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "beaker browser",
+        "date": "February 07, 2017",
+        "time": "",
+        "link": "https://www.electronjs.org/blog/beaker-browser",
+        "desc": "Beaker browser pre-release",
+        "tags": [
+          "project"
+        ],
+        "active_state": "INACTIVE"
+      },
+      {
+        "title": "dat desktop",
+        "date": "February 12, 2017",
+        "time": "",
+        "link": "https://blog.dat-ecosystem.org/dat-desktop-is-here/",
+        "desc": "Dat desktop is released",
+        "tags": [
+          "milestone"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "dat 2.0",
+        "date": "June 01, 2017",
+        "time": "",
+        "link": "https://blog.dat-ecosystem.org/dat-sleep-release/",
+        "desc": "Dat 2.0 is released",
+        "tags": [
+          "milestone"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "dat whitepaper",
+        "date": "June 01, 2017",
+        "time": "",
+        "link": "https://github.com/dat-ecosystem-archive/whitepaper/blob/master/dat-paper.pdf",
+        "desc": "Dat whitepaper is released",
+        "tags": [
+          "whitepaper"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "Moore Foundation Grant ($110.000)",
+        "date": "September 14, 2017",
+        "time": "",
+        "link": "https://blog.dat-ecosystem.org/dat-in-the-lab/",
+        "desc": "Moore Foundation grant for collaboration of dat and California Digital Library (CDL)",
+        "tags": [
+          "grant"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "organizational changes",
+        "date": "December 20, 2017",
+        "time": "",
+        "link": "https://blog.datproject.org/2017/12/20/organization-changes-dat-css/",
+        "desc": "Organizational Changes for Dat and Code for Science & Society",
+        "tags": [
+          "organization"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "arso",
+        "date": "March 02, 2018",
+        "time": "",
+        "link": "https://arso.xyz/",
+        "desc": "arso joins the ecosystem",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "multifeed",
+        "date": "April 12, 2018",
+        "time": "",
+        "link": "https://github.com/kappa-db/multifeed/releases/tag/v1.0.0",
+        "desc": "Multi-writer hypercore (multifeed) is released",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "Beaker browser and the Dat protocol analysis",
+        "date": "May 01, 2018",
+        "time": "",
+        "link": "https://bernsteinbear.com/dat-paper/",
+        "desc": "Beaker browser and the Dat protocol: An analysis for COMP 117: Internet-scale Distributed Systems is released",
+        "tags": [
+          "scientific article"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "kappa core",
+        "date": "May 13, 2018",
+        "time": "",
+        "link": "https://github.com/kappa-db/kappa-core/releases/tag/v1.0.0",
+        "desc": "Kappa Core 1.0 is released (minimal append only DB)",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "cabal",
+        "date": "May 13, 2018",
+        "time": "",
+        "link": "https://github.com/cabal-club/cabal-core/releases/tag/v1.0.0",
+        "desc": "Cabal core 1.0 is release",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "Mozila Open Source Support Grant ($34,000)",
+        "date": "September 05, 2018",
+        "time": "",
+        "link": "https://blog.dat-ecosystem.org/moss-2019-summary/",
+        "desc": "Dat Project Receives Mozilla Open Source Support Grant",
+        "tags": [
+          "grant"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "dat open collective",
+        "date": "October 05, 2018",
+        "time": "",
+        "link": "https://opencollective.com/dat",
+        "desc": "Dat Open Collective page is set up for recurring donations",
+        "tags": [
+          "donations"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "how dat works",
+        "date": "November 01, 2018",
+        "time": "",
+        "link": "https://dat-ecosystem-archive.github.io/how-dat-works/",
+        "desc": "How dat works visualization project is started",
+        "tags": [
+          "asset"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "Handshake Grant ($100.000)",
+        "date": "December 01, 2018",
+        "time": "",
+        "link": "https://blog.dat-ecosystem.org/dat-receives-two-new-grants/",
+        "desc": "Handshake Grant is received",
+        "tags": [
+          "grant"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "Samsung NEXT Stack Zero Grant ($63.000)",
+        "date": "December 02, 2018",
+        "time": "",
+        "link": "https://blog.dat-ecosystem.org/dat-receives-two-new-grants/",
+        "desc": "Samsung NEXT Stack Zero grant is received",
+        "tags": [
+          "grant"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "dat hack unconference",
+        "date": "May 19, 2019",
+        "time": "",
+        "link": "https://events.dat.foundation/2019/",
+        "desc": "Dat Hack Unconference in Berlin",
+        "tags": [
+          "event"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "Wireline Donation ($50,000)",
+        "date": "June 01, 2019",
+        "time": "",
+        "link": "https://github.com/datproject/organization#2019",
+        "desc": "Dat Project receives donation from Wireline",
+        "tags": [
+          "donation"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "dat consortium",
+        "date": "December 01, 2019",
+        "time": "",
+        "link": "https://hackmd.io/@T6Wf5EsOQKe-6wyPjJPtuw/Hycn0F63r/%2FHbu0ffkwQS6KIO_97fH-Mw",
+        "desc": "Dat consortium is formed",
+        "tags": [
+          "organization"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "ara",
+        "date": "December 01, 2019",
+        "time": "",
+        "link": "https://ara.one/",
+        "desc": "Ara joins the ecosystem",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "consento",
+        "date": "December 01, 2019",
+        "time": "",
+        "link": "https://consento.org/",
+        "desc": "Consento joins the ecosystem",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "datdot",
+        "date": "December 01, 2019",
+        "time": "",
+        "link": "https://datdot.org/",
+        "desc": "DatDot joins the ecosystem",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "decentlabs",
+        "date": "December 01, 2019",
+        "time": "",
+        "link": "https://decentlabs.se/",
+        "desc": "Decentlabs joins the ecosystem",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "geut",
+        "date": "December 01, 2019",
+        "time": "",
+        "link": "https://www.geutstudio.com/",
+        "desc": "Geut joins the ecosystem",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "digital democracy",
+        "date": "December 01, 2019",
+        "time": "",
+        "link": "https://www.digital-democracy.org/",
+        "desc": "Digital Democracy joins the ecosystem",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "arso - sonar release",
+        "date": "December 17, 2019",
+        "time": "",
+        "link": "https://arso.xyz/blog/2019-12-17-introducing-sonar",
+        "desc": "Arso introduces Sonar",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "Hypercore protocol graduates from Dat Ecosystem",
+        "date": "May 15, 2020",
+        "time": "",
+        "link": "https://blog.dat-ecosystem.org/dat-protocol-renamed-hypercore-protocol/",
+        "desc": "Dat protocol is renamed to Hypercore protocol",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "NLnet grant ($50.000)",
+        "date": "July 01, 2020",
+        "time": "",
+        "link": "https://github.com/datproject/organization#2020",
+        "desc": "NLnet grant is recieved for a Rust port",
+        "tags": [
+          "grant"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "agregore",
+        "date": "June 19, 2020",
+        "time": "",
+        "link": "https://github.com/AgregoreWeb/agregore-browser/releases/tag/v1.0.1-0",
+        "desc": "Agregore browser is pre-released",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "dat conference",
+        "date": "July 30, 2020",
+        "time": "",
+        "link": "https://www.youtube.com/channel/UCbLY5Qg3t3OJbxZZUioqMOQ",
+        "desc": "Dat online conference is organized",
+        "tags": [
+          "event"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "agregore",
+        "date": "October 14, 2020",
+        "time": "",
+        "link": "https://agregore.mauve.moe/",
+        "desc": "Agregore joins the ecosystem",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "tradle",
+        "date": "November 09, 2020",
+        "time": "",
+        "link": "https://tradle.io/",
+        "desc": "Tradle joins the ecosystem",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "gateway browser",
+        "date": "January 11, 2020",
+        "time": "",
+        "link": "https://gitlab.com/gateway-browser/gateway",
+        "desc": "Gateway browser joins the ecosystem",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "hyperbee",
+        "date": "December 03, 2020",
+        "time": "",
+        "link": "https://github.com/hypercore-protocol/hyperbee/releases/tag/v1.0.0",
+        "desc": "Hyperbee 1.0 is released",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "earthstar",
+        "date": "January 10, 2021",
+        "time": "",
+        "link": "https://github.com/earthstar-project/earthstar",
+        "desc": "Earthstar joins the ecosystem",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "dat manifesto",
+        "date": "March 09, 2021",
+        "time": "",
+        "link": "https://github.com/dat-ecosystem/organization/blob/main/MANIFESTO.md",
+        "desc": "Dat consortium forms Dat Ecosystem and consoritum members sign a manifesto",
+        "tags": [
+          "organization"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "Code for Science and Society grant ($20.000)",
+        "date": "December 21, 2021",
+        "time": "",
+        "link": "https://blog.dat-ecosystem.org/dat-ecosystem-relaunch/",
+        "desc": "Archiving and ecosystem launch grant",
+        "tags": [
+          "grant"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "socket supply",
+        "date": "April 15, 2022",
+        "time": "",
+        "link": "https://socketsupply.co/",
+        "desc": "Socket Supply joins the ecosystem",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "hyperswarm",
+        "date": "July 02, 2021",
+        "time": "",
+        "link": "https://github.com/hyperswarm/hyperswarm/releases/tag/v3.0.0-beta2",
+        "desc": "Hyperswarm v3.0.0-beta is released",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "autobase",
+        "date": "July 02, 2021",
+        "time": "",
+        "link": "https://github.com/hypercore-protocol/autobase/releases/tag/v1.0.0-alpha.0",
+        "desc": "Autobase v3.0.0-beta is released",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "dat ecosystem archive",
+        "date": "August 01, 2021",
+        "time": "",
+        "link": "https://github.com/dat-ecosystem-archive",
+        "desc": "Dat ecosystem archive is created to archive all the historic repositories",
+        "tags": [
+          "organization"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "geut - sher",
+        "date": "October 08, 2021",
+        "time": "",
+        "link": "https://sher.geutstudio.com/",
+        "desc": "Geut studio introduces new project Sher",
+        "tags": [
+          "organization"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "ahau",
+        "date": "April 30, 2022",
+        "time": "",
+        "link": "https://ahau.io/",
+        "desc": "ahau joins the ecosystem",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "keet",
+        "date": "July 25, 2022",
+        "time": "",
+        "link": "https://keet.io/",
+        "desc": "hypercore protocol team releases Keet",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "dcent reads",
+        "date": "August 20, 2022",
+        "time": "",
+        "link": "https://www.dcent-reads.org/#/read",
+        "desc": "Dcent Reads, a platform for decentralised publishing joins the ecosystem",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
+        "title": "wizard amigos",
+        "date": "August 27, 2022",
+        "time": "",
+        "link": "https://wizardamigos.com",
+        "desc": "wizard amigos join the ecosystem",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      }
+      ,{
+        "title": "lumeweb",
+        "date": "September 4, 2022",
+        "time": "",
+        "link": "https://lumeweb.com/",
+        "desc": "lumeweb join the ecosystem",
+        "tags": ["project"],
+        "active_state": "ACTIVE"
+      },{
+        "title": "wizard amigos code camp",
+        "date": "September 26, 2022",
+        "time": "",
+        "link": "https://wizardamigos.com/codecamp2022/",
+        "desc": "wizard amigos code camp is organized in Wales",
+        "tags": ["event"],
+        "active_state": "ACTIVE"
+      }, {
+        "title": "HOP",
+        "date": "November 23, 2022",
+        "time": "",
+        "link": "https://www.healthscience.network/",
+        "desc": "HOP (health oracle protocol) joins the ecosystem",
+        "tags": ["project"],
+        "active_state": "ACTIVE"
+      },{
+        "title": "dat ecosystem visualized",
+        "date": "January 07, 2023",
+        "time": "",
+        "link": "https://micahscopes.github.io/webscape-wanderer/",
+        "desc": "webscape wanderer visualizer engine is created to visualize dat ecosystem",
+        "tags": ["presentation"],
+        "active_state": "ACTIVE"
+      },{
+        "title": "webscape wanderer",
+        "date": "January 08, 2023",
+        "time": "",
+        "link": "https://github.com/micahscopes/webscape-wanderer/",
+        "desc": "webscape wanderer joins the ecosystem",
+        "tags": ["project"],
+        "active_state": "ACTIVE"
+      },{
+        "title": "interview series",
+        "date": "May 03, 2023",
+        "time": "",
+        "link": "https://blog.dat-ecosystem.org/staying-connected/",
+        "desc": "video interviews launch",
+        "tags": ["presentation"],
+        "active_state": "ACTIVE"
+      },{
+        "title": "dxos",
+        "date": "May 15, 2023",
+        "time": "",
+        "link": "https://dxos.org/",
+        "desc": "dxos joins the ecosystem",
+        "tags": ["project"],
+        "active_state": "ACTIVE"
+      },{
+        "title": "hyper-nostr",
+        "date": "July 05, 2023",
+        "time": "",
+        "link": "https://github.com/Ruulul/hyper-nostr",
+        "desc": "hypercore-nostr relay is published and project joins the ecosystem",
+        "tags": ["project"],
+        "active_state": "ACTIVE"
+      },{
+        "title": "demo & AMA sessions",
+        "date": "August 27, 2023",
+        "time": "",
+        "link": "https://blog.dat-ecosystem.org/tags/demo/",
+        "desc": "demo sessions and AMA commm comm calls launch",
+        "tags": ["presentation"],
+        "active_state": "ACTIVE"
+      },{
+        "title": "wizard amigos code camp",
+        "date": "October 01, 2023",
+        "time": "",
+        "link": "https://wizardamigos.com/codecamp2023/",
+        "desc": "wizard amigos code camp is organized in Portugal",
+        "tags": ["event"],
+        "active_state": "ACTIVE"
+      },{
+        "title": "new dat ecosystem web page is released",
+        "date": "January 11, 2024",
+        "time": "",
+        "link": "https://dat-ecosystem.org",
+        "desc": "Dat ecosystem releases new web page",
+        "tags": ["organization"],
+        "active_state": "ACTIVE"
+      }
+    ],
+    "projects": [
+      {
+        "project_name": "Agregore",
+        "project_desc": "Agregore, a browser for the distributed web, facilitates peer-to-peer data sharing without central servers, supporting protocols like BitTorrent and IPFS for direct loading and sharing of content.",
+        "project_website": "https://agregore.mauve.moe/",
+        "project_socials": [
+          {
+            "github": "https://github.com/RangerMauve/agregore-browser"
+          },
+          {
+            "discord": "https://discord.com/invite/QMthd4Y"
+          }
+        ],
+        "project_tags": [
+          "hypercore",
+          "browser",
+          "p2p",
+          "electron"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "ahau",
+        "project_desc": "Āhau is a Whānau Data Platform that helps whānau-based communities (whānau, hapū, Iwi) capture, preserve, and share important information and histories into secure, whānau managed databases and servers.",
+        "project_website": "https://www.ahau.io/",
+        "project_socials": [
+          {
+            "github": "https://www.hypercore.com/ahau"
+          },
+          {
+            "discord": "https://chat.ahau.io/"
+          }
+        ],
+        "project_tags": [
+          "hypercore",
+          "māori",
+          "genealogy"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "ara",
+        "project_desc": "Ara represents a new era for content on the internet. Where we get our voices back. Where what's ours is ours. All content, decentralized, secure, owned, distributed, paid for, and rewarded between peers.",
+        "project_website": "https://ara.one/",
+        "project_socials": [
+          {
+            "github": "https://github.com/AraBlocks"
+          },
+          {
+            "discord": "https://discord.gg/eUMzA4Y"
+          }
+        ],
+        "project_tags": [
+          "Hypercore",
+          "nft",
+          "subscription"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "cabal",
+        "project_desc": "Cabal is an experimental P2P community chat platform where servers are unnecessary, everything runs locally, and each community is identified by a secret key, offering both internet and local network connectivity.",
+        "project_website": "https://cabal.chat/",
+        "project_socials": [
+          {
+            "github": "https://github.com/cabal-club"
+          }
+        ],
+        "project_tags": [
+          "hypercore", 
+          "cable", 
+          "p2p", 
+          "chat", 
+          "desktop", 
+          "terminal"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "datdot",
+        "project_desc": "DatDot enables peer-to-peer sharing of storage space and data seeding to make data sovereignity and portability more accessible and reliable for users.",
+        "project_website": "https://datdot.org/",
+        "project_socials": [
+          {
+            "github": "https://github.com/datdotorg"
+          },
+          {
+            "twitter": "https://twitter.com/datdotorg"
+          },
+          {
+            "discord": "https://discord.com/invite/3CJuGxkyyE"
+          }
+        ],
+        "project_tags": [
+          "hypercore", 
+          "p2p", 
+          "hosting network", 
+          "backup"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "dxos",
+        "project_desc": "DXOS provides developers with everything they need to build real-time, collaborative apps which run entirely on the client, and communicate peer-to-peer, without servers.",
+        "project_website": "https://dxos.org/",
+        "project_socials": [
+          {
+            "github": "https://github.com/dxos/dxos"
+          },
+          {
+            "discord": "https://discord.gg/eXVfryv3sW"
+          }
+        ],
+        "project_tags": [
+          "hypercore", 
+          "p2p", 
+          "offline", 
+          "platform"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "earthstar",
+        "project_desc": "Earthstar is a small and resilient distributed storage protocol designed with a strong focus on simplicity and versatility, with the social realities of peer-to-peer computing kept in mind.",
+        "project_website": "https://github.com/earthstar-project/earthstar",
+        "project_socials": [
+          {
+            "github": "https://github.com/earthstar-project/earthstar"
+          },
+          {
+            "discord": "https://discord.gg/5b8q7VtunU"
+          }
+        ],
+        "project_tags": [
+          "p2p", 
+          "key-value database", 
+          "offline"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "gatewaybrowser",
+        "project_desc": "An experimental mobile browser that aims to help build a sustainable community-owned P2P web.",
+        "project_website": "https://twitter.com/GatewayBrowser",
+        "project_socials": [
+          {
+            "github": "https://hypercore.com/gateway-browser/gateway"
+          },
+          {
+            "twitter": "https://twitter.com/GatewayBrowser"
+          }
+        ],
+        "project_tags": [
+          "hypercore", 
+          "mobile", 
+          "browser"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "hop",
+        "project_desc": "We are building a choherence protocol based on peer to peer open source software and toolkit that empower everyone to have sovereignity over data that shapes the health of the world. ",
+        "project_website": "https://www.healthscience.network/",
+        "project_socials": [
+          {
+            "github": "https://github.com/healthscience"
+          },
+          {
+            "discord": "https://discord.gg/UZWgrjZZXK"
+          }
+        ],
+        "project_tags": [
+          "hypercore", 
+          "health oracle"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "hyper-nostr",
+        "project_desc": "The goal of this tool is to behave as a public relay; think of the chosen topic as a public relay, where you can send and receive notes from your peers!",
+        "project_website": "https://github.com/Ruulul/hyper-nostr",
+        "project_socials": [
+          {
+            "github": "https://github.com/Ruulul/hyper-nostr"
+          },
+          {
+            "discord": "https://discord.gg/8jvhQYKnwQ"
+          }
+        ],
+        "project_tags": [
+          "hypercore", 
+          "nostr", 
+          "relay"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "hypercore-protocol",
+        "project_desc": "Hypercore is a secure, distributed append-only log built for sharing large datasets and streams of real-time data.",
+        "project_website": "https://docs.holepunch.to/building-blocks/hypercore",
+        "project_socials": [
+          {
+            "github": "https://github.com/holepunchto/hypercore"
+          },
+          {
+            "discord": "https://discord.gg/qkV4YMwHgZ"
+          }
+        ],
+        "project_tags": [
+          "hypercore", 
+          "p2p", 
+          "protocol"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "Keet",
+        "project_desc": "Keet only shares end-to-end encrypted data between the participants in every call. Without middlemen, third-parties, or servers, there’s nobody left who can snoop on calls, leak or collect data.",
+        "project_website": "https://keet.io/",
+        "project_socials": [
+          {
+            "twitter": "https://twitter.com/keet_io"
+          },
+          {
+            "discord": "https://discord.gg/znw6KfTyw8"
+          }
+        ],
+        "project_tags": [
+          "hypercore", 
+          "p2p", 
+          "chat", 
+          "video", 
+          "electron"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "peermaps",
+        "project_desc": "Peermaps is a distributed, offline-friendly alternative to commercial map providers such as google maps. Instead of fetching data from a centralized tile service, your computer fetches map data from other peers across the network.",
+        "project_website": "https://peermaps.org/",
+        "project_socials": [
+          {
+            "github": "https://github.com/peermaps"
+          }
+        ],
+        "project_tags": [
+          "hypercore", 
+          "p2p", 
+          "OpenStreetMap", 
+          "offline"
+        ],
+        "project_active_state": "PAUSED"
+      },
+      {
+        "project_name": "peershare",
+        "project_desc": "PeerShare enables you to share files to your friends, family, colleagues etc, using peer-to-peer technology. With a clean, easy to read interface, you can share your files right away.",
+        "project_website": "https://peershare.lone-wolf.software/",
+        "project_socials": [
+          {
+            "github": "https://github.com/connor-davis/peershare"
+          },
+          {
+            "twitter": "https://twitter.com/PeerShareApp"
+          },
+          {
+            "discord": "https://discord.gg/U8sYVMts4W"
+          }
+        ],
+        "project_tags": [
+          "hypercore"
+        ],
+        "project_active_state": "INACTIVE"
+      },
+      {
+        "project_name": "picostack",
+        "project_desc": "0% Backend, 10'000% Frontend",
+        "project_website": "https://pico-todo.surge.sh/",
+        "project_socials": [
+          {
+            "github": "https://github.com/telamon/picostack"
+          },
+          {
+            "discord": "https://discord.com/invite/8RMRUPZ9RS"
+          }
+        ],
+        "project_tags": [
+          "hypercore", 
+          "pico", 
+          "blockend"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "sher",
+        "project_desc": "It's simple. You create your show and share the link with your audience.",
+        "project_website": "https://sher.geutstudio.com/",
+        "project_socials": [
+          {
+            "twitter": "https://twitter.com/the_sher_app"
+          }
+        ],
+        "project_tags": [
+          "hypercore", 
+          "live-streaming", 
+          "audio"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "socket supply",
+        "project_desc": "Build mobile and destkop apps for any OS using HTML, CSS, and JavaScript. Connect users with modern P2P that can make the cloud entirely optional.",
+        "project_website": "https://socketsupply.co/",
+        "project_socials": [
+          {
+            "github": "https://github.com/socketsupply"
+          },
+          {
+            "twitter": "https://twitter.com/socketsupply"
+          },
+          {
+            "discord": "https://discord.gg/YPV32gKCsH"
+          }
+        ],
+        "project_tags": [
+          "runtime", 
+          "web", 
+          "p2p", 
+          "native apps"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "sonar",
+        "project_desc": "Sonar is based on the Hypercore Protocol and part of the Dat ecosystem of peer-to-peer tools.",
+        "project_website": "https://sonar.dev.arso.xyz/",
+        "project_socials": [
+          {
+            "github": "https://github.com/arso-project"
+          }
+        ],
+        "project_tags": [
+          "hypercore", 
+          "kappa", 
+          "p2p", 
+          "search", 
+          "database"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "webscape-wanderer",
+        "project_desc": "An interactive visualization engine for open source ecosystems",
+        "project_website": "https://micahscopes.github.io/webscape-wanderer/",
+        "project_socials": [
+          {
+            "github": "https://github.com/micahscopes/webscape-wanderer/"
+          },
+          {
+            "twitter": "https://twitter.com/micahscopes"
+          }
+        ],
+        "project_tags": [
+          "hypercore", 
+          "web-gl", 
+          "three-js", 
+          "3D"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "wizardamigos",
+        "project_desc": "Wizard Amigos is a global community of self-employed nomadic developers, technologists, creators, problem solvers, thinkers, activists, researchers, artists, and individuals from diverse backgrounds who share a common passion for technology and open collaboration.",
+        "project_website": "https://wizardamigos.com/",
+        "project_socials": [
+          {
+            "twitter": "https://twitter.com/wizardamigos"
+          },
+          {
+            "discord": ""
+          }
+        ],
+        "project_tags": [
+          "p2p", 
+          "workshop", 
+          "code camp"
+        ],
+        "project_active_state": "ACTIVE"
+      }
+    ]
+}
+  
+},{}],29:[function(require,module,exports){
 (function (process,__filename){(function (){
 const cover_app = require('app-cover')
 const app_timeline_mini = require('app-timeline-mini')
@@ -6934,7 +7322,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/home-page/home-page.js")
-},{"_process":2,"app-about-us":7,"app-cover":8,"app-footer":9,"app-projects-mini":11,"app-timeline-mini":13}],29:[function(require,module,exports){
+},{"_process":2,"app-about-us":7,"app-cover":8,"app-footer":9,"app-projects-mini":11,"app-timeline-mini":13}],30:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 /******************************************************************************
@@ -7121,7 +7509,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/important-documents/important-documents.js")
-},{"_process":2,"window-bar":54}],30:[function(require,module,exports){
+},{"_process":2,"window-bar":55}],31:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const scrollbar = require('scrollbar')
@@ -7422,7 +7810,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/manifesto/manifesto.js")
-},{"_process":2,"scrollbar":41,"window-bar":54}],31:[function(require,module,exports){
+},{"_process":2,"scrollbar":42,"window-bar":55}],32:[function(require,module,exports){
 (function (process,__filename){(function (){
 const day_button = require('buttons/day-button')
 /******************************************************************************
@@ -7631,7 +8019,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/month-card/month-card.js")
-},{"_process":2,"buttons/day-button":15}],32:[function(require,module,exports){
+},{"_process":2,"buttons/day-button":15}],33:[function(require,module,exports){
 (function (process,__filename){(function (){
 const month_card = require('month-card')
 const scrollbar = require('scrollbar')
@@ -7964,7 +8352,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/month-filter/month-filter.js")
-},{"_process":2,"month-card":31,"scrollbar":41}],33:[function(require,module,exports){
+},{"_process":2,"month-card":32,"scrollbar":42}],34:[function(require,module,exports){
 (function (process,__filename){(function (){
 const icon_button = require('buttons/icon-button')
 const logo_button = require('buttons/logo-button')
@@ -8233,15 +8621,15 @@ function navbar (opts = default_opts, protocol) {
     // @TODO: PROBLEM: this makes navbar know what is active, but it doesnt highlight it yet
   }
   function do_page_change (page, head, { be_channel, ex_channel, up_channel }) {
-    if (be_channel) be_channel.send({ // new active nav button
-      head: [id, be_channel.send.id, be_channel.mid++],
-      refs: { cause: head },
-      type: 'activate',
-    })
     if (ex_channel) ex_channel.send({ // old active nav button
       head: [id, ex_channel.send.id, ex_channel.mid++],
       refs: { cause: head },
       type: 'inactivate',
+    })
+    if (be_channel) be_channel.send({ // new active nav button
+      head: [id, be_channel.send.id, be_channel.mid++],
+      refs: { cause: head },
+      type: 'activate',
     })
     if (up_channel) up_channel.send({ // send parent to update page content
       head: [id, up_channel.send.id, up_channel.mid++],
@@ -8255,16 +8643,15 @@ function navbar (opts = default_opts, protocol) {
     const ex_channel = state.net[state.status.active_button]
     state.status.active_button = state.aka[page]
     const be_channel = state.net[state.status.active_button]
-
-    if (be_channel) be_channel.send({ // new active nav button
-      head: [id, be_channel.send.id, be_channel.mid++],
-      refs: { cause: head },
-      type: 'activate',
-    })
     if (ex_channel) ex_channel.send({ // old active nav button
       head: [id, ex_channel.send.id, ex_channel.mid++],
       refs: { cause: head },
       type: 'inactivate',
+    })
+    if (be_channel) be_channel.send({ // new active nav button
+      head: [id, be_channel.send.id, be_channel.mid++],
+      refs: { cause: head },
+      type: 'activate',
     })
   }
   function on_toggle_terminal () {
@@ -8399,7 +8786,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/navbar/navbar.js")
-},{"_process":2,"buttons/icon-button":16,"buttons/logo-button":17,"buttons/text-button":23}],34:[function(require,module,exports){
+},{"_process":2,"buttons/icon-button":16,"buttons/logo-button":17,"buttons/text-button":23}],35:[function(require,module,exports){
 module.exports=[
   {"name": "Andrew Osheroff", "link": "https://github.com/andrewosh"},
   {"name": "Bruno Vieira", "link": "https://twitter.com/bmpvieira"},
@@ -8425,13 +8812,13 @@ module.exports=[
   {"name": "Yoshua Wuyts", "link": "https://github.com/yoshuawuyts"},
   {"name": "Yuhong Wang", "link": "http://github.com/ywyw"}
 ]
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
-const members = require('./members.json');
+const alumni = require('./alumni.json');
 
 /******************************************************************************
-  OUR MEMBERS COMPONENT
+  OUR alumni COMPONENT
 ******************************************************************************/
 // ----------------------------------------
 // MODULE STATE & ID
@@ -8481,34 +8868,34 @@ function our_alumni (opts = default_opts, protocol) {
   const el = document.createElement('div')
   const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
-  shadow.innerHTML = `<div class="our_member">
+  shadow.innerHTML = `<div class="our_alumni">
     <div class="windowbar"></div>
-    <div class="member_content">
-      <h2>## our members</h2>
+    <div class="alumni_content">
+      <h2>## our alumni</h2>
     </div>
   </div>`
 
-  // Function to create a table from the members data
+  // Function to create a table from the alumni data
   function createTable(data) {
     const tableHeader = '<thead><tr><td> no. </td><td> name </td></tr></thead>'
-    const tableRows = data.map((member, index) => {
-      const anchorLink = `<a href="${member.link}" target="_blank">${member.name}</a>`
+    const tableRows = data.map((alumni, index) => {
+      const anchorLink = `<a href="${alumni.link}" target="_blank">${alumni.name}</a>`
       return `<tr><td> ${index + 1} </td><td> ${anchorLink} </td></tr>`
     })
     const table = `<table>${tableHeader}<tbody>${tableRows}</tbody></table>`
     return table
   }
 
-  const tableHTML = createTable(members)
+  const tableHTML = createTable(alumni)
   const tempContainer = document.createElement('div')
   tempContainer.innerHTML = tableHTML
   const tableElement = tempContainer.querySelector('table')
-  const memberContent = shadow.querySelector('.member_content')
-  memberContent.appendChild(tableElement)
+  const alumniContent = shadow.querySelector('.alumni_content')
+  alumniContent.appendChild(tableElement)
 
 
 
-  const our_alumni_wrapper = shadow.querySelector('.our_member')
+  const our_alumni_wrapper = shadow.querySelector('.our_alumni')
   // ----------------------------------------
   const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
   // ----------------------------------------
@@ -8542,10 +8929,10 @@ function get_theme () {
     * {
       box-sizing: border-box;
     }
-    .our_member {
+    .our_alumni {
       display: none;
     }
-    .member_content {
+    .alumni_content {
       position: relative;
       display: flex;
       flex-direction: column;
@@ -8557,21 +8944,21 @@ function get_theme () {
       border: 1px solid var(--primary_color);
       margin-bottom: 30px;
     }
-    .member_content h2 {
+    .alumni_content h2 {
       margin: 0;
     }
-    .member_content table {
+    .alumni_content table {
       border-collapse: collapse;
     }
-    .member_content table thead {
+    .alumni_content table thead {
       font-weight: bold;
     }
-    .member_content table td {
+    .alumni_content table td {
       border: 1px solid var(--primary_color);
       padding: 8px;
     }
     @container (min-width: 510px) {
-      .our_member .member_content {
+      .our_alumni .alumni_content {
         width: auto;
         height: auto;
       }
@@ -8629,7 +9016,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/our-alumni/our-alumni.js")
-},{"./members.json":34,"_process":2,"window-bar":54}],36:[function(require,module,exports){
+},{"./alumni.json":35,"_process":2,"window-bar":55}],37:[function(require,module,exports){
 module.exports=[
     { "name": "Alexander Cobleigh", "organization": "Cabal", "link": "https://github.com/cblgh" },
     { "name": "Alexander Praetorius", "organization": "DatDot & WizardAmigos", "link": "https://github.com/serapath" },
@@ -8638,7 +9025,7 @@ module.exports=[
     { "name": "Kevin Faaborg", "organization": "Ara", "link": "https://github.com/zootella" },
     { "name": "Nina Breznik", "organization": "DatDot & WizardAmigos", "link": "https://github.com/nbreznik" }
   ]  
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const members = require('./members.json');
@@ -8842,7 +9229,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/our-members/our-members.js")
-},{"./members.json":36,"_process":2,"window-bar":54}],38:[function(require,module,exports){
+},{"./members.json":37,"_process":2,"window-bar":55}],39:[function(require,module,exports){
 (function (process,__filename){(function (){
 const sm_icon_button = require('buttons/sm-icon-button')
 /******************************************************************************
@@ -9047,7 +9434,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/project-card/project-card.js")
-},{"_process":2,"buttons/sm-icon-button":20}],39:[function(require,module,exports){
+},{"_process":2,"buttons/sm-icon-button":20}],40:[function(require,module,exports){
 (function (process,__filename){(function (){
 const search_input = require('search-input')
 const select_button = require('buttons/select-button')
@@ -9202,7 +9589,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/project-filter/project-filter.js")
-},{"_process":2,"buttons/select-button":18,"search-input":42}],40:[function(require,module,exports){
+},{"_process":2,"buttons/select-button":18,"search-input":43}],41:[function(require,module,exports){
 (function (process,__filename){(function (){
 const app_projects = require('app-projects')
 const the_dat = require('the-dat')
@@ -9358,7 +9745,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/projects-page/projects-page.js")
-},{"_process":2,"app-footer":9,"app-projects":12,"the-dat":46}],41:[function(require,module,exports){
+},{"_process":2,"app-footer":9,"app-projects":12,"the-dat":47}],42:[function(require,module,exports){
 (function (process,__filename){(function (){
 const sm_icon_button = require('buttons/sm-icon-button')
 /******************************************************************************
@@ -9650,7 +10037,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/scrollbar/scrollbar.js")
-},{"_process":2,"buttons/sm-icon-button":20}],42:[function(require,module,exports){
+},{"_process":2,"buttons/sm-icon-button":20}],43:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   SEARCH INPUT COMPONENT
@@ -9811,7 +10198,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/search-input/search-input.js")
-},{"_process":2}],43:[function(require,module,exports){
+},{"_process":2}],44:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   WINDOW BAR COMPONENT
@@ -9929,7 +10316,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/svg-element/svg-element.js")
-},{"_process":2}],44:[function(require,module,exports){
+},{"_process":2}],45:[function(require,module,exports){
 (function (process,__filename){(function (){
 const scrollbar = require('scrollbar')
 /******************************************************************************
@@ -9973,7 +10360,8 @@ function tab_window (opts = default_opts, protocol) {
     'help': on_help,
     'list': on_list,
     'goto': on_goto,
-    'unknown': 'Command not found'
+    'read': on_read,
+    'unknown': {content: 'Command not found', status: 'red'}
   }
   // ----------------------------------------
   // OPTS
@@ -9994,8 +10382,8 @@ function tab_window (opts = default_opts, protocol) {
   shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `<div class="tab_wrapper">
     <div class="scrollbar_wrapper">
-      <div>
-        Type help() for more info.
+      <div class="color1">
+        Type <span class="prompt">help()</span> for more info.
       </div>
       <div class="history">
       </div>
@@ -10012,7 +10400,7 @@ function tab_window (opts = default_opts, protocol) {
   // ELEMENTS
   // ----------------------------------------
   input.onkeyup = textAreaAdjust
-  input.onkeydown = submitOnEnter
+  input.onkeydown = handleKeyDown
   
   { // scrollbar
     const on = { 'set_scroll': on_set_scroll, 'status': on_update_size }
@@ -10068,19 +10456,27 @@ function tab_window (opts = default_opts, protocol) {
     e.target.style.height = "1px";
     e.target.style.height = (25+e.target.scrollHeight)+"px";
   }
-  function submitOnEnter (e) {
+  function handleKeyDown (e) {
     if (e.which === 13){
       if (input.value) {
         const prompt = document.createElement('div')
-        prompt.innerHTML = `$ ${input.value}`
+        prompt.classList.add('prompt')
+        prompt.innerHTML = `<span class="no-select">$&nbsp</span>${input.value}`
         
-        const [command, data] = input.value.toLowerCase().split('(')
-        
+        let [command, data] = input.value.trim().toLowerCase().split('(')
+        command = command.trim()
+
         const response = document.createElement('div')
-        if(status.commands[command])
-          response.innerHTML = status.commands[command](data.replace(/[)'"']/g, ''))
-        else
-          response.innerHTML = status.commands['unknown']
+        let response_data
+        if(status.commands[command] && data && data.slice(-1) === ')'){
+          response_data = status.commands[command](data.replace(/[)]/g, '').trim())
+        }
+        else{
+          response_data = status.commands['unknown']
+        }
+        
+        response.classList.add(response_data.status)
+        response.innerHTML = response_data.content
 
         history.append(...[prompt, response])
       }
@@ -10094,49 +10490,117 @@ function tab_window (opts = default_opts, protocol) {
     }
   }
   function on_list (data){
-    const command_list = {
-      info: {
-        'mission_statement.md': 'mission_statement',
-        'important_documents.md': 'important_documents',
-        'our_members.md': 'our_members',
-        'tools': {}
-      },
-      home: {},
-      projects: {},
-      timeline: {}
+    const command_list = require(`../data/data.json`)
+    let response, check
+
+    if(data){
+      response = command_list
+      const arguments = data.split('/') 
+      arguments.forEach(argument => {
+          console.error(argument)
+          if(argument){
+            response = response[argument]
+            check = false
+          }
+          else if(check)
+            response = ''
+          else
+            check = true
+        }
+      )
     }
-    const response = data ? command_list[data] : command_list
+    else{
+      response = command_list
+    }
+    
     if(typeof(response) === 'object'){
-      return '[' + Object.entries(response).map(v => {
+      return {content: '<span class="ac-3">[</span>' + Object.entries(response).map(v => {
         if(typeof(v[1]) === 'string')
           return v[0]
         else
           return v[0] + '/'
-      }).toString().replace(/,/g, ', ') + ']'
+      }).toString().replace(/,/g, '<span class="ac-3">, </span>') + '<span class="ac-3">]</span>', status: 'color1'}
     }
-    else{
-      return response
-    }
+    return {content: 'undefined', status: 'red'}
   }
-  function on_help (){
-    const command_list = { 
-      help: `DAT bash, version 0.0.1. These shell commands are defined internally
-      `, 
-      list: 'description of list command', 
-      goto: '...', 
-      read: '...' 
+  function on_read (data){
+    const command_list = require(`../data/data.json`)
+    let response, check
+
+    if(data){
+      response = command_list
+      const arguments = data.split('/') 
+      arguments.forEach(argument => {
+          console.error(response)
+          if(argument){
+            response = response[argument]
+            check = false
+          }
+          else if(check)
+            response = {}
+          else
+            check = true
+        }
+      )
     }
 
-    return JSON.stringify(command_list, null, 2).replace(/"/g, '')
+    if(typeof(response) === 'string')
+      return {content: response, status: 'color1'}
+    return {content: 'undefined', status: 'red'}
+  }
+  function on_help (){
+    return {content: `
+      <br>
+      <b class="ac-3">
+        ##----------------------------------------- <br>
+        ## Description of commands <br>
+        ##----------------------------------------- <br>
+      </b>
+      <span class="prompt">goto(<u class="argument">page_name</u>)</span> <br>
+      - goto command will bring you to the specified page <br>
+      - <u class="argument">page_name</u> refers to website pages. For instance 'goto(projects)' <br>
+      <br>
+      <span class="prompt">list(<u class="argument">folder_address</u>: optional)</span>  <br>
+      - list command will list the items in the specified folder <br>
+      - <u class="argument">folder_address</u> refers to the JSON address of the folder. For instance 'list(info)' <br>
+      <br>
+      <span class="prompt">read(<u class="argument">file_address</u>)</span> <br>
+      - read command will print the content in the specified file <br>
+      - <u class="argument">file_address</u> refers to the JSON address of the file. For instance 'read(info/mission_statement.md)' <br>
+      <br>
+      <b class="ac-3">
+        ##----------------------------------------- <br>
+        ## Pages <br>
+        ##----------------------------------------- <br>
+      </b>
+      Consortium<br>
+      Home<br>
+      Timeline<br>
+      Dat_garden<br>
+      Projects<br>
+      <br>
+      <b class="ac-3">
+      ##----------------------------------------- <br>
+      ## Files and Folders <br>
+      ##----------------------------------------- <br>
+      </b>
+      Folders end with a / and Files end with a letter. Type <span class="prompt">list()</span> for more info.<br>
+      <br>
+      `, status: 'color1'}
   }
   function on_goto (data){
-    const up_channel = state.net[state.aka.up]
-    up_channel.send({
-      head: [id, up_channel.send.id, up_channel.mid++],
-      type: 'navigate',
-      data: data.slice(0, -1).toUpperCase()
-    })
-    return ''
+    data = data.toUpperCase()
+    const pages = ['TIMELINE', 'PROJECTS', 'HOME', 'DAT_GARDEN', 'CONSORTIUM']
+    if(pages.includes(data)){
+      const up_channel = state.net[state.aka.up]
+      up_channel.send({
+        head: [id, up_channel.send.id, up_channel.mid++],
+        type: 'navigate',
+        data
+      })
+      return {content: 'success', status: 'color1'}
+    }
+    return {content: 'page not found', status: 'red'}
   }
   function toggle_fullscreen (msg){
     scrollbar_wrapper.classList.toggle('fullscreen')
@@ -10167,7 +10631,7 @@ function get_theme() {
     .tab_wrapper #input{
       display: inline;
       background-color: transparent;
-      color: var(--primary-color);
+      color: blue;
       border: none;
       outline: none;
       width: 100%;
@@ -10183,7 +10647,26 @@ function get_theme() {
     .tab_wrapper .dollar::before{
       content: '$';
       position: absolute;
+      color: blue;
       top: 0;
+    }
+    .tab_wrapper .prompt{
+      color: blue;
+    }
+    .tab_wrapper .red{
+      color: red;
+    }
+    .tab_wrapper .color1{
+      color: var(--ac-1);
+    }
+    .tab_wrapper .argument{
+      color: gray;
+    }
+    .tab_wrapper .no-select{
+      user-select: none;
+    }
+    .tab_wrapper .ac-3{
+      color: var(--ac-3);
     }
   `
 }
@@ -10238,7 +10721,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/tab-window/tab-window.js")
-},{"_process":2,"scrollbar":41}],45:[function(require,module,exports){
+},{"../data/data.json":28,"_process":2,"scrollbar":42}],46:[function(require,module,exports){
 (function (process,__filename){(function (){
 const tab_window = require('tab-window')
 const tab_button = require('buttons/tab-button')
@@ -10655,7 +11138,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/terminal/terminal.js")
-},{"_process":2,"buttons/sm-icon-button-alt":19,"buttons/tab-button":22,"scrollbar":41,"tab-window":44}],46:[function(require,module,exports){
+},{"_process":2,"buttons/sm-icon-button-alt":19,"buttons/tab-button":22,"scrollbar":42,"tab-window":45}],47:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 /******************************************************************************
@@ -10846,7 +11329,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/the-dat/the-dat.js")
-},{"_process":2,"window-bar":54}],47:[function(require,module,exports){
+},{"_process":2,"window-bar":55}],48:[function(require,module,exports){
 const white = {} // hsla(0, 0%, 100%, 1)
 white.hue = 0
 white.saturation = '0%'
@@ -10909,7 +11392,7 @@ purple.opacity = 1
 purple.color = `hsla(${purple.hue}, ${purple.saturation}, ${purple.lightness}, ${purple.opacity})`
 
 module.exports = { white, isabelline, gray, black, eerie_black, night_black, darkblue, green, pink, purple }
-},{}],48:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const brand = require('theme/brand')
 const path = require('path')
@@ -11004,7 +11487,7 @@ const dark_theme = {
 
 module.exports = dark_theme
 }).call(this)}).call(this,require('_process'),"/src/node_modules/theme/dark-theme")
-},{"_process":2,"path":1,"theme/brand":47}],49:[function(require,module,exports){
+},{"_process":2,"path":1,"theme/brand":48}],50:[function(require,module,exports){
 (function (process,__dirname){(function (){
 const brand = require('theme/brand')
 const path = require('path')
@@ -11099,7 +11582,7 @@ const light_theme = {
 
 module.exports = light_theme
 }).call(this)}).call(this,require('_process'),"/src/node_modules/theme/lite-theme")
-},{"_process":2,"path":1,"theme/brand":47}],50:[function(require,module,exports){
+},{"_process":2,"path":1,"theme/brand":48}],51:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   TIMELINE CARD COMPONENT
@@ -11288,7 +11771,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/timeline-card/timeline-card.js")
-},{"_process":2}],51:[function(require,module,exports){
+},{"_process":2}],52:[function(require,module,exports){
 (function (process,__filename){(function (){
 const search_input = require('search-input')
 const select_button = require('buttons/select-button')
@@ -11508,7 +11991,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/timeline-filter/timeline-filter.js")
-},{"_process":2,"buttons/select-button":18,"buttons/sm-icon-button":20,"buttons/year-button":24,"search-input":42}],52:[function(require,module,exports){
+},{"_process":2,"buttons/select-button":18,"buttons/sm-icon-button":20,"buttons/year-button":24,"search-input":43}],53:[function(require,module,exports){
 (function (process,__filename){(function (){
 const app_timeline = require('app-timeline')
 const app_footer = require('app-footer')
@@ -11651,7 +12134,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/timeline-page/timeline-page.js")
-},{"_process":2,"app-footer":9,"app-timeline":14}],53:[function(require,module,exports){
+},{"_process":2,"app-footer":9,"app-timeline":14}],54:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 /******************************************************************************
@@ -11897,7 +12380,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/tools/tools.js")
-},{"_process":2,"window-bar":54}],54:[function(require,module,exports){
+},{"_process":2,"window-bar":55}],55:[function(require,module,exports){
 (function (process,__filename){(function (){
 const sm_icon_button_alt = require('buttons/sm-icon-button-alt')
 const sm_text_button = require('buttons/sm-text-button')
@@ -12159,7 +12642,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/window-bar/window-bar.js")
-},{"_process":2,"buttons/sm-icon-button-alt":19,"buttons/sm-text-button":21}],55:[function(require,module,exports){
+},{"_process":2,"buttons/sm-icon-button-alt":19,"buttons/sm-text-button":21}],56:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   YEAR FILTER COMPONENT
@@ -12192,7 +12675,7 @@ function year_filter (opts = default_opts, protocol) {
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
-  const { latest_date, oldest_date, visitor } = opts
+  const { latest_year, oldest_year, visitor } = opts
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
@@ -12209,9 +12692,6 @@ function year_filter (opts = default_opts, protocol) {
   // ----------------------------------------
   // ELEMENTS
   // ----------------------------------------
-  const latest_year = new Date(latest_date).getFullYear()
-  const oldest_year = new Date(oldest_date).getFullYear()
-
   for (let i = oldest_year; i <= latest_year; i++) {
     const year_button = document.createElement('span')
     year_button.classList.add('year_button')
@@ -12223,7 +12703,7 @@ function year_filter (opts = default_opts, protocol) {
   // ----------------------------------------
   // INIT
   // ----------------------------------------
-  const year = new Date(visitor === 'old' ? latest_date : oldest_date).getFullYear()
+  const year = visitor ? latest_year : oldest_year
   on_active_state({ data: year })
   
   return el
