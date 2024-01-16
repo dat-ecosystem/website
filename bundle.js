@@ -1223,6 +1223,9 @@ function app_about_us (opts = default_opts, protocol) {
     about_us_cover,
     icon_pdf_reader_solid = `${prefix}/icon_pdf_reader_solid.svg`,
   } } = data
+
+  const content = require(`../data/data.json`).home.about_us
+
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
@@ -1247,9 +1250,7 @@ function app_about_us (opts = default_opts, protocol) {
       </div>
     </div>
     <div class="about_us_desc">
-    Dat projects in its core build tools and infrastructure for distributed data syncronization. But as people and technologists we stand for Sustainable Open Source, Modularity & Technical Inclusion, Local First & Cloudless, Social Impact & Cooperative Ownership, Non-extractive Business Models, Data Sovereignty & Access Control.
-    Dat's first project was a protocol which later grew to become the independent project (hypercore protocol). Today Dat ecosystem is a global community of many projects working side by side on open and secure protocols for the web of commons.
-    See <span class="about_us_link">dat-ecosystem visualization</span> to explore the whole universe of dat projects and the relationships between them.
+    ${content} <span class="about_us_link">dat-ecosystem visualization</span> to explore the whole universe of dat projects and the relationships between them.
     </div>
   </div>`
   // ----------------------------------------
@@ -1437,7 +1438,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-about-us/app-about-us.js")
-},{"_process":2,"window-bar":55}],8:[function(require,module,exports){
+},{"../data/data.json":28,"_process":2,"window-bar":55}],8:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 /******************************************************************************
@@ -1476,6 +1477,8 @@ function cover_app (opts = default_opts, protocol) {
     tree_character = `${prefix}/tree_character.png`,
     icon_pdf_reader_solid = `${prefix}/icon_pdf_reader_solid.svg`,
   } = img_src
+
+  const content = require(`../data/data.json`).home.cover
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
@@ -1502,7 +1505,7 @@ function cover_app (opts = default_opts, protocol) {
     </div>
     <div class="cover_desc">
       <h3> Community for the next generation Web </h3>
-      Dat ecosystem is driven forward by many projects, most self funded. Some of the projects contribute maintainance and development to core pieces of the Dat ecosystem while others create high level applications built on top of p2p protocols.
+      ${content}
     </div>
   </div>`
   const cover_wrapper = shadow.querySelector('.cover_wrapper')
@@ -1662,7 +1665,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-cover/app-cover.js")
-},{"_process":2,"window-bar":55}],9:[function(require,module,exports){
+},{"../data/data.json":28,"_process":2,"window-bar":55}],9:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const sm_text_button = require('buttons/sm-text-button')
@@ -1915,11 +1918,14 @@ function app_icon (opts = default_opts, protocol) {
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
-  const { source, label } = opts
+  const { source, label, circle, tick } = opts
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
-  const on = {}
+  const on = {
+    'activate': activate,
+    'deactivate': deactivate
+  }
   const channel = use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
   // TEMPLATE
@@ -1929,9 +1935,12 @@ function app_icon (opts = default_opts, protocol) {
   shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `<div class="app-icon">
     <div class="svg-element"></div>
+    <div class="circle">${circle}</div>
+    <div class="tick">${tick}</div>
     <span>${label}</span>
   </div>`
   const svg_shadow = shadow.querySelector('.svg-element').attachShadow(shopts)
+  const tick_wrapper = shadow.querySelector('.tick')
   // ----------------------------------------
   // ELEMENTS
   // ----------------------------------------
@@ -1947,6 +1956,14 @@ function app_icon (opts = default_opts, protocol) {
   // ----------------------------------------
 
   return el
+
+  async function activate (){
+    tick_wrapper.classList.add('active')
+  }
+  async function deactivate (){
+    tick_wrapper.classList.remove('active')
+  }
+  
 }
 function get_theme () {
   return `
@@ -1955,6 +1972,7 @@ function get_theme () {
       flex-direction: column;
       align-items: center;
       width: 100%;
+      position: relative;
     }
     span {
       background-color: var(--bg_color_2);
@@ -1962,6 +1980,15 @@ function get_theme () {
       padding: 10px 0;
       text-align: center;
       word-wrap: break-word;
+    }
+    .circle, .tick.active{
+      display: block;
+      position: absolute;
+      left: 45px;
+      top: 40px;
+    }
+    .tick{
+      display: none;
     }
   `
 }
@@ -2054,7 +2081,10 @@ function app_projects_mini (opts = default_opts, protocol) {
     icon_folder_solid = `${prefix}/icon_folder_solid.svg`,
   } } = data
 
-  let cards_data = require(`../data/data.json`).projects.slice(0).sort(() => 0.5 - Math.random()).slice(0, 3)
+  let cards_data = require(`../data/data.json`).projects
+  const projects_count = Object.keys(cards_data).length
+
+  cards_data = cards_data.slice(0).sort(() => 0.5 - Math.random()).slice(0, 3)
   cards_data = cards_data.map(card => {
     card.data = data
     return card
@@ -2094,7 +2124,7 @@ function app_projects_mini (opts = default_opts, protocol) {
       name:'OUR PROJECTS', 
       src: icon_folder_solid,
       action_buttons: [
-        {text:'View more (12)', action: 'open_project_page', activate: false}
+        {text:`View more (${projects_count})`, action: 'open_project_page', activate: false}
       ],
       data
     }
@@ -2585,7 +2615,10 @@ function app_timeline_mini (opts = default_opts, protocol) {
   const { img_src: {
     icon_folder_solid= `${prefix}/icon_folder_solid.svg`,
   } } = data
-    const cards_data = [
+  let cards_data = require(`../data/data.json`).timeline
+  const timeline_count = Object.keys(cards_data).length
+
+  cards_data = [
     {
       title: 'interview series',
       date: 'May 3, 2023',
@@ -2642,6 +2675,7 @@ function app_timeline_mini (opts = default_opts, protocol) {
       active_state: 'ACTIVE'
     }
   ]
+
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
@@ -2677,7 +2711,7 @@ function app_timeline_mini (opts = default_opts, protocol) {
       name:'TIMELINE', 
       src: icon_folder_solid,
       action_buttons: [
-        {text: 'View more (12)', action: 'open_timeline_page', activate: false}
+        {text: `View more (${timeline_count})`, action: 'open_timeline_page', activate: false}
       ],
       data
     }
@@ -2853,7 +2887,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-timeline-mini/app-timeline-mini.js")
-},{"_process":2,"scrollbar":42,"timeline-card":51,"window-bar":55}],14:[function(require,module,exports){
+},{"../data/data.json":28,"_process":2,"scrollbar":42,"timeline-card":51,"window-bar":55}],14:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const timeline_card = require('timeline-card')
@@ -2884,6 +2918,7 @@ function app_timeline (opts = default_opts, protocol) {
   // ----------------------------------------
   const ro = new ResizeObserver(entries => {
     console.log('ResizeObserver:terminal:resize')
+    !visitor && setScrollTop(timeline_wrapper.scrollHeight)
     const scroll_channel = state.net[state.aka.scrollbar]
     scroll_channel.send({
       head: [id, scroll_channel.send.id, scroll_channel.mid++],
@@ -2942,7 +2977,7 @@ function app_timeline (opts = default_opts, protocol) {
       //   return visitor ? dateB.getFullYear() - dateA.getFullYear() : dateA.getFullYear() - dateB.getFullYear()
       // }
       // If years are the same, compare dates in ascending/descending order
-      return visitor ? dateB.getTime() - dateA.getTime() : dateA.getTime() - dateB.getTime()
+      return dateB.getTime() - dateA.getTime()
     })
   status.years_max = [...status.years]
   cardfilter = [...cards_data]
@@ -3093,6 +3128,8 @@ function app_timeline (opts = default_opts, protocol) {
       data, latest_year: Math.max(...status.years), oldest_year: Math.min(...status.years), visitor
     }
     year_filter_wrapper = shadowfy()(year_filter(opts, protocol))
+    filter_wrapper.append(year_filter_wrapper)
+    
     function on_set_scroll ({ data }) {
       set_scroll(data)
       updateCalendar()
@@ -3141,12 +3178,10 @@ function app_timeline (opts = default_opts, protocol) {
   // ----------------------------------------
   updateCalendar()
   current_separator.innerHTML = visitor ? Math.max(...status.years) : Math.min(...status.years)
-
   return el
 
   function onscroll (event) {
     const scroll_channel = state.net[state.aka.scrollbar]
-    current_separator.innerHTML = status.YEAR
     scroll_channel.send({
       head: [id, scroll_channel.send.id, scroll_channel.mid++],
       type: 'handle_scroll'
@@ -3192,6 +3227,7 @@ function app_timeline (opts = default_opts, protocol) {
       type: 'update_timeline_filter',
       data: { month: status.MONTH , year: status.YEAR }
     })
+    current_separator.innerHTML = status.YEAR
   }
   function convert_time_format (time) {
     let temp = time.slice(0, 2)
@@ -4226,7 +4262,7 @@ function get_theme () {
       position: absolute;
       display: none;
       box-sizing: border-box;
-height: max-content;
+      height: max-content;
       max-height: 400px;
       width: 100%;
       background-color: var(--bg_color);
@@ -4291,13 +4327,10 @@ height: max-content;
       max-height: 200px;
       min-height: 100px;
       overflow-y: scroll;
-    scrollbar-width: none;
+      scrollbar-width: none;
       width: 100%;
       background-color: var(--bg_color);
       border: 1px solid var(--primary_color);
-    }
-    .option_scrollbar_wrapper::-webkit-scrollbar {
-      display: none;
     }
     .select_button_wrapper .option_scrollbar_wrapper::-webkit-scrollbar {
       display: none;
@@ -5140,7 +5173,7 @@ function year_button (opts = default_opts, protocol) {
   const shadow = el.attachShadow(shopts)
   const date = new Date(latest_date)
   shadow.adoptedStyleSheets = [sheet]
-  shadow.innerHTML = `<div class="year_button">
+  shadow.innerHTML = `<div class="year_button active">
     <div class="text_wrapper">${date.getFullYear()}</div>
     ${icon_arrow_up}
   </div>`
@@ -5483,6 +5516,7 @@ function consortium_page (opts = default_opts, protocol) {
   const status = {}
   const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
   const cache = resources({})
+  status.windows = {}
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
@@ -5492,6 +5526,8 @@ function consortium_page (opts = default_opts, protocol) {
   const {
     icon_pdf_reader,
     icon_folder,
+    circle,
+    tick
   } = img_src
   const icons_data = [{
     name: 'manifesto',
@@ -5545,18 +5581,24 @@ function consortium_page (opts = default_opts, protocol) {
       const { name, type, img: source } = icon_data
       const label = `${name}${type}`
       const protocol = use_protocol(label)({ state, on })
-      const opts = { source, label }
+      const opts = { source, label, circle, tick }
       const element = shadowfy()(app_icon(opts, protocol))
       const onclick = show(label)
       element.ondblclick = onclick // () => {PROTOCOLS['notify_'+window]()}
       element.ontouchend = onclick // () => {PROTOCOLS['notify_'+window]()}
       return element
-      function show (label) {
+      function show () {
         return event => {
           const channel = state.net[state.aka[name]]
+          setScrollTop(status.windows[name].getBoundingClientRect().top - popup_wrapper.getBoundingClientRect().top + popup_wrapper.scrollTop)
           channel.send({
             head: [id, channel.send.id, channel.mid++],
             type: 'show'
+          })
+          const icon_channel = state.net[state.aka[label]]
+          icon_channel.send({
+            head: [id, icon_channel.send.id, icon_channel.mid++],
+            type: 'activate'
           })
         }
       }
@@ -5573,37 +5615,57 @@ function consortium_page (opts = default_opts, protocol) {
   })
   { // important documents
     const { name: petname } = important_documents
-    const protocol = use_protocol(petname)({ state })
+    const on = {
+      'deactivate_tick': deactivate_tick
+    }
+    const protocol = use_protocol(petname)({ state, on })
     const opts = { data }
     const element = shadowfy()(important_documents(opts, protocol))
+    status.windows[petname] = element
     mini_popup_wrapper.append(element)
   }
   { // our members
     const { name: petname } = our_members
-    const protocol = use_protocol(petname)({ state })
+    const on = {
+      'deactivate_tick': deactivate_tick
+    }
+    const protocol = use_protocol(petname)({ state, on })
     const opts = { data }
     const element = shadowfy()(our_members(opts, protocol))
+    status.windows[petname] = element
     mini_popup_wrapper.append(element)
   }
   { // our alumni
     const { name: petname } = our_alumni
-    const protocol = use_protocol(petname)({ state })
+    const on = {
+      'deactivate_tick': deactivate_tick
+    }
+    const protocol = use_protocol(petname)({ state, on })
     const opts = { data }
     const element = shadowfy()(our_alumni(opts, protocol))
+    status.windows[petname] = element
     mini_popup_wrapper.append(element)
   }
   { // tools
     const { name: petname } = tools
-    const protocol = use_protocol(petname)({ state })
+    const on = {
+      'deactivate_tick': deactivate_tick
+    }
+    const protocol = use_protocol(petname)({ state, on })
     const opts = { data }
     const element = shadowfy()(tools(opts, protocol))
+    status.windows[petname] = element
     mini_popup_wrapper.append(element)
   }
   { // mission statement
     const { name: petname } = mission_statement
-    const protocol = use_protocol(petname)({ state })
+    const on = {
+      'deactivate_tick': deactivate_tick
+    }
+    const protocol = use_protocol(petname)({ state, on })
     const opts = { data }
     const element = shadowfy()(mission_statement(opts, protocol))
+    status.windows[petname] = element
     popup_wrapper.append(element)
     // @TODO: why popup_wrapper vs. mini_popup_wrapper ?
     // @TODO: separate data from programs!
@@ -5611,6 +5673,15 @@ function consortium_page (opts = default_opts, protocol) {
   // ----------------------------------------
   // INIT
   // ----------------------------------------
+  const icon_labels = ['manifesto.md', 'important_documents.md']
+  icon_labels.forEach(label => {
+    const icon_channel = state.net[state.aka[label]]
+    icon_channel.send({
+      head: [id, icon_channel.send.id, icon_channel.mid++],
+      type: 'activate'
+    })
+      
+  })
 
   return el
 
@@ -5629,6 +5700,16 @@ function consortium_page (opts = default_opts, protocol) {
       type: 'show'
     })
   }
+  async function setScrollTop (value) {
+    popup_wrapper.scrollTop = value
+  }
+  async function deactivate_tick ({ data }) {
+    const icon_channel = state.net[state.aka[data]]
+    icon_channel.send({
+      head: [id, icon_channel.send.id, icon_channel.mid++],
+      type: 'deactivate'
+    })
+  }
 }
 function get_theme () {
   return `
@@ -5642,8 +5723,7 @@ function get_theme () {
       padding: 30px 10px;
       opacity: 1;
       background-size: 16px 16px;
-position: relative;
-      overflow-scroll;
+      position: relative;
     }
     .main_wrapper .icon_wrapper {
       display: flex;
@@ -5667,6 +5747,7 @@ position: relative;
       left: 0;
       z-index: 20;
       overflow: scroll;
+      max-height: 88vh;
     }
     .main_wrapper .popup_wrapper::-webkit-scrollbar {
       display: none;
@@ -5922,7 +6003,10 @@ module.exports={
         "keet": "<a target=\"_blank\" href=\"https://keet.io/\">keet</a>"
       }
     },
-    "home" : [],
+    "home" : {
+      "about_us": "Dat projects in its core build tools and infrastructure for distributed data syncronization. But as people and technologists we stand for Sustainable Open Source, Modularity & Technical Inclusion, Local First & Cloudless, Social Impact & Cooperative Ownership, Non-extractive Business Models, Data Sovereignty & Access Control. Dat's first project was a protocol which later grew to become the independent project (hypercore protocol). Today Dat ecosystem is a global community of many projects working side by side on open and secure protocols for the web of commons.",
+      "cover": "Dat ecosystem is driven forward by many projects, most self funded. Some of the projects contribute maintainance and development to core pieces of the Dat ecosystem while others create high level applications built on top of p2p protocols."
+    },
     "timeline": [
       {
         "title": "dat - brainstorming an idea",
@@ -7405,6 +7489,12 @@ function important_documents (opts = default_opts, protocol) {
     async function toggle_active_state (message) {
       const { active_state } = message.data
       if (active_state === 'active') important_documents_wrapper.style.display = 'none'
+      const channel = state.net[state.aka.up]
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'deactivate_tick',
+        data: opts.name
+      })
     }
   }
   // ----------------------------------------
@@ -7639,7 +7729,7 @@ function manifesto (opts = default_opts, protocol) {
     }
     const protocol = use_protocol('windowbar')({ state, on })
     const opts = {
-      name: 'MANIFESTO.md', 
+      name: 'manifesto.md', 
       src: icon_pdf_reader,
       data
     }
@@ -7648,6 +7738,12 @@ function manifesto (opts = default_opts, protocol) {
     async function toggle_active_state (message) {
       const { active_state } = message.data
       if (active_state === 'active') mission_statement_wrapper.style.display = 'none'
+      const channel = state.net[state.aka.up]
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'deactivate_tick',
+        data: opts.name
+      })
     }
   }
   { // scrollbar
@@ -8815,6 +8911,7 @@ module.exports=[
 },{}],36:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
+const scrollbar = require('scrollbar')
 const alumni = require('./alumni.json');
 
 /******************************************************************************
@@ -8835,6 +8932,18 @@ const shopts = { mode: 'closed' }
 module.exports = our_alumni
 // ----------------------------------------
 function our_alumni (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // RESOURCE POOL (can't be serialized)
+  // ----------------------------------------
+  const ro = new ResizeObserver(entries => {
+    console.log('ResizeObserver:terminal:resize')
+    const scroll_channel = state.net[state.aka.scrollbar]
+    scroll_channel.send({
+      head: [id, scroll_channel.send.id, scroll_channel.mid++],
+      refs: { },
+      type: 'handle_scroll',
+    })
+  })
   // ----------------------------------------
   // ID + JSON STATE
   // ----------------------------------------
@@ -8857,7 +8966,7 @@ function our_alumni (opts = default_opts, protocol) {
   const on = { 'show': on_show, 'hide': on_hide }
   const channel = use_protocol('up')({ protocol, state, on })
   function on_show (message) {
-    our_alumni_wrapper.style.display = 'inline'
+    our_alumni_wrapper.style.display = 'block'
   }
   function on_hide (message) {
     our_alumni_wrapper.style.display = 'none'
@@ -8870,8 +8979,10 @@ function our_alumni (opts = default_opts, protocol) {
   shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `<div class="our_alumni">
     <div class="windowbar"></div>
-    <div class="alumni_content">
-      <h2>## our alumni</h2>
+    <div class="scrollbar_wrapper">
+      <div class="alumni_content">
+        <h2>## our alumni</h2>
+      </div>
     </div>
   </div>`
 
@@ -8890,12 +9001,13 @@ function our_alumni (opts = default_opts, protocol) {
   const tempContainer = document.createElement('div')
   tempContainer.innerHTML = tableHTML
   const tableElement = tempContainer.querySelector('table')
-  const alumniContent = shadow.querySelector('.alumni_content')
-  alumniContent.appendChild(tableElement)
+  const alumni_content = shadow.querySelector('.alumni_content')
+  alumni_content.appendChild(tableElement)
 
 
 
   const our_alumni_wrapper = shadow.querySelector('.our_alumni')
+  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
   // ----------------------------------------
   const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
   // ----------------------------------------
@@ -8916,13 +9028,63 @@ function our_alumni (opts = default_opts, protocol) {
     async function toggle_active_state (message) {
       const { active_state } = message.data
       if (active_state === 'active') our_alumni_wrapper.style.display = 'none'
+      const channel = state.net[state.aka.up]
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'deactivate_tick',
+        data: opts.name
+      })
     }
+  }
+  { // scrollbar
+    const on = { 'set_scroll': on_set_scroll, status: onstatus }
+    const protocol = use_protocol('scrollbar')({ state, on })
+    opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_up
+    opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_down
+    const opts1 = { data }
+    const element = shadowfy()(scrollbar(opts1, protocol))
+    scrollbar_wrapper.append(element)
+    alumni_content.onscroll = on_scroll
   }
   // ----------------------------------------
   // INIT
   // ----------------------------------------
+  watch_scrollbar()
 
   return el
+
+  function watch_scrollbar () {
+    const channel = state.net[state.aka.scrollbar]
+    ro.observe(alumni_content)
+  }
+  function on_scroll (message) {
+    const channel = state.net[state.aka.scrollbar]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      refs: { },
+      type: 'handle_scroll',
+    })
+  }
+  function on_set_scroll (message) {
+    console.log('set_scroll', message) 
+    setScrollTop(message.data)
+  }
+  function onstatus (message) {
+    const channel = state.net[state.aka.scrollbar]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      refs: { cause: message.head },
+      type: 'update_size',
+      data: {
+        sh: alumni_content.scrollHeight,
+        ch: alumni_content.clientHeight,
+        st: alumni_content.scrollTop
+      }
+    })
+  }
+  async function setScrollTop (value) {
+    alumni_content.scrollTop = value
+  }
 }
 function get_theme () {
   return `
@@ -8931,18 +9093,23 @@ function get_theme () {
     }
     .our_alumni {
       display: none;
+      margin-bottom: 30px;
     }
     .alumni_content {
       position: relative;
       display: flex;
       flex-direction: column;
       width: 100%;
-      height: 100vh;
+      height: 100%;
       padding: 10px;
       background-size: 10px 10px;
       background-color: var(--bg_color);
       border: 1px solid var(--primary_color);
-      margin-bottom: 30px;
+      max-height: 600px;
+      overflow-y: scroll;
+    }
+    .alumni_content::-webkit-scrollbar{
+      display: none;
     }
     .alumni_content h2 {
       margin: 0;
@@ -8957,11 +9124,8 @@ function get_theme () {
       border: 1px solid var(--primary_color);
       padding: 8px;
     }
-    @container (min-width: 510px) {
-      .our_alumni .alumni_content {
-        width: auto;
-        height: auto;
-      }
+    .our_alumni .scrollbar_wrapper{
+      display: flex;
     }
   `
 }
@@ -9016,14 +9180,14 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/our-alumni/our-alumni.js")
-},{"./alumni.json":35,"_process":2,"window-bar":55}],37:[function(require,module,exports){
+},{"./alumni.json":35,"_process":2,"scrollbar":42,"window-bar":55}],37:[function(require,module,exports){
 module.exports=[
     { "name": "Alexander Cobleigh", "organization": "Cabal", "link": "https://github.com/cblgh" },
     { "name": "Alexander Praetorius", "organization": "DatDot & WizardAmigos", "link": "https://github.com/serapath" },
     { "name": "Diego Paez", "organization": "Geut Studio", "link": "https://github.com/dpaez" },
     { "name": "Franz Heinzmann", "organization": "Sonar", "link": "https://github.com/frando" },
     { "name": "Kevin Faaborg", "organization": "Ara", "link": "https://github.com/zootella" },
-    { "name": "Nina Breznik", "organization": "DatDot & WizardAmigos", "link": "https://github.com/nbreznik" }
+    { "name": "Nina Breznik", "organization": "DatDot & WizardAmigos", "link": "https://github.com/ninabreznik" }
   ]  
 },{}],38:[function(require,module,exports){
 (function (process,__filename){(function (){
@@ -9129,6 +9293,12 @@ function our_members (opts = default_opts, protocol) {
     async function toggle_active_state (message) {
       const { active_state } = message.data
       if (active_state === 'active') our_members_wrapper.style.display = 'none'
+      const channel = state.net[state.aka.up]
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'deactivate_tick',
+        data: opts.name
+      })
     }
   }
   // ----------------------------------------
@@ -10254,8 +10424,8 @@ function svg_element (opts = default_opts, protocol) {
 function get_theme () {
   return `
     svg {
-      height: 50px;
-      width: 50px;
+      height: 40px;
+      width: 40px;
       margin: 5px 0;
       padding: 3px;
       background-color: var(--bg_color_2);
@@ -11449,7 +11619,7 @@ const dark_theme = {
     // window icons
     icon_close_dark: `<svg width="15" height="15" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.25 12V9.75H7V7.5H4.75V5.25H2.5V3H0.25V0.75H2.5V3H4.75V5.25H7V7.5H9.25V9.75H11.5V12H9.25ZM7 5.25V3H9.25V0.75H11.5V3H9.25V5.25H7ZM2.5 9.75V7.5H4.75V9.75H2.5ZM0.25 12V9.75H2.5V12H0.25Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9 12.25V10H6.75V7.75H5V10H2.75V12.25H0V9.5H2.25V7.25H4.5V5.5H2.25V3.25H0V0.5H2.75V2.75H5V5H6.75V2.75H9V0.5H11.75V3.25H9.5V5.5H7.25V7.25H9.5V9.5H11.75V12.25H9ZM9.25 9.75V7.5H7V5.25H9.25V3H11.5V0.75H9.25V3H7V5.25H4.75V3H2.5V0.75H0.25V3H2.5V5.25H4.75V7.5H2.5V9.75H0.25V12H2.5V9.75H4.75V7.5H7V9.75H9.25V12H11.5V9.75H9.25Z" fill="#293648"/></svg>`,
     icon_close_light: `<svg width="15" height="15" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.25 11.9023V9.65234H7V7.40234H4.75V5.15234H2.5V2.90234H0.25V0.652344H2.5V2.90234H4.75V5.15234H7V7.40234H9.25V9.65234H11.5V11.9023H9.25ZM7 5.15234V2.90234H9.25V0.652344H11.5V2.90234H9.25V5.15234H7ZM2.5 9.65234V7.40234H4.75V9.65234H2.5ZM0.25 11.9023V9.65234H2.5V11.9023H0.25Z" fill="white"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9 12.1523V9.90234H6.75V7.65234H5V9.90234H2.75V12.1523H0V9.40234H2.25V7.15234H4.5V5.40234H2.25V3.15234H0V0.402344H2.75V2.65234H5V4.90234H6.75V2.65234H9V0.402344H11.75V3.15234H9.5V5.40234H7.25V7.15234H9.5V9.40234H11.75V12.1523H9ZM9.25 9.65234V7.40234H7V5.15234H9.25V2.90234H11.5V0.652344H9.25V2.90234H7V5.15234H4.75V2.90234H2.5V0.652344H0.25V2.90234H2.5V5.15234H4.75V7.40234H2.5V9.65234H0.25V11.9023H2.5V9.65234H4.75V7.40234H7V9.65234H9.25V11.9023H11.5V9.65234H9.25Z" fill="white"/></svg>`,
-    icon_pdf_reader: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2040_2024)"><path fill-rule="evenodd" clip-rule="evenodd" d="M45 6.00332V8V50H5V0H37H39V2L41 2.00332L40.9998 4.00332H43V6.00332H45ZM37 2H39V4H40.9991L41 6.00332H43V8H37V2ZM8 3H33.9987V11.0032H42V47H8V3Z" fill="white"/><path d="M26.9981 12.0012H10.9981V14.0012H26.9981V12.0012Z" fill="white"/><path d="M32.9981 25.9951H10.9981V27.9951H32.9981V25.9951Z" fill="white"/><path d="M34.9981 15.9953H10.9981V17.9953H34.9981V15.9953Z" fill="white"/><path d="M32.9981 29.9989H10.9981V31.9989H32.9981V29.9989Z" fill="white"/></g><defs><clipPath id="clip0_2040_2024"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_pdf_reader: `<svg width="18" height="18" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2040_2024)"><path fill-rule="evenodd" clip-rule="evenodd" d="M45 6.00332V8V50H5V0H37H39V2L41 2.00332L40.9998 4.00332H43V6.00332H45ZM37 2H39V4H40.9991L41 6.00332H43V8H37V2ZM8 3H33.9987V11.0032H42V47H8V3Z" fill="white"/><path d="M26.9981 12.0012H10.9981V14.0012H26.9981V12.0012Z" fill="white"/><path d="M32.9981 25.9951H10.9981V27.9951H32.9981V25.9951Z" fill="white"/><path d="M34.9981 15.9953H10.9981V17.9953H34.9981V15.9953Z" fill="white"/><path d="M32.9981 29.9989H10.9981V31.9989H32.9981V29.9989Z" fill="white"/></g><defs><clipPath id="clip0_2040_2024"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
     icon_pdf_reader_solid:`<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M35.3636 0H6V50H44V8.92857H35.3636V0ZM10.4902 11.0698H27.072V13.2127H10.4902V11.0698ZM33.2902 26.0633H10.4902V28.2062H33.2902V26.0633ZM10.4902 15.3492H35.3629V17.4921H10.4902V15.3492ZM33.2902 30.3531H10.4902V32.496H33.2902V30.3531Z" fill="white"/><path d="M37.0909 1.78571H38.8182V3.57143H40.5455V5.35714H42.2727V7.14286H37.0909V1.78571Z" fill="white"/></svg>`,
     icon_folder: `<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M28 15H0V41H50V9H28V15ZM31 12V18H3V38H47V12H31Z" fill="white"/></svg>`,
     icon_folder_solid:`<svg width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M30.137 9V15.5306H0V41H50V9H30.137Z" fill="#FFFAF4"/></svg>`,
@@ -11474,6 +11644,8 @@ const dark_theme = {
     img_robot_2 : `${prefix}/../assets/images/img_robot_2_dark.png`,
     pattern_img_1 : `${prefix}/../assets/images/pattern_img_1.png`,
     logo:  `${prefix}/../assets/images/logo.png`,
+    circle: `<?xml version="1.0" ?><svg width="15" height="15" version="1.1" viewBox="0 0 16 16" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="hsla(133, 57%, 45%, 1)"><circle cx="8" cy="8" r="8"/></svg>`,
+    tick: `<?xml version="1.0" ?><svg height="10" version="1.1" viewBox="0 0 13 19" width="12" xmlns="http://www.w3.org/2000/svg" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns" xmlns:xlink="http://www.w3.org/1999/xlink"><title/><desc/><defs/><g fill="none" fill-rule="evenodd" id="Page-1" stroke="none" stroke-width="1"><g fill="#000000" id="Core" transform="translate(-423.000000, -47.000000)"><g id="check" transform="translate(423.000000, 47.500000)"><path d="M6,10.2 L1.8,6 L0.4,7.4 L6,13 L18,1 L16.6,-0.4 L6,10.2 Z" id="Shape"/></g></g></g></svg>`,
 
     icon_arrow_right: `<svg transform="rotate(90 0 0)" width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.5789 9H18.4211V17H7.89473V27.6667H0V41H18.4211V33H31.5789V41H50V27.6667H42.1053V17H31.5789V9Z" fill="#293648"/></svg>`,
     icon_arrow_left: `<svg transform="rotate(90 0 0)" width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="#293648"/></svg>`,
@@ -11569,6 +11741,8 @@ const light_theme = {
     img_robot_2 : `${prefix}/../assets/images/img_robot_2_light.png`,
     pattern_img_1 : `${prefix}/../assets/images/pattern_img_1.png`,
     logo:  `${prefix}/../assets/images/logo.png`,
+    circle: `<?xml version="1.0" ?><svg width="15" height="15" version="1.1" viewBox="0 0 16 16" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="hsla(133, 57%, 45%, 1)"><circle cx="8" cy="8" r="8"/></svg>`,
+    tick: `<?xml version="1.0" ?><svg height="10" version="1.1" viewBox="0 0 13 19" width="12" xmlns="http://www.w3.org/2000/svg" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns" xmlns:xlink="http://www.w3.org/1999/xlink"><title/><desc/><defs/><g fill="none" fill-rule="evenodd" id="Page-1" stroke="none" stroke-width="1"><g fill="#000000" id="Core" transform="translate(-423.000000, -47.000000)"><g id="check" transform="translate(423.000000, 47.500000)"><path d="M6,10.2 L1.8,6 L0.4,7.4 L6,13 L18,1 L16.6,-0.4 L6,10.2 Z" id="Shape"/></g></g></g></svg>`,
 
     icon_arrow_right: `<svg transform="rotate(90 0 0)" width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.5789 9H18.4211V17H7.89473V27.6667H0V41H18.4211V33H31.5789V41H50V27.6667H42.1053V17H31.5789V9Z" fill="#293648"/></svg>`,
     icon_arrow_left: `<svg transform="rotate(90 0 0)" width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="#293648"/></svg>`,
@@ -12257,7 +12431,7 @@ function tools (opts = default_opts, protocol) {
     }
     const protocol = use_protocol('windowbar')({ state, on })
     const opts = {
-      name: 'tools.md', 
+      name: 'tools/', 
       src: icon_folder,
       data: data
     }
@@ -12266,6 +12440,12 @@ function tools (opts = default_opts, protocol) {
     async function toggle_active_state (message) {
       const { active_state } = message.data
       if (active_state === 'active') tools_wrapper.style.display = 'none'
+      const channel = state.net[state.aka.up]
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'deactivate_tick',
+        data: opts.name
+      })
     }
   }
   // ----------------------------------------
@@ -12698,7 +12878,7 @@ function year_filter (opts = default_opts, protocol) {
     year_button.innerHTML = i.toString()
     year_button.onclick = toggle_active_state
     year_buttons[i.toString()] = year_button
-    year_wrapper.append(year_button)
+    year_wrapper.prepend(year_button)
   }
   // ----------------------------------------
   // INIT
