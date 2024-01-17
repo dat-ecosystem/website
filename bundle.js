@@ -5590,7 +5590,6 @@ function consortium_page (opts = default_opts, protocol) {
       function show () {
         return event => {
           const channel = state.net[state.aka[name]]
-          setScrollTop(status.windows[name].getBoundingClientRect().top - popup_wrapper.getBoundingClientRect().top + popup_wrapper.scrollTop)
           channel.send({
             head: [id, channel.send.id, channel.mid++],
             type: 'show'
@@ -5600,6 +5599,7 @@ function consortium_page (opts = default_opts, protocol) {
             head: [id, icon_channel.send.id, icon_channel.mid++],
             type: 'activate'
           })
+          setScrollTop(status.windows[name].getBoundingClientRect().top - popup_wrapper.getBoundingClientRect().top + popup_wrapper.scrollTop)
         }
       }
     }
@@ -5701,6 +5701,7 @@ function consortium_page (opts = default_opts, protocol) {
     })
   }
   async function setScrollTop (value) {
+    console.error(value)
     popup_wrapper.scrollTop = value
   }
   async function deactivate_tick ({ data }) {
