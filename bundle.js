@@ -1922,10 +1922,7 @@ function app_icon (opts = default_opts, protocol) {
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
-  const on = {
-    'activate': activate,
-    'deactivate': deactivate
-  }
+  const on = {}
   const channel = use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
   // TEMPLATE
@@ -1935,12 +1932,9 @@ function app_icon (opts = default_opts, protocol) {
   shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `<div class="app-icon">
     <div class="svg-element"></div>
-    <div class="circle">${circle}</div>
-    <div class="tick">${tick}</div>
     <span>${label}</span>
   </div>`
   const svg_shadow = shadow.querySelector('.svg-element').attachShadow(shopts)
-  const tick_wrapper = shadow.querySelector('.tick')
   // ----------------------------------------
   // ELEMENTS
   // ----------------------------------------
@@ -1956,14 +1950,6 @@ function app_icon (opts = default_opts, protocol) {
   // ----------------------------------------
 
   return el
-
-  async function activate (){
-    tick_wrapper.classList.add('active')
-  }
-  async function deactivate (){
-    tick_wrapper.classList.remove('active')
-  }
-  
 }
 function get_theme () {
   return `
@@ -1980,15 +1966,6 @@ function get_theme () {
       padding: 10px 0;
       text-align: center;
       word-wrap: break-word;
-    }
-    .circle, .tick.active{
-      display: block;
-      position: absolute;
-      left: 45px;
-      top: 40px;
-    }
-    .tick{
-      display: none;
     }
   `
 }
@@ -2918,7 +2895,7 @@ function app_timeline (opts = default_opts, protocol) {
   // ----------------------------------------
   const ro = new ResizeObserver(entries => {
     console.log('ResizeObserver:terminal:resize')
-    !visitor && setScrollTop(timeline_wrapper.scrollHeight)
+    // !visitor && setScrollTop(timeline_wrapper.scrollHeight)
     const scroll_channel = state.net[state.aka.scrollbar]
     scroll_channel.send({
       head: [id, scroll_channel.send.id, scroll_channel.mid++],
@@ -5594,11 +5571,6 @@ function consortium_page (opts = default_opts, protocol) {
             head: [id, channel.send.id, channel.mid++],
             type: 'show'
           })
-          const icon_channel = state.net[state.aka[label]]
-          icon_channel.send({
-            head: [id, icon_channel.send.id, icon_channel.mid++],
-            type: 'activate'
-          })
           setScrollTop(status.windows[name].getBoundingClientRect().top - popup_wrapper.getBoundingClientRect().top + popup_wrapper.scrollTop)
         }
       }
@@ -5615,9 +5587,6 @@ function consortium_page (opts = default_opts, protocol) {
   })
   { // important documents
     const { name: petname } = important_documents
-    const on = {
-      'deactivate_tick': deactivate_tick
-    }
     const protocol = use_protocol(petname)({ state, on })
     const opts = { data }
     const element = shadowfy()(important_documents(opts, protocol))
@@ -5626,9 +5595,6 @@ function consortium_page (opts = default_opts, protocol) {
   }
   { // our members
     const { name: petname } = our_members
-    const on = {
-      'deactivate_tick': deactivate_tick
-    }
     const protocol = use_protocol(petname)({ state, on })
     const opts = { data }
     const element = shadowfy()(our_members(opts, protocol))
@@ -5637,9 +5603,6 @@ function consortium_page (opts = default_opts, protocol) {
   }
   { // our alumni
     const { name: petname } = our_alumni
-    const on = {
-      'deactivate_tick': deactivate_tick
-    }
     const protocol = use_protocol(petname)({ state, on })
     const opts = { data }
     const element = shadowfy()(our_alumni(opts, protocol))
@@ -5648,9 +5611,6 @@ function consortium_page (opts = default_opts, protocol) {
   }
   { // tools
     const { name: petname } = tools
-    const on = {
-      'deactivate_tick': deactivate_tick
-    }
     const protocol = use_protocol(petname)({ state, on })
     const opts = { data }
     const element = shadowfy()(tools(opts, protocol))
@@ -5659,9 +5619,6 @@ function consortium_page (opts = default_opts, protocol) {
   }
   { // mission statement
     const { name: petname } = mission_statement
-    const on = {
-      'deactivate_tick': deactivate_tick
-    }
     const protocol = use_protocol(petname)({ state, on })
     const opts = { data }
     const element = shadowfy()(mission_statement(opts, protocol))
@@ -5673,15 +5630,6 @@ function consortium_page (opts = default_opts, protocol) {
   // ----------------------------------------
   // INIT
   // ----------------------------------------
-  const icon_labels = ['manifesto.md', 'important_documents.md']
-  icon_labels.forEach(label => {
-    const icon_channel = state.net[state.aka[label]]
-    icon_channel.send({
-      head: [id, icon_channel.send.id, icon_channel.mid++],
-      type: 'activate'
-    })
-      
-  })
 
   return el
 
@@ -5701,15 +5649,7 @@ function consortium_page (opts = default_opts, protocol) {
     })
   }
   async function setScrollTop (value) {
-    console.error(value)
     popup_wrapper.scrollTop = value
-  }
-  async function deactivate_tick ({ data }) {
-    const icon_channel = state.net[state.aka[data]]
-    icon_channel.send({
-      head: [id, icon_channel.send.id, icon_channel.mid++],
-      type: 'deactivate'
-    })
   }
 }
 function get_theme () {
@@ -12894,8 +12834,7 @@ function year_filter (opts = default_opts, protocol) {
   // ----------------------------------------
   // INIT
   // ----------------------------------------
-  const year = visitor ? latest_year : oldest_year
-  on_active_state({ data: year })
+  on_active_state({ data: latest_year })
   
   return el
 
