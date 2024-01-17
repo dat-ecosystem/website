@@ -5661,7 +5661,6 @@ function get_theme () {
       gap: 20px;
       justify-content: space-between;
       margin: 0;
-      padding: 30px 10px;
       opacity: 1;
       background-size: 16px 16px;
       position: relative;
@@ -5683,12 +5682,15 @@ function get_theme () {
     }
     .main_wrapper .popup_wrapper {
       display: inline;
+      box-sizing: border-box;
+      padding: 30px;
       position: absolute;
       top: 0;
       left: 0;
       z-index: 20;
-      overflow: scroll;
-      max-height: 88vh;
+      overflow-y: scroll;
+      height: 100%;
+      scrollbar-width: none; /* For Firefox */
     }
     .main_wrapper .popup_wrapper::-webkit-scrollbar {
       display: none;
@@ -9058,6 +9060,7 @@ function get_theme () {
       border: 1px solid var(--primary_color);
       max-height: 600px;
       overflow-y: scroll;
+      scrollbar-width: none; /* For Firefox */
     }
     .alumni_content::-webkit-scrollbar{
       display: none;
