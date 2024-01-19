@@ -2,7 +2,7 @@ const home_page = require('home-page')
 const dat_garden_page = require('dat-garden')
 const timeline_page = require('timeline-page')
 const projects_page = require('projects-page')
-const consortium_page = require('consortium-page')
+const info_page = require('info-page/info-page')
 const terminal = require('terminal')
 const navbar = require('navbar')
 /******************************************************************************
@@ -61,7 +61,7 @@ async function desktop (opts = default_opts, protocol) {
   // RESOURCE POOL (can't be serialized)
   // ----------------------------------------
   const navigate = cache({
-    HOME, PROJECTS, DAT_GARDEN, TIMELINE, CONSORTIUM
+    HOME, PROJECTS, DAT_GARDEN, TIMELINE, INFO
   })
   const widget = cache({ TERMINAL })
   // ----------------------------------------
@@ -125,7 +125,7 @@ async function desktop (opts = default_opts, protocol) {
     terminal_sh.append(widget('TERMINAL'))
   }
   function open_important_documents () {
-    const consortium_channel = state.net[state.aka.consortium_page]
+    const consortium_channel = state.net[state.aka.info_page]
     consortium_channel.send({
       head: [id, channel.send.id, channel.mid++],
       type: 'open_important_documents'
@@ -162,11 +162,11 @@ async function desktop (opts = default_opts, protocol) {
     const element = timeline_page(opts, protocol)
     return element
   }
-  function CONSORTIUM () {
+  function INFO () {
     const on = {}
-    const protocol = use_protocol('consortium_page')({ state, on })
+    const protocol = use_protocol('info_page')({ state, on })
     const opts = { data: current_theme }
-    const element = consortium_page(opts, protocol)
+    const element = info_page(opts, protocol)
     return element
   }
   function TERMINAL () {
@@ -258,6 +258,7 @@ function resources (pool) {
       const id = prefix + name
       if (pool[id]) return pool[id]
       const type = factory[name]
+      console.error(name)
       return pool[id] = type()
     }
     return Object.assign(get, factory)
