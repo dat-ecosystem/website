@@ -2594,65 +2594,11 @@ function app_timeline_mini (opts = default_opts, protocol) {
   } } = data
   let cards_data = require(`../data/data.json`).timeline
   const timeline_count = Object.keys(cards_data).length
-
-  cards_data = [
-    {
-      title: 'interview series',
-      date: 'May 3, 2023',
-      time: '',
-      link: 'https://blog.dat-ecosystem.org/staying-connected/',
-      desc: 'video interviews launch',
-      tags: ['presentation'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'dxos',
-      date: 'May 15, 2023',
-      time: '',
-      link: 'https://dxos.org/',
-      desc: 'dxos joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'hyper-nostr',
-      date: 'July 5, 2023',
-      time: '',
-      link: 'https://github.com/Ruulul/hyper-nostr',
-      desc: 'hypercore-nostr relay is published and project joins the ecosystem',
-      tags: ['project'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'demo & AMA sessions',
-      date: 'August 27, 2023',
-      time: '',
-      link: 'https://blog.dat-ecosystem.org/tags/demo/',
-      desc: 'demo sessions and AMA commm comm calls launch',
-      tags: ['presentation'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'wizard amigos code camp',
-      date: 'October 1, 2023',
-      time: '',
-      link: 'https://wizardamigos.com/codecamp2023/',
-      desc: 'wizard amigos code camp is organized in Portugal',
-      tags: ['event'],
-      data,
-      active_state: 'ACTIVE'
-    },{
-      title: 'new dat ecosystem web page is released',
-      date: 'January 11, 2024',
-      time: '',
-      link: 'https://dat-ecosystem.org',
-      desc: 'Dat ecosystem releases new web page',
-      tags: ['organization'],
-      data,
-      active_state: 'ACTIVE'
-    }
-  ]
-
+  cards_data = cards_data.slice(-6).reverse()
+  cards_data = cards_data.map(card => {
+    card.data = data
+    return card
+  })
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
@@ -3263,13 +3209,12 @@ function app_timeline (opts = default_opts, protocol) {
       })
     }
     else if(status.cards){
-      status.cards.forEach(status_card => {value
+      status.cards.forEach(status_card => {
         status_card.classList.remove('active')
       })
       status.cards = []
       return
     }
-    
     
     const year_channel = state.net[state.aka.year_filter]
     year_channel.send({
@@ -3283,6 +3228,7 @@ function app_timeline (opts = default_opts, protocol) {
     timeline_wrapper.scrollTop = value
   }
   async function setFilter (data) {
+    //Store filter value
     status[data.filter] = data.value
     timeline_wrapper.innerHTML = ''
     cardfilter = [...cards_data]
@@ -3297,6 +3243,7 @@ function app_timeline (opts = default_opts, protocol) {
         return card_data.tags.includes(status.TAGS) && card_data
       })
     }
+    //update timeline_cards
     status.separators = []
     status.years = []
     const card_groups = []
@@ -3350,6 +3297,8 @@ function app_timeline (opts = default_opts, protocol) {
     card_groups.forEach((card_group) => {
       timeline_wrapper.append(card_group)
     })
+    
+    //Update scrollbar and calendar
     const channel = state.net[state.aka.scrollbar]
     channel.send({
       head: [id, channel.send.id, channel.mid++],
@@ -3360,15 +3309,15 @@ function app_timeline (opts = default_opts, protocol) {
       filter: 'YEAR',
       value: String(new Date(cardfilter[0].date_raw).getFullYear())
     })
-    updateCalendar()
+    updateCalendar(true)//to indicate this request is coming from setFilter
   }
-  async function updateCalendar () {
+  async function updateCalendar (check = false) {
     let dates = []
     if (status.YEAR) cardfilter.forEach(card_data => {
       if (card_data.date.includes(status.YEAR)) dates.push(card_data.date)
     })
     const channel = state.net[state.aka.month_filter]
-    if(prev_year !== String(status.YEAR)){
+    if(prev_year !== String(status.YEAR) || check){
       channel.send({
         head: [id, channel.send.id, channel.mid++],
         type: 'update_calendar',
@@ -5740,6 +5689,7 @@ function get_theme () {
       overflow-y: scroll;
       height: 94vh;
       max-height: 94vh;
+      padding: 0 0 30px 20px;
     }
     .scrollbar_wrapper::-webkit-scrollbar {
       display: none;
@@ -6062,7 +6012,7 @@ module.exports={
       },
       {
         "title": "dat-data website",
-        "date": "October 12, 2023",
+        "date": "October 12, 2013",
         "time": "",
         "link": "https://dat-ecosystem-archive.github.io/dat-data.com/",
         "desc": "First website is released",
@@ -7838,6 +7788,7 @@ function get_theme () {
         var(--bg_color_3);  /* second color */  
       background-size: var(--s) var(--s);  
       border: 1px solid var(--primary_color);
+      margin-bottom: 30px;
     }
     .mission_statement .mission_content {
       position: relative;
@@ -8288,7 +8239,7 @@ function month_filter (opts = default_opts, protocol) {
       const channel = state.net[state.aka[petname]]
       return element
     }
-    const elements = month_data.map(make_card)
+    const elements = month_data.map(make_card).reverse()
     month_filter_wrapper.append(...elements)
     async function toggle_month_button (message) {
       const { data } = message
@@ -11392,10 +11343,15 @@ function the_dat (opts = default_opts, protocol) {
     <div class="windowbar"></div>
     <div class="dat_content">
       <iframe class="visualization" src="https://micahscopes.github.io/webscape-wanderer/" title="the dat garden visualization"></iframe>
+      <div class="dat_desc">
+        An interactive visualization of the Dat community open source project ecosystem.<br>
+        With data provided by <a target="_blank" href="https://github.com/dat-ecosystem/dat-garden-rake">dat-garden-rake</a>
+      </div>
     </div>
   </div>`
   const the_dat_wrapper = shadow.querySelector('.the_dat')
   const dat_content = shadow.querySelector('.dat_content')
+  const dat_desc = shadow.querySelector('.dat_desc')
   // ----------------------------------------
   const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
   // ----------------------------------------
@@ -11434,6 +11390,7 @@ function the_dat (opts = default_opts, protocol) {
   async function toggle_fullscreen (message) {
     the_dat_wrapper.classList.toggle('active')
     dat_content.classList.toggle('active')
+    dat_desc.classList.toggle('hide')
     if (document.fullscreenElement) document.exitFullscreen()
     else the_dat_wrapper.requestFullscreen()    
   }
@@ -11445,7 +11402,6 @@ function get_theme () {
   return `
     * {
       box-sizing: border-box;
-      color: var(--primary_color);
     }
     .visualization {
       background-color: black;
@@ -11475,6 +11431,12 @@ function get_theme () {
     .the_dat .dat_content.active {
       height: 96vh;
       max-height: 96vh;
+    }
+    .the_dat .dat_desc {
+      padding: 10px;
+    }
+    .the_dat .dat_desc.hide {
+      display: none;
     }
   `
 }
