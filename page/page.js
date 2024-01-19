@@ -93,7 +93,7 @@ async function boot (opts) {
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
-  const { page = 'CONSORTIUM', theme = 'dark_theme' } = opts
+  const { page = 'INFO', theme = 'dark_theme' } = opts
   const { light_theme, dark_theme } = opts.themes
   const themes = { light_theme, dark_theme }
   // ----------------------------------------
