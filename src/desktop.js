@@ -258,7 +258,6 @@ function resources (pool) {
       const id = prefix + name
       if (pool[id]) return pool[id]
       const type = factory[name]
-      console.error(name)
       return pool[id] = type()
     }
     return Object.assign(get, factory)
