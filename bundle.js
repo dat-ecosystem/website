@@ -818,7 +818,7 @@ async function boot (opts) {
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
-  const { page = 'CONSORTIUM', theme = 'dark_theme' } = opts
+  const { page = 'INFO', theme = 'dark_theme' } = opts
   const { light_theme, dark_theme } = opts.themes
   const themes = { light_theme, dark_theme }
   // ----------------------------------------
@@ -924,7 +924,7 @@ const home_page = require('home-page')
 const dat_garden_page = require('dat-garden')
 const timeline_page = require('timeline-page')
 const projects_page = require('projects-page')
-const consortium_page = require('consortium-page')
+const info_page = require('info-page/info-page')
 const terminal = require('terminal')
 const navbar = require('navbar')
 /******************************************************************************
@@ -983,7 +983,7 @@ async function desktop (opts = default_opts, protocol) {
   // RESOURCE POOL (can't be serialized)
   // ----------------------------------------
   const navigate = cache({
-    HOME, PROJECTS, DAT_GARDEN, TIMELINE, CONSORTIUM
+    HOME, PROJECTS, DAT_GARDEN, TIMELINE, INFO
   })
   const widget = cache({ TERMINAL })
   // ----------------------------------------
@@ -1047,7 +1047,7 @@ async function desktop (opts = default_opts, protocol) {
     terminal_sh.append(widget('TERMINAL'))
   }
   function open_important_documents () {
-    const consortium_channel = state.net[state.aka.consortium_page]
+    const consortium_channel = state.net[state.aka.info_page]
     consortium_channel.send({
       head: [id, channel.send.id, channel.mid++],
       type: 'open_important_documents'
@@ -1084,11 +1084,11 @@ async function desktop (opts = default_opts, protocol) {
     const element = timeline_page(opts, protocol)
     return element
   }
-  function CONSORTIUM () {
+  function INFO () {
     const on = {}
-    const protocol = use_protocol('consortium_page')({ state, on })
+    const protocol = use_protocol('info_page')({ state, on })
     const opts = { data: current_theme }
-    const element = consortium_page(opts, protocol)
+    const element = info_page(opts, protocol)
     return element
   }
   function TERMINAL () {
@@ -1186,7 +1186,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/desktop.js")
-},{"_process":2,"consortium-page":26,"dat-garden":27,"home-page":29,"navbar":34,"projects-page":41,"terminal":46,"timeline-page":53}],7:[function(require,module,exports){
+},{"_process":2,"dat-garden":26,"home-page":28,"info-page/info-page":30,"navbar":34,"projects-page":41,"terminal":46,"timeline-page":53}],7:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 /******************************************************************************
@@ -1262,14 +1262,14 @@ function app_about_us (opts = default_opts, protocol) {
   { // windowbar
     const on = {
       'toggle_active_state': toggle_active_state,
-      'open_consortium_page': open_consortium_page
+      'open_info_page': open_info_page
     }
     const protocol = use_protocol('windobar')({ state, on })
     const opts = {
       name:'Learn_about_us.pdf', 
       src: icon_pdf_reader_solid,
       action_buttons: [
-        {text: 'IMPORTANT DOCUMENTS', action: 'open_consortium_page', activate: false}
+        {text: 'IMPORTANT DOCUMENTS', action: 'open_info_page', activate: false}
       ],
       data
     }
@@ -1279,8 +1279,8 @@ function app_about_us (opts = default_opts, protocol) {
       const { active_state } = data
       if (active_state === 'active') el.style.display = 'none'
     }
-    async function open_consortium_page (message){
-      open_page ('CONSORTIUM')
+    async function open_info_page (message){
+      open_page ('INFO')
       channel.send({
         head: [id, channel.send.id, channel.mid++],
         type: 'open_important_documents',
@@ -1438,7 +1438,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-about-us/app-about-us.js")
-},{"../data/data.json":28,"_process":2,"window-bar":55}],8:[function(require,module,exports){
+},{"../data/data.json":27,"_process":2,"window-bar":55}],8:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 /******************************************************************************
@@ -1665,7 +1665,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-cover/app-cover.js")
-},{"../data/data.json":28,"_process":2,"window-bar":55}],9:[function(require,module,exports){
+},{"../data/data.json":27,"_process":2,"window-bar":55}],9:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const sm_text_button = require('buttons/sm-text-button')
@@ -2233,7 +2233,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-projects-mini/app-projects-mini.js")
-},{"../data/data.json":28,"_process":2,"project-card":39,"window-bar":55}],12:[function(require,module,exports){
+},{"../data/data.json":27,"_process":2,"project-card":39,"window-bar":55}],12:[function(require,module,exports){
 (function (process,__filename){(function (){
 const project_card = require('project-card')
 const window_bar = require('window-bar')
@@ -2542,7 +2542,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-projects/app-projects.js")
-},{"../data/data.json":28,"_process":2,"project-card":39,"project-filter":40,"scrollbar":42,"window-bar":55}],13:[function(require,module,exports){
+},{"../data/data.json":27,"_process":2,"project-card":39,"project-filter":40,"scrollbar":42,"window-bar":55}],13:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const timeline_card = require('timeline-card')
@@ -2810,7 +2810,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-timeline-mini/app-timeline-mini.js")
-},{"../data/data.json":28,"_process":2,"scrollbar":42,"timeline-card":51,"window-bar":55}],14:[function(require,module,exports){
+},{"../data/data.json":27,"_process":2,"scrollbar":42,"timeline-card":51,"window-bar":55}],14:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const timeline_card = require('timeline-card')
@@ -2841,7 +2841,7 @@ function app_timeline (opts = default_opts, protocol) {
   // ----------------------------------------
   const ro = new ResizeObserver(entries => {
     console.log('ResizeObserver:terminal:resize')
-    // !visitor && setScrollTop(timeline_wrapper.scrollHeight)
+    // !sorting && setScrollTop(timeline_wrapper.scrollHeight)
     const scroll_channel = state.net[state.aka.scrollbar]
     scroll_channel.send({
       head: [id, scroll_channel.send.id, scroll_channel.mid++],
@@ -2863,7 +2863,7 @@ function app_timeline (opts = default_opts, protocol) {
   status.separators = []
   status.years = []
   let dates = []
-  let visitor = ''
+  let sorting = true // latest to oldest
   let cardfilter
   // ----------------------------------------
   // Local Storage
@@ -2951,11 +2951,17 @@ function app_timeline (opts = default_opts, protocol) {
   // ELEMENTS
   // ----------------------------------------
   { // windowbar
-    const on = { 'toggle_active_state': toggle_active_state }
+    const on = { 
+      'toggle_active_state': toggle_active_state,
+      'toggle_sorting': toggle_sorting
+    }
     const protocol = use_protocol('windowbar')({ state, on })
     const opts = {
       name: 'TIMELINE', 
       src: icon_folder_solid,
+      icon_buttons: [
+        { icon: icon_folder_solid, action: 'toggle_sorting' }
+      ],
       data: data
     }
     const element = window_bar(opts, protocol)
@@ -2963,6 +2969,26 @@ function app_timeline (opts = default_opts, protocol) {
     async function toggle_active_state (message) {
       const { active_state } = message.data
       if (active_state === 'active') el.style.display = 'none'
+    }
+    async function toggle_sorting (message) {
+      //flip the cards
+      timeline_cards.reverse()
+      sorting = !sorting
+      //flip the year_filter
+      const year_channel = state.net[state.aka.year_filter]
+      year_channel.send({
+        head: [id, year_channel.send.id, year_channel.mid++],
+        type: 'flip',
+        data: sorting
+      })
+      //flip the month_filter
+      const month_channel = state.net[state.aka.month_filter]
+      month_channel.send({
+        head: [id, month_channel.send.id, month_channel.mid++],
+        type: 'flip'
+      })
+      //render the flipped cards
+      set_filter({value: ''})
     }
   }
   var timeline_cards
@@ -2988,15 +3014,15 @@ function app_timeline (opts = default_opts, protocol) {
       // }
       if (year_cache !== slice) {
         const latest = Number(slice)
-        let oldest = year_cache ? visitor ? Number(year_cache) - 1 : Number(year_cache) + 1 : Number(slice)
+        let oldest = year_cache ? sorting ? Number(year_cache) - 1 : Number(year_cache) + 1 : Number(slice)
         
-        while(visitor ? latest <= oldest : latest >= oldest){
+        while(sorting ? latest <= oldest : latest >= oldest){
           const separator = document.createElement('div')
           separator.innerHTML = oldest
           separator.classList.add('separator')
           status.separators.push(separator)
           card_groups.push(separator)
-          visitor ? oldest-- : oldest++
+          sorting ? oldest-- : oldest++
         }
   
         card_group = document.createElement('div')
@@ -3017,7 +3043,7 @@ function app_timeline (opts = default_opts, protocol) {
       'toggle_month_filter': toggle_month_filter,
       'toggle_year_filter': toggle_year_filter,
       'value': on_value,
-      'set_filter': setFilter
+      'set_filter': set_filter
     }
     const protocol = use_protocol('timeline_filter')({ state, on })
     const opts = {
@@ -3026,14 +3052,14 @@ function app_timeline (opts = default_opts, protocol) {
     }
     const element = shadowfy()(timeline_filter(opts, protocol))
     main_wrapper.append(element)
-    function on_value (message) { setFilter(message.data) }
+    function on_value (message) { set_filter(message.data) }
     async function toggle_month_filter (message) {
       if (month_wrapper.contains(month_filter_wrapper)) {
         month_wrapper.removeChild(month_filter_wrapper)
-        timeline_wrapper.style.height = '500px'
+        timeline_wrapper.classList.remove('shrink')
       } else {
         month_wrapper.append(month_filter_wrapper)
-        timeline_wrapper.style.height = '333px'
+        timeline_wrapper.classList.add('shrink')
       }
     }
     async function toggle_year_filter (message) {
@@ -3048,7 +3074,7 @@ function app_timeline (opts = default_opts, protocol) {
     const protocol =  use_protocol('year_filter')({ state, on })
     
     const opts = {
-      data, latest_year: Math.max(...status.years), oldest_year: Math.min(...status.years), visitor
+      data, latest_year: Math.max(...status.years), oldest_year: Math.min(...status.years), sorting
     }
     year_filter_wrapper = shadowfy()(year_filter(opts, protocol))
     filter_wrapper.append(year_filter_wrapper)
@@ -3061,7 +3087,7 @@ function app_timeline (opts = default_opts, protocol) {
   year_filter_wrapper.classList.add('year_filter_wrapper')
   var month_filter_wrapper
   { // month filter
-    const on = { 'set_scroll': on_set_scroll, 'set_filter': setFilter }
+    const on = { 'set_scroll': on_set_scroll, 'set_filter': set_filter }
     const protocol = use_protocol('month_filter')({ state, on })
     const opts = { data }
     month_filter_wrapper = shadowfy()(month_filter(opts, protocol))
@@ -3100,7 +3126,7 @@ function app_timeline (opts = default_opts, protocol) {
   // INIT
   // ----------------------------------------
   updateCalendar()
-  current_separator.innerHTML = visitor ? Math.max(...status.years) : Math.min(...status.years)
+  current_separator.innerHTML = sorting ? Math.max(...status.years) : Math.min(...status.years)
   return el
 
   function onscroll (event) {
@@ -3158,6 +3184,7 @@ function app_timeline (opts = default_opts, protocol) {
     return temp + time.slice(2, -2)
   }
   async function set_scroll (data) {
+    //for scroll by year we can use separators
     if (data.filter === 'YEAR'){
       status[data.filter] = data.value
       status.separators.some(separator => {
@@ -3167,7 +3194,7 @@ function app_timeline (opts = default_opts, protocol) {
           return true
         }
       })
-    }
+    }//otherwise we need to use the cards
     else if (data.value){
       status[data.filter] = data.value
       let check = true
@@ -3207,7 +3234,7 @@ function app_timeline (opts = default_opts, protocol) {
         type: 'update_timeline_filter',
         data: { month: status.MONTH , year: status.YEAR }
       })
-    }
+    }//otherwise it means we need to remove highlight
     else if(status.cards){
       status.cards.forEach(status_card => {
         status_card.classList.remove('active')
@@ -3215,7 +3242,7 @@ function app_timeline (opts = default_opts, protocol) {
       status.cards = []
       return
     }
-    
+    //update year_filter
     const year_channel = state.net[state.aka.year_filter]
     year_channel.send({
       head: [id, year_channel.send.id, year_channel.mid++],
@@ -3227,7 +3254,7 @@ function app_timeline (opts = default_opts, protocol) {
   async function setScrollTop (value) {
     timeline_wrapper.scrollTop = value
   }
-  async function setFilter (data) {
+  async function set_filter (data) {
     //Store filter value
     status[data.filter] = data.value
     timeline_wrapper.innerHTML = ''
@@ -3252,17 +3279,17 @@ function app_timeline (opts = default_opts, protocol) {
     timeline_cards.forEach((card, i) => {
       const { idx } = card
       const card_data = cards_data[idx]
-      
+      //if the main loop never runs or misses last iterations
       if(i === Object.keys(cards_data).length - 1){
-        const latest = visitor ? Math.min(...status.years_max) : Math.max(...status.years_max)
-        let oldest = year_cache ? visitor ? Number(year_cache) - 1 : Number(year_cache) + 1 : visitor ? Math.max(...status.years_max) : Math.min(...status.years_max)
-        while(visitor ? latest <= oldest : latest >= oldest){
+        const latest = sorting ? Math.min(...status.years_max) : Math.max(...status.years_max)
+        let oldest = year_cache ? sorting ? Number(year_cache) - 1 : Number(year_cache) + 1 : sorting ? Math.max(...status.years_max) : Math.min(...status.years_max)
+        while(sorting ? latest <= oldest : latest >= oldest){
           const separator = document.createElement('div')
           separator.innerHTML = oldest
           separator.classList.add('separator')
           status.separators.push(separator)
           card_groups.push(separator)
-          visitor ? oldest-- : oldest++
+          sorting ? oldest-- : oldest++
         }
       }
       if (cardfilter.includes(card_data)) {
@@ -3270,19 +3297,19 @@ function app_timeline (opts = default_opts, protocol) {
         if(!status.years.includes(date.getFullYear()))
           status.years.push(date.getFullYear())
         const slice = card_data.date.slice(-4)
-        
+        //main loop
         if (year_cache !== slice) {
           if(i < Object.keys(cards_data).length - 1){
             const latest = Number(slice)
-            let oldest = year_cache ? visitor ? Number(year_cache) - 1 : Number(year_cache) + 1 :  visitor ? Math.max(...status.years_max) : Math.min(...status.years_max)
+            let oldest = year_cache ? sorting ? Number(year_cache) - 1 : Number(year_cache) + 1 :  sorting ? Math.max(...status.years_max) : Math.min(...status.years_max)
             
-            while(visitor ? latest <= oldest : latest >= oldest){
+            while(sorting ? latest <= oldest : latest >= oldest){
               const separator = document.createElement('div')
               separator.innerHTML = oldest
               separator.classList.add('separator')
               status.separators.push(separator)
               card_groups.push(separator)
-              visitor ? oldest-- : oldest++
+              sorting ? oldest-- : oldest++
             }
           }
         
@@ -3305,11 +3332,12 @@ function app_timeline (opts = default_opts, protocol) {
       type: 'handle_scroll'
     })
     if (!cardfilter[0]) return
+
     set_scroll({
       filter: 'YEAR',
-      value: String(new Date(cardfilter[0].date_raw).getFullYear())
+      value: sorting ? Math.max(...status.years_max) : Math.min(...status.years_max)
     })
-    updateCalendar(true)//to indicate this request is coming from setFilter
+    updateCalendar(true)//boolean argument indicates that this request is coming from set_filter
   }
   async function updateCalendar (check = false) {
     let dates = []
@@ -3381,6 +3409,9 @@ function get_theme () {
       overflow: scroll;
       gap: 20px;
       scrollbar-width: none; /* For Firefox */
+    }
+    .main_wrapper .filter_wrapper .timeline_wrapper.shrink {
+      height: 333px;
     }
     .main_wrapper .filter_wrapper .timeline_wrapper.hide > div {
       display: none;
@@ -3469,6 +3500,12 @@ function get_theme () {
         grid-template-columns: repeat(3, 4fr);
       }
     }
+    @container(min-width: 1900px) {
+      .main_wrapper .filter_wrapper .timeline_wrapper.shrink {
+        height: 355px;
+      }
+    }
+
   `
 }
 // ----------------------------------------------------------------------------
@@ -3522,7 +3559,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/app-timeline/app-timeline.js")
-},{"../data/data.json":28,"_process":2,"month-filter":33,"scrollbar":42,"timeline-card":51,"timeline-filter":52,"window-bar":55,"year-filter":56}],15:[function(require,module,exports){
+},{"../data/data.json":27,"_process":2,"month-filter":33,"scrollbar":42,"timeline-card":51,"timeline-filter":52,"window-bar":55,"year-filter":56}],15:[function(require,module,exports){
 (function (process,__filename){(function (){
 /******************************************************************************
   DAY BUTTON COMPONENT
@@ -5411,402 +5448,6 @@ function resources (pool) {
 }).call(this)}).call(this,require('_process'),"/src/node_modules/comingsoon/comingsoon.js")
 },{"_process":2,"window-bar":55}],26:[function(require,module,exports){
 (function (process,__filename){(function (){
-const mission_statement = require('manifesto/manifesto')
-const important_documents = require('important-documents')
-const our_members = require('our-members')
-const our_alumni = require('our-alumni/our-alumni')
-const tools = require('tools')
-const app_icon = require('app-icon')
-const scrollbar = require('scrollbar')
-/******************************************************************************
-  WINDOW BAR COMPONENT
-******************************************************************************/
-// ----------------------------------------
-// MODULE STATE & ID
-var count = 0
-const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
-const ID = dir.slice(cwd.length)
-const STATE = { ids: {}, net: {} } // all state of component module
-// ----------------------------------------
-const sheet = new CSSStyleSheet
-sheet.replaceSync(get_theme())
-const default_opts = { }
-const shopts = { mode: 'closed' }
-// ----------------------------------------
-module.exports = consortium_page
-// ----------------------------------------
-function consortium_page (opts = default_opts, protocol) {
-  // ----------------------------------------
-  // RESOURCE POOL (can't be serialized)
-  // ----------------------------------------
-  const ro = new ResizeObserver(entries => {
-    console.log('ResizeObserver:terminal:resize')
-    const scroll_channel = state.net[state.aka.scrollbar]
-    scroll_channel.send({
-      head: [id, scroll_channel.send.id, scroll_channel.mid++],
-      refs: { },
-      type: 'handle_scroll',
-    })
-  })
-  // ----------------------------------------
-  // ID + JSON STATE
-  // ----------------------------------------
-  const id = `${ID}:${count++}` // assigns their own name
-  const status = {}
-  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
-  const cache = resources({})
-  status.windows = {}
-  // ----------------------------------------
-  // OPTS
-  // ----------------------------------------
-  // Image data
-  const { data } = opts
-  const { img_src } = data
-  const {
-    icon_pdf_reader,
-    icon_folder,
-    circle,
-    tick
-  } = img_src
-  const icons_data = [{
-    name: 'manifesto',
-    type: '.md',
-    img: icon_pdf_reader,
-  },{
-    name: 'important_documents',
-    type: '.md',
-    img: icon_pdf_reader,
-  },{
-    name: 'our_members',
-    type: '.md',
-    img: icon_pdf_reader,
-  },{
-    name: 'our_alumni',
-    type: '.md',
-    img: icon_pdf_reader,
-  },{
-    name: 'tools',
-    type: '/', // folder
-    img: icon_folder,
-  }]
-  // ----------------------------------------
-  // PROTOCOL
-  // ----------------------------------------
-  const on = {
-    'open_important_documents': open_important_documents
-  }
-  const channel = use_protocol('up')({ protocol, state, on })
-  // ----------------------------------------
-  // TEMPLATE
-  // ----------------------------------------
-  const el = document.createElement('div')
-  const shadow = el.attachShadow(shopts)
-  shadow.adoptedStyleSheets = [sheet]
-  shadow.innerHTML = `<div class="main_wrapper">
-    <div class="scrollbar_wrapper">
-      <div class="icon_wrapper"></div>
-      <div class="popup_wrapper">
-        <div class="mini_popup_wrapper"></div>
-      </div>
-    </div>
-  </div>`
-  const main_wrapper = shadow.querySelector('.main_wrapper')
-  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
-  const popup_wrapper = shadow.querySelector('.popup_wrapper')
-  const mini_popup_wrapper = shadow.querySelector('.mini_popup_wrapper')
-  const icon_wrapper = shadow.querySelector('.icon_wrapper')
-  // ----------------------------------------
-  // ELEMENTS
-  // ----------------------------------------
-  { // desktop icons
-    const on = {}
-    function make_element (icon_data, i) {
-      const { name, type, img: source } = icon_data
-      const label = `${name}${type}`
-      const protocol = use_protocol(label)({ state, on })
-      const opts = { source, label, circle, tick }
-      const element = shadowfy()(app_icon(opts, protocol))
-      const onclick = show(label)
-      element.ondblclick = onclick // () => {PROTOCOLS['notify_'+window]()}
-      element.ontouchend = onclick // () => {PROTOCOLS['notify_'+window]()}
-      return element
-      function show () {
-        return event => {
-          const channel = state.net[state.aka[name]]
-          channel.send({
-            head: [id, channel.send.id, channel.mid++],
-            type: 'show'
-          })
-          setScrollTop(status.windows[name].getBoundingClientRect().top - popup_wrapper.getBoundingClientRect().top + popup_wrapper.scrollTop)
-        }
-      }
-    }
-    const elements = icons_data.map(make_element)
-    icon_wrapper.append(...elements)
-  }
-  const program = cache({
-    'HOME': () => home_page({ data: current_theme }, use_protocol('home_page')({ state })),
-    'PROJECTS': () => projects_page({ data: current_theme }, use_protocol('projects_page')({ state })),
-    'GROWTH PROGRAM': () => growth_page({ data: current_theme }, use_protocol('growth_page')({ state })),
-    'TIMELINE': () => timeline_page({ data: current_theme }, use_protocol('timeline_page')({ state })),
-    'CONSORTIUM': () => consortium_page({ data: current_theme }, use_protocol('consortium_page')({ state })),
-  })
-  { // important documents
-    const { name: petname } = important_documents
-    const protocol = use_protocol(petname)({ state, on })
-    const opts = { data }
-    const element = shadowfy()(important_documents(opts, protocol))
-    status.windows[petname] = element
-    mini_popup_wrapper.append(element)
-  }
-  { // our members
-    const { name: petname } = our_members
-    const protocol = use_protocol(petname)({ state, on })
-    const opts = { data }
-    const element = shadowfy()(our_members(opts, protocol))
-    status.windows[petname] = element
-    mini_popup_wrapper.append(element)
-  }
-  { // our alumni
-    const { name: petname } = our_alumni
-    const protocol = use_protocol(petname)({ state, on })
-    const opts = { data }
-    const element = shadowfy()(our_alumni(opts, protocol))
-    status.windows[petname] = element
-    mini_popup_wrapper.append(element)
-  }
-  { // tools
-    const { name: petname } = tools
-    const protocol = use_protocol(petname)({ state, on })
-    const opts = { data }
-    const element = shadowfy()(tools(opts, protocol))
-    status.windows[petname] = element
-    mini_popup_wrapper.append(element)
-  }
-  { // mission statement
-    const { name: petname } = mission_statement
-    const protocol = use_protocol(petname)({ state, on })
-    const opts = { data }
-    const element = shadowfy()(mission_statement(opts, protocol))
-    status.windows[petname] = element
-    popup_wrapper.append(element)
-    // @TODO: why popup_wrapper vs. mini_popup_wrapper ?
-    // @TODO: separate data from programs!
-  }
-  { // scrollbar
-    const on = { 'set_scroll': on_set_scroll, status: onstatus }
-    const protocol = use_protocol('scrollbar')({ state, on })
-    opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_up
-    opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_down
-    const opts1 = { data }
-    const element = shadowfy()(scrollbar(opts1, protocol))
-    main_wrapper.append(element)
-    scrollbar_wrapper.onscroll = on_scroll
-  }
-  // ----------------------------------------
-  // INIT
-  // ----------------------------------------
-  watch_scrollbar()
-
-  return el
-
-  function watch_scrollbar () {
-    const channel = state.net[state.aka.scrollbar]
-    ro.observe(scrollbar_wrapper)
-  }
-  function on_scroll (message) {
-    const channel = state.net[state.aka.scrollbar]
-    channel.send({
-      head: [id, channel.send.id, channel.mid++],
-      refs: { },
-      type: 'handle_scroll',
-    })
-  }
-  function on_set_scroll (message) {
-    console.log('set_scroll', message) 
-    setScrollTop(message.data)
-  }
-  function onstatus (message) {
-    const channel = state.net[state.aka.scrollbar]
-    channel.send({
-      head: [id, channel.send.id, channel.mid++],
-      refs: { cause: message.head },
-      type: 'update_size',
-      data: {
-        sh: scrollbar_wrapper.scrollHeight,
-        ch: scrollbar_wrapper.clientHeight,
-        st: scrollbar_wrapper.scrollTop
-      }
-    })
-  }
-  async function setScrollTop (value) {
-    scrollbar_wrapper.scrollTop = value
-  }
-  async function open_important_documents () {
-    icons_data.forEach(icon => {
-      const channel = state.net[state.aka[icon.name]]
-      channel.send({
-        head: [id, channel.send.id, channel.mid++],
-        type: 'hide'
-      })
-    })
-    const channel = state.net[state.aka.important_documents]
-    channel.send({
-      head: [id, channel.send.id, channel.mid++],
-      type: 'show'
-    })
-  }
-  async function setScrollTop (value) {
-    scrollbar_wrapper.scrollTop = value
-  }
-}
-function get_theme () {
-  return `
-    .main_wrapper{
-      display: flex;
-    }
-    .main_wrapper > div:last-child{
-      border: 1px solid var(--primary_color);
-      --s: 15px; /* control the size */
-      --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
-      background:
-        repeating-conic-gradient(at 33% 33%,var(--_g)),
-        repeating-conic-gradient(at 66% 66%,var(--_g)),
-        var(--bg_color_3);  /* second color */  
-      background-size: var(--s) var(--s);  
-    }
-    .scrollbar_wrapper {
-      box-sizing: border-box;
-      container-type: inline-size;
-      display: flex;
-      width: 100%;
-      gap: 20px;
-      justify-content: space-between;
-      margin: 0;
-      opacity: 1;
-      background-size: 16px 16px;
-      position: relative;
-      overflow-y: scroll;
-      height: 94vh;
-      max-height: 94vh;
-      padding: 0 0 30px 20px;
-    }
-    .scrollbar_wrapper::-webkit-scrollbar {
-      display: none;
-    }
-    .main_wrapper .icon_wrapper {
-      display: flex;
-      flex-wrap: wrap;
-      flex-direction: row;
-      gap: 25px;
-      width: fit-content;
-      height: fit-content;
-      align-items: center;
-      user-select: none;
-      position:sticky;
-      top:30px;
-    }
-    .main_wrapper .icon_wrapper:hover {
-      cursor: pointer;
-    }
-    .main_wrapper .popup_wrapper {
-      display: inline;
-      box-sizing: border-box;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 20;
-      height: 100%;
-      scrollbar-width: none; /* For Firefox */
-    }
-    
-    .main_wrapper .popup_wrapper .mini_popup_wrapper {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-    }
-    @container (min-width: 510px) {
-      .main_wrapper .icon_wrapper {
-        flex-direction: column;
-      }
-      .main_wrapper .main_wrapper {
-        flex-direction: row;
-      }
-      .main_wrapper .popup_wrapper {
-        display: flex;
-        flex-direction: column;
-        position: relative;
-        top: 0;
-      }
-    }
-    @container (min-width: 768px) {
-      .main_wrapper .popup_wrapper {
-        padding: 30px;
-        padding-left: 100px;
-      }
-    }
-    @container (min-width: 1200px) {
-      .main_wrapper .popup_wrapper {
-        flex-direction: row;
-        gap: 20px;
-        padding-left: 200px;
-      }
-    }
-  `
-}
-// ----------------------------------------------------------------------------
-function shadowfy (props = {}, sheets = []) {
-  return element => {
-    const el = Object.assign(document.createElement('div'), { ...props })
-    const sh = el.attachShadow(shopts)
-    sh.adoptedStyleSheets = sheets
-    sh.append(element)
-    return el
-  }
-}
-function use_protocol (petname) {
-  return ({ protocol, state, on = { } }) => {
-    if (petname in state.aka) throw new Error('petname already initialized')
-    const { id } = state
-    const invalid = on[''] || (message => console.error('invalid type', message))
-    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
-    else return handshake
-    // ----------------------------------------
-    // @TODO: how to disconnect channel
-    // ----------------------------------------
-    function handshake (send) {
-      state.aka[petname] = send.id
-      const channel = state.net[send.id] = { petname, mid: 0, send, on }
-      return protocol ? channel : Object.assign(listen, { id })
-    }
-    function listen (message) {
-      const [from] = message.head
-      const by = state.aka[petname]
-      if (from !== by) return invalid(message) // @TODO: maybe forward
-      console.log(`[${id}]:${petname}>`, message)
-      const { on } = state.net[by]
-      const action = on[message.type] || invalid
-      action(message)
-    }
-  }
-}
-// ----------------------------------------------------------------------------
-function resources (pool) {
-  var num = 0
-  return factory => {
-    const prefix = num++
-    const get = name => {
-      const id = prefix + name
-      if (pool[id]) return pool[id]
-      const type = factory[name]
-      return pool[id] = type()
-    }
-    return Object.assign(get, factory)
-  }
-}
-}).call(this)}).call(this,require('_process'),"/src/node_modules/consortium-page/consortium-page.js")
-},{"_process":2,"app-icon":10,"important-documents":30,"manifesto/manifesto":31,"our-alumni/our-alumni":36,"our-members":38,"scrollbar":42,"tools":54}],27:[function(require,module,exports){
-(function (process,__filename){(function (){
 const comingsoon = require('comingsoon')
 const app_footer = require('app-footer')
 /******************************************************************************
@@ -5948,7 +5589,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/dat-garden/dat-garden.js")
-},{"_process":2,"app-footer":9,"comingsoon":25}],28:[function(require,module,exports){
+},{"_process":2,"app-footer":9,"comingsoon":25}],27:[function(require,module,exports){
 module.exports={
     "info": {
       "mission_statement.md": "<p>We, the \"Dat Ecosystem\" members, come together to achieve the following goals:</p>       <ul>         <li>Share our knowledge on building decentralized systems.</li>         <li>Publish our work under permissive, open culture, licenses.</li>         <li>Build decentralized systems that profit the general public and empower users.</li>         <li>Have dat protocols (e.g. <a href=\"https://hypercore-protocol.org/\" target=\"_blank\">hypercore-protocol</a> or similar) as a foundation of our work.</li>         <li>Promote our shared goals with the public.</li>         <li>Develop solutions to shared technical problems.</li>         <li>Find and invite new members that share our goals.</li>         <li>Promote the adoption of shared technology through documentation or standardization.</li>       </ul>       <p>This group is <b>governed by individuals</b> that form together \"<i>the Consortium</i>\". The Consortium works to:</p>       <ul>         <li>Enact our <a href=\"https://github.com/dat-ecosystem/organization/blob/main/code-of-conduct.md\" targer=\"_blank\">code of conduct</a>.</li>         <li>Raise and maintain funds and assets to fulfill the goals.</li>         <li>Use decentralized systems wherever feasible.</li>         <li>Publicly and transparently document the process and offer the public a means to comment.</li>         <li>Coordinate efforts by members.</li>         <li>Communicate on <a href=\"https://github.com/dat-ecosystem/dat-ecosystem.github.io#join-the-dat-ecosystem-chat-network\" target=\"_blank\">discord/cabal</a> </li>       </ul>       <p>         Proposals are submitted as pull requests to /consortium/decisions/{YYY}.{MM}.{DD}-{proposal_name}.md in <a href=\"https://github.com/dat-ecosystem/organization/tree/main\" target=\"_blank\">organization repository.</a><br>         Proposals to change the manifesto are submitted as pull requests to change the manifesto itself.<br>         Proposer needs to tag all consortium members in the pull request and notify consortium members in the active consortium communication channel.<br>       </p>        <p>         Decisions will be done through voting by consortium members. The voting period lasts 2 weeks.<br>         Regular voting items are accepted unless there is opposition by at least one Consortium member. Members may state opposition beforehands.<br>       </p>          <p>         The addition of a member or changes to this Manifesto requires unanimous support by all Consortium members.<br>         The removal of one member requires unanimous support by all Consortium members except by the member in question.<br>         After a consortium member is tagged in a proposals pull request and the consortium communication channel and that member does not respond within 3 months, their consortium membership becomes dormant, which means they do not count as consortium member in the context of deciding about any proposals.<br>         Dormant consortium members can reactivate themselves at any given time to become normal consortium members again unilateraly.<br>         Consortium Members can end their consortium membership and remove themselves from the consortium membership list at any given time unilateraly.<br>       </p>       <p>Consortium members <i>(alphabetic order)</i>:</p>       <ul>         <li><a href=\"https://github.com/cblgh\" target=\"_blank\">Alexander Cobleigh</a></li>         <li><a href=\"https://github.com/serapath\" target=\"_blank\">Alexander Praetorius</a></li>         <li><a href=\"https://github.com/dpaez\" target=\"_blank\">Diego Paez</a></li>         <li><a href=\"https://github.com/frando\" target=\"_blank\">Franz Heinzmann</a></li>         <li><a href=\"https://github.com/zootella\" target=\"_blank\">Kevin Faaborg</a></li>         <li><a href=\"https://github.com/nbreznik\" target=\"_blank\">Nina Breznik</a></li>       <ul>",
@@ -7184,7 +6825,7 @@ module.exports={
     ]
 }
   
-},{}],29:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 (function (process,__filename){(function (){
 const cover_app = require('app-cover')
 const app_timeline_mini = require('app-timeline-mini')
@@ -7375,7 +7016,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/home-page/home-page.js")
-},{"_process":2,"app-about-us":7,"app-cover":8,"app-footer":9,"app-projects-mini":11,"app-timeline-mini":13}],30:[function(require,module,exports){
+},{"_process":2,"app-about-us":7,"app-cover":8,"app-footer":9,"app-projects-mini":11,"app-timeline-mini":13}],29:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 /******************************************************************************
@@ -7568,7 +7209,404 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/important-documents/important-documents.js")
-},{"_process":2,"window-bar":55}],31:[function(require,module,exports){
+},{"_process":2,"window-bar":55}],30:[function(require,module,exports){
+(function (process,__filename){(function (){
+const mission_statement = require('manifesto/manifesto')
+const important_documents = require('important-documents')
+const our_members = require('our-members')
+const our_alumni = require('our-alumni/our-alumni')
+const tools = require('tools')
+const app_icon = require('app-icon')
+const scrollbar = require('scrollbar')
+/******************************************************************************
+  WINDOW BAR COMPONENT
+******************************************************************************/
+// ----------------------------------------
+// MODULE STATE & ID
+var count = 0
+const [cwd, dir] = [process.cwd(), __filename].map(x => new URL(x, 'file://').href)
+const ID = dir.slice(cwd.length)
+const STATE = { ids: {}, net: {} } // all state of component module
+// ----------------------------------------
+const sheet = new CSSStyleSheet
+sheet.replaceSync(get_theme())
+const default_opts = { }
+const shopts = { mode: 'closed' }
+// ----------------------------------------
+module.exports = info_page
+// ----------------------------------------
+function info_page (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // RESOURCE POOL (can't be serialized)
+  // ----------------------------------------
+  const ro = new ResizeObserver(entries => {
+    console.log('ResizeObserver:terminal:resize')
+    const scroll_channel = state.net[state.aka.scrollbar]
+    scroll_channel.send({
+      head: [id, scroll_channel.send.id, scroll_channel.mid++],
+      refs: { },
+      type: 'handle_scroll',
+    })
+  })
+  // ----------------------------------------
+  // ID + JSON STATE
+  // ----------------------------------------
+  const id = `${ID}:${count++}` // assigns their own name
+  const status = {}
+  const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
+  const cache = resources({})
+  status.windows = {}
+  // ----------------------------------------
+  // OPTS
+  // ----------------------------------------
+  // Image data
+  const { data } = opts
+  const { img_src } = data
+  const {
+    icon_pdf_reader,
+    icon_folder,
+    circle,
+    tick
+  } = img_src
+  const icons_data = [{
+    name: 'manifesto',
+    type: '.md',
+    img: icon_pdf_reader,
+  },{
+    name: 'important_documents',
+    type: '.md',
+    img: icon_pdf_reader,
+  },{
+    name: 'our_members',
+    type: '.md',
+    img: icon_pdf_reader,
+  },{
+    name: 'our_alumni',
+    type: '.md',
+    img: icon_pdf_reader,
+  },{
+    name: 'tools',
+    type: '/', // folder
+    img: icon_folder,
+  }]
+  // ----------------------------------------
+  // PROTOCOL
+  // ----------------------------------------
+  const on = {
+    'open_important_documents': open_important_documents
+  }
+  const channel = use_protocol('up')({ protocol, state, on })
+  // ----------------------------------------
+  // TEMPLATE
+  // ----------------------------------------
+  const el = document.createElement('div')
+  const shadow = el.attachShadow(shopts)
+  shadow.adoptedStyleSheets = [sheet]
+  shadow.innerHTML = `<div class="main_wrapper">
+    <div class="scrollbar_wrapper">
+      <div class="icon_wrapper"></div>
+      <div class="popup_wrapper">
+        <div class="mini_popup_wrapper"></div>
+      </div>
+    </div>
+  </div>`
+  const main_wrapper = shadow.querySelector('.main_wrapper')
+  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
+  const popup_wrapper = shadow.querySelector('.popup_wrapper')
+  const mini_popup_wrapper = shadow.querySelector('.mini_popup_wrapper')
+  const icon_wrapper = shadow.querySelector('.icon_wrapper')
+  // ----------------------------------------
+  // ELEMENTS
+  // ----------------------------------------
+  { // desktop icons
+    const on = {}
+    function make_element (icon_data, i) {
+      const { name, type, img: source } = icon_data
+      const label = `${name}${type}`
+      const protocol = use_protocol(label)({ state, on })
+      const opts = { source, label, circle, tick }
+      const element = shadowfy()(app_icon(opts, protocol))
+      const onclick = show(label)
+      element.ondblclick = onclick // () => {PROTOCOLS['notify_'+window]()}
+      element.ontouchend = onclick // () => {PROTOCOLS['notify_'+window]()}
+      return element
+      function show () {
+        return event => {
+          const channel = state.net[state.aka[name]]
+          channel.send({
+            head: [id, channel.send.id, channel.mid++],
+            type: 'show'
+          })
+          setScrollTop(status.windows[name].getBoundingClientRect().top - popup_wrapper.getBoundingClientRect().top + popup_wrapper.scrollTop)
+        }
+      }
+    }
+    const elements = icons_data.map(make_element)
+    icon_wrapper.append(...elements)
+  }
+  const program = cache({
+    'HOME': () => home_page({ data: current_theme }, use_protocol('home_page')({ state })),
+    'PROJECTS': () => projects_page({ data: current_theme }, use_protocol('projects_page')({ state })),
+    'GROWTH PROGRAM': () => growth_page({ data: current_theme }, use_protocol('growth_page')({ state })),
+    'TIMELINE': () => timeline_page({ data: current_theme }, use_protocol('timeline_page')({ state })),
+    'info': () => info_page({ data: current_theme }, use_protocol('info_page')({ state })),
+  })
+  { // important documents
+    const { name: petname } = important_documents
+    const protocol = use_protocol(petname)({ state, on })
+    const opts = { data }
+    const element = shadowfy()(important_documents(opts, protocol))
+    status.windows[petname] = element
+    mini_popup_wrapper.append(element)
+  }
+  { // our members
+    const { name: petname } = our_members
+    const protocol = use_protocol(petname)({ state, on })
+    const opts = { data }
+    const element = shadowfy()(our_members(opts, protocol))
+    status.windows[petname] = element
+    mini_popup_wrapper.append(element)
+  }
+  { // our alumni
+    const { name: petname } = our_alumni
+    const protocol = use_protocol(petname)({ state, on })
+    const opts = { data }
+    const element = shadowfy()(our_alumni(opts, protocol))
+    status.windows[petname] = element
+    mini_popup_wrapper.append(element)
+  }
+  { // tools
+    const { name: petname } = tools
+    const protocol = use_protocol(petname)({ state, on })
+    const opts = { data }
+    const element = shadowfy()(tools(opts, protocol))
+    status.windows[petname] = element
+    mini_popup_wrapper.append(element)
+  }
+  { // mission statement
+    const { name: petname } = mission_statement
+    const protocol = use_protocol(petname)({ state, on })
+    const opts = { data }
+    const element = shadowfy()(mission_statement(opts, protocol))
+    status.windows[petname] = element
+    popup_wrapper.append(element)
+    // @TODO: why popup_wrapper vs. mini_popup_wrapper ?
+    // @TODO: separate data from programs!
+  }
+  { // scrollbar
+    const on = { 'set_scroll': on_set_scroll, status: onstatus }
+    const protocol = use_protocol('scrollbar')({ state, on })
+    opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_up
+    opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_down
+    const opts1 = { data }
+    const element = shadowfy()(scrollbar(opts1, protocol))
+    main_wrapper.append(element)
+    scrollbar_wrapper.onscroll = on_scroll
+  }
+  // ----------------------------------------
+  // INIT
+  // ----------------------------------------
+  watch_scrollbar()
+
+  return el
+
+  function watch_scrollbar () {
+    const channel = state.net[state.aka.scrollbar]
+    ro.observe(scrollbar_wrapper)
+  }
+  function on_scroll (message) {
+    const channel = state.net[state.aka.scrollbar]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      refs: { },
+      type: 'handle_scroll',
+    })
+  }
+  function on_set_scroll (message) {
+    console.log('set_scroll', message) 
+    setScrollTop(message.data)
+  }
+  function onstatus (message) {
+    const channel = state.net[state.aka.scrollbar]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      refs: { cause: message.head },
+      type: 'update_size',
+      data: {
+        sh: scrollbar_wrapper.scrollHeight,
+        ch: scrollbar_wrapper.clientHeight,
+        st: scrollbar_wrapper.scrollTop
+      }
+    })
+  }
+  async function setScrollTop (value) {
+    scrollbar_wrapper.scrollTop = value
+  }
+  async function open_important_documents () {
+    icons_data.forEach(icon => {
+      const channel = state.net[state.aka[icon.name]]
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'hide'
+      })
+    })
+    const channel = state.net[state.aka.important_documents]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'show'
+    })
+  }
+  async function setScrollTop (value) {
+    scrollbar_wrapper.scrollTop = value
+  }
+}
+function get_theme () {
+  return `
+    .main_wrapper{
+      display: flex;
+      height: calc(100vh - 42px);
+    }
+    .main_wrapper > div:last-child{
+      border: 1px solid var(--primary_color);
+      --s: 15px; /* control the size */
+      --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
+      background:
+        repeating-conic-gradient(at 33% 33%,var(--_g)),
+        repeating-conic-gradient(at 66% 66%,var(--_g)),
+        var(--bg_color_3);  /* second color */  
+      background-size: var(--s) var(--s);  
+    }
+    .scrollbar_wrapper {
+      box-sizing: border-box;
+      container-type: inline-size;
+      display: flex;
+      width: 100%;
+      gap: 20px;
+      justify-content: space-between;
+      margin: 0;
+      opacity: 1;
+      background-size: 16px 16px;
+      position: relative;
+      overflow-y: scroll;
+      height: 94vh;
+      max-height: 94vh;
+      padding: 0 0 30px 20px;
+    }
+    .scrollbar_wrapper::-webkit-scrollbar {
+      display: none;
+    }
+    .main_wrapper .icon_wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      flex-direction: row;
+      gap: 25px;
+      width: fit-content;
+      height: fit-content;
+      align-items: center;
+      user-select: none;
+      position:sticky;
+      top: 10px;
+    }
+    .main_wrapper .icon_wrapper:hover {
+      cursor: pointer;
+    }
+    .main_wrapper .popup_wrapper {
+      display: inline;
+      box-sizing: border-box;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 20;
+      height: 100%;
+      scrollbar-width: none; /* For Firefox */
+    }
+    
+    .main_wrapper .popup_wrapper .mini_popup_wrapper {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+    @container (min-width: 510px) {
+      .main_wrapper .icon_wrapper {
+        flex-direction: column;
+      }
+      .main_wrapper .main_wrapper {
+        flex-direction: row;
+      }
+      .main_wrapper .popup_wrapper {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        top: 0;
+      }
+    }
+    @container (min-width: 768px) {
+      .main_wrapper .popup_wrapper {
+        padding: 30px;
+        padding-left: 100px;
+      }
+    }
+    @container (min-width: 1200px) {
+      .main_wrapper .popup_wrapper {
+        flex-direction: row;
+        gap: 20px;
+        padding-left: 200px;
+      }
+    }
+  `
+}
+// ----------------------------------------------------------------------------
+function shadowfy (props = {}, sheets = []) {
+  return element => {
+    const el = Object.assign(document.createElement('div'), { ...props })
+    const sh = el.attachShadow(shopts)
+    sh.adoptedStyleSheets = sheets
+    sh.append(element)
+    return el
+  }
+}
+function use_protocol (petname) {
+  return ({ protocol, state, on = { } }) => {
+    if (petname in state.aka) throw new Error('petname already initialized')
+    const { id } = state
+    const invalid = on[''] || (message => console.error('invalid type', message))
+    if (protocol) return handshake(protocol(Object.assign(listen, { id })))
+    else return handshake
+    // ----------------------------------------
+    // @TODO: how to disconnect channel
+    // ----------------------------------------
+    function handshake (send) {
+      state.aka[petname] = send.id
+      const channel = state.net[send.id] = { petname, mid: 0, send, on }
+      return protocol ? channel : Object.assign(listen, { id })
+    }
+    function listen (message) {
+      const [from] = message.head
+      const by = state.aka[petname]
+      if (from !== by) return invalid(message) // @TODO: maybe forward
+      console.log(`[${id}]:${petname}>`, message)
+      const { on } = state.net[by]
+      const action = on[message.type] || invalid
+      action(message)
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+function resources (pool) {
+  var num = 0
+  return factory => {
+    const prefix = num++
+    const get = name => {
+      const id = prefix + name
+      if (pool[id]) return pool[id]
+      const type = factory[name]
+      return pool[id] = type()
+    }
+    return Object.assign(get, factory)
+  }
+}
+}).call(this)}).call(this,require('_process'),"/src/node_modules/info-page/info-page.js")
+},{"_process":2,"app-icon":10,"important-documents":29,"manifesto/manifesto":31,"our-alumni/our-alumni":36,"our-members":38,"scrollbar":42,"tools":54}],31:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
 const scrollbar = require('scrollbar')
@@ -8129,6 +8167,7 @@ function month_filter (opts = default_opts, protocol) {
   let active_month = ''
   let active_day = ''
   let active_date_prev = []
+  let month_cards
   const month_buttons = {}
   // ----------------------------------------
   // OPTS
@@ -8151,64 +8190,11 @@ function month_filter (opts = default_opts, protocol) {
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
-  const on = { 'update_calendar': update_calendar }
-  const up_channel = use_protocol('up')({ protocol, state, on })
-  
-  function update_calendar ({ data }) {
-    const {dates, year} = data
-    if (active_day) {
-      const key = `month_${new Date(active_day + ', 2000').getMonth()}`
-      const channel = state.net[state.aka[key]]
-      channel.send({
-        head: [id, channel.send.id, channel.mid++],
-        type: 'toggle_all_days',
-        data: active_day
-      })
-      active_day = ''
-    }
-    if (active_month) {
-      const key = `month_${new Date('01 '+ active_month + ', 2000').getMonth()}`
-      const active_channel = state.net[state.aka[key]]
-      active_channel.send({
-        head: [id, active_channel.send.id, active_channel.mid++],
-        type: 'toggle_month_button',
-        data: ''
-      })
-      active_month = ''
-    }
-    
-    active_date_prev.forEach(date => {
-      const petname = `month_${new Date(date).getMonth()}`
-      const channel = state.net[state.aka[petname]]
-      channel.send({
-        head: [id, channel.send.id, channel.mid++],
-        type: 'toggle_day_highlight',
-        data: { mode: 'remove_highlight', date }
-      })
-    })
-    active_date_prev = dates
-
-    //Leap year check
-    month_data[1] = ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0) ? 
-    { name: 'February', days: 29 } : { name: 'February', days: 28 }
-    const petname = 'month_1'
-    const channel = state.net[state.aka[petname]]
-    channel.send({
-      head: [id, channel.send.id, channel.mid++],
-      type: 'toggle_day_button_visibility',
-      data: month_data[1].days === 29 ? true : false
-    })
-
-    dates.forEach(date => {
-      const petname = `month_${new Date(date).getMonth()}`
-      const channel = state.net[state.aka[petname]]
-      channel.send({
-        head: [id, channel.send.id, channel.mid++],
-        type: 'toggle_day_highlight',
-        data: { mode: 'add_highlight', date }
-      })
-    })
+  const on = { 
+    'update_calendar': update_calendar,
+    'flip': flip
   }
+  const up_channel = use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
   // TEMPLATE
   // ----------------------------------------
@@ -8239,8 +8225,8 @@ function month_filter (opts = default_opts, protocol) {
       const channel = state.net[state.aka[petname]]
       return element
     }
-    const elements = month_data.map(make_card).reverse()
-    month_filter_wrapper.append(...elements)
+    month_cards = month_data.map(make_card).reverse()
+    month_filter_wrapper.append(...month_cards)
     async function toggle_month_button (message) {
       const { data } = message
       if (active_day) {
@@ -8349,6 +8335,67 @@ function month_filter (opts = default_opts, protocol) {
   // ----------------------------------------
   
   return el
+
+  async function flip () {
+    month_cards.reverse()
+    month_filter_wrapper.innerHTML = ''
+    month_filter_wrapper.append(...month_cards)
+  }
+  function update_calendar ({ data }) {
+    const {dates, year} = data
+    if (active_day) {
+      const key = `month_${new Date(active_day + ', 2000').getMonth()}`
+      const channel = state.net[state.aka[key]]
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'toggle_all_days',
+        data: active_day
+      })
+      active_day = ''
+    }
+    if (active_month) {
+      const key = `month_${new Date('01 '+ active_month + ', 2000').getMonth()}`
+      const active_channel = state.net[state.aka[key]]
+      active_channel.send({
+        head: [id, active_channel.send.id, active_channel.mid++],
+        type: 'toggle_month_button',
+        data: ''
+      })
+      active_month = ''
+    }
+    
+    active_date_prev.forEach(date => {
+      const petname = `month_${new Date(date).getMonth()}`
+      const channel = state.net[state.aka[petname]]
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'toggle_day_highlight',
+        data: { mode: 'remove_highlight', date }
+      })
+    })
+    active_date_prev = dates
+
+    //Leap year check
+    month_data[1] = ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0) ? 
+    { name: 'February', days: 29 } : { name: 'February', days: 28 }
+    const petname = 'month_1'
+    const channel = state.net[state.aka[petname]]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'toggle_day_button_visibility',
+      data: month_data[1].days === 29 ? true : false
+    })
+
+    dates.forEach(date => {
+      const petname = `month_${new Date(date).getMonth()}`
+      const channel = state.net[state.aka[petname]]
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'toggle_day_highlight',
+        data: { mode: 'add_highlight', date }
+      })
+    })
+  }
 }
 function get_theme () {
   return `
@@ -8449,16 +8496,21 @@ function navbar (opts = default_opts, protocol) {
   const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
   const cache = resources({})
   // ----------------------------------------
+  // Local Storage
+  // ----------------------------------------
+  status.theme_dark =  localStorage.getItem('themeStatus') === 'true'
+  // ----------------------------------------
   // OPTS
   // ----------------------------------------
   const { data, page = default_opts.page } = opts
   // Assigning all the icons
   const {
-    icon_consortium,
+    icon_info,
     icon_blogger,
     icon_discord,
     icon_twitter,
     icon_github,
+    icon_mastodon,
     icon_terminal,
     icon_theme,
     icon_arrow_down,
@@ -8501,13 +8553,13 @@ function navbar (opts = default_opts, protocol) {
   // ----------------------------------------
   // ELEMENTS
   // ----------------------------------------
-  { // consortium button
-    const petname = 'CONSORTIUM'
+  { // info button
+    const petname = 'INFO'
     const on = { 'click': onclick }
     const protocol = use_protocol(petname)({ state, on })
-    const opts = { src: icon_consortium }
+    const opts = { src: icon_info }
     const element = icon_button(opts, protocol)
-    const channel = state.net[state.aka.CONSORTIUM]
+    const channel = state.net[state.aka.INFO]
     info_sh.append(element)
     function onclick (message) { // receive click from a button -> that button will become active!
       const active_id = state.status.active_button
@@ -8594,6 +8646,11 @@ function navbar (opts = default_opts, protocol) {
       src: icon_github,
       activate: false,
       link: 'https://github.com/dat-ecosystem'
+    }, {
+      name: 'mastodon_button',
+      src: icon_mastodon,
+      activate: false,
+      link: 'https://fosstodon.org/@dat_ecosystem'
     }]
     function make_button ({ name: petname, src, activate, link }) {
       const on = { 'click': onclick }
@@ -8640,7 +8697,9 @@ function navbar (opts = default_opts, protocol) {
     const channel = state.net[state.aka.theme_button]
     icon_wrapper.append(element)
     function onclick (message) {
-      state.status.theme_dark = !state.status.theme_dark
+      status.theme_dark = !status.theme_dark
+      localStorage.setItem('themeStatus', status.theme_dark)
+
       const up_channel = state.net[state.aka.up]
       const [by, to, mid] = [id, up_channel.send.id, up_channel.mid++]
       up_channel.send({
@@ -8660,6 +8719,20 @@ function navbar (opts = default_opts, protocol) {
   // INIT
   // ----------------------------------------
   initialize(page)
+  if(status.theme_dark){
+    const up_channel = state.net[state.aka.up]
+    const [by, to, mid] = [id, up_channel.send.id, up_channel.mid++]
+    up_channel.send({
+      head: [by, to, mid],
+      type: 'handle_theme_change',
+      data: ''
+    })
+    const channel = state.net[state.aka.theme_button]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      type: 'activate'
+    })
+  }
 
   return el
 
@@ -9423,7 +9496,7 @@ function project_card (opts = default_opts, protocol) {
   
   // Assigning all the icons
   const { img_src: { 
-      icon_consortium = `${prefix}/icon_consortium_page.png`,
+      icon_info = `${prefix}/icon_info_page.png`,
   } } = data
   
   const social_icons = []
@@ -10724,7 +10797,7 @@ function tab_window (opts = default_opts, protocol) {
         ## Pages <br>
         ##----------------------------------------- <br>
       </b>
-      Consortium<br>
+      Info<br>
       Home<br>
       Timeline<br>
       Dat_garden<br>
@@ -10741,7 +10814,7 @@ function tab_window (opts = default_opts, protocol) {
   }
   function on_goto (data){
     data = data.toUpperCase()
-    const pages = ['TIMELINE', 'PROJECTS', 'HOME', 'DAT_GARDEN', 'CONSORTIUM']
+    const pages = ['TIMELINE', 'PROJECTS', 'HOME', 'DAT_GARDEN', 'INFO']
     if(pages.includes(data)){
       const up_channel = state.net[state.aka.up]
       up_channel.send({
@@ -10872,7 +10945,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/tab-window/tab-window.js")
-},{"../data/data.json":28,"_process":2,"scrollbar":42}],46:[function(require,module,exports){
+},{"../data/data.json":27,"_process":2,"scrollbar":42}],46:[function(require,module,exports){
 (function (process,__filename){(function (){
 const tab_window = require('tab-window')
 const tab_button = require('buttons/tab-button')
@@ -11605,7 +11678,7 @@ const dark_theme = {
     icon_reddit:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2281_72)"><path d="M19.5 30C19.0056 30 18.5222 29.8534 18.1111 29.5787C17.7 29.304 17.3795 28.9134 17.1903 28.4565C17.0011 28 16.9516 27.4972 17.0481 27.0122C17.1445 26.5272 17.3826 26.0819 17.7323 25.7322C18.0819 25.3825 18.5273 25.1444 19.0122 25.0481C19.4972 24.9515 20 25.0009 20.4566 25.1903C20.9134 25.3794 21.3041 25.7 21.5788 26.1109C21.8534 26.5222 22 27.0056 22 27.5C22 27.8284 21.9353 28.1534 21.8097 28.4565C21.6841 28.76 21.5 29.0356 21.2678 29.2678C21.0356 29.5 20.76 29.684 20.4566 29.8097C20.1534 29.9353 19.8284 30 19.5 30ZM50 25C50 29.9447 48.5338 34.7781 45.7869 38.8893C43.0397 43.0006 39.1353 46.2046 34.5672 48.0968C29.9991 49.989 24.9722 50.4843 20.1228 49.5196C15.2732 48.555 10.8187 46.174 7.32234 42.6778C3.82603 39.1812 1.445 34.7268 0.480373 29.8772C-0.484252 25.0278 0.0108423 20.0009 1.90303 15.4329C3.79522 10.8647 6.99953 6.96027 11.1107 4.21325C15.222 1.46622 20.0556 0 25 0C31.6303 0 37.9894 2.6339 42.6778 7.32234C47.3659 12.0107 50 18.3696 50 25ZM36.6562 20.8437C35.7947 20.8944 34.9822 21.2619 34.375 21.875C31.8047 20.1762 28.7994 19.254 25.7187 19.2187L27.4687 11.3125L33.0625 12.5625C33.0584 12.8893 33.1191 13.2137 33.2413 13.5168C33.3638 13.82 33.5447 14.0958 33.7744 14.3284C34.0041 14.561 34.2778 14.7456 34.5794 14.8716C34.8809 14.9976 35.2044 15.0625 35.5312 15.0625C36.1972 15.0543 36.8331 14.784 37.3009 14.3101C37.7691 13.8363 38.0313 13.1972 38.0313 12.5312C38.05 11.9598 37.8697 11.3997 37.5216 10.9464C37.1731 10.493 36.6781 10.1746 36.1212 10.0456C35.5644 9.91646 34.98 9.98468 34.4675 10.2385C33.9553 10.4924 33.5472 10.9161 33.3125 11.4375L27.0625 10.0625C26.9137 10.034 26.7597 10.0633 26.6319 10.1447C26.5041 10.226 26.4122 10.3531 26.375 10.5L24.4375 19.2187C21.3581 19.2628 18.3553 20.184 15.7813 21.875C15.443 21.5256 15.0326 21.2544 14.5787 21.08C14.1248 20.9056 13.6383 20.8322 13.1532 20.8653C12.6681 20.8981 12.1959 21.0362 11.7697 21.2703C11.3435 21.5044 10.9735 21.8287 10.6854 22.2203C10.3974 22.6122 10.1982 23.0622 10.1019 23.5387C10.0056 24.0153 10.0143 24.5072 10.1276 24.98C10.2408 25.4528 10.4558 25.8953 10.7576 26.2765C11.0594 26.6578 11.4407 26.9687 11.875 27.1875C11.8272 27.7072 11.8272 28.2303 11.875 28.75C11.875 34.0312 17.8437 38.3437 25.1875 38.3437C32.5313 38.3437 38.5 34.0312 38.5 28.75C38.5012 28.2131 38.4381 27.6781 38.3125 27.1562C38.9441 26.7984 39.4422 26.245 39.7313 25.5794C40.0206 24.9137 40.0856 24.1722 39.9162 23.4662C39.7469 22.7606 39.3522 22.129 38.7925 21.6672C38.2325 21.2056 37.5375 20.9384 36.8125 20.9062L36.6562 20.8437ZM29.7188 32.5625C28.3144 33.4447 26.6897 33.9125 25.0312 33.9125C23.3728 33.9125 21.7481 33.4447 20.3438 32.5625C20.2284 32.4572 20.0781 32.3987 19.9219 32.3987C19.7656 32.3987 19.6153 32.4572 19.5 32.5625C19.4394 32.6181 19.3909 32.6856 19.3578 32.7609C19.3247 32.8362 19.3078 32.9178 19.3078 33C19.3078 33.0822 19.3247 33.1637 19.3578 33.239C19.3909 33.3143 19.4394 33.3818 19.5 33.4375C21.1412 34.5512 23.0791 35.1465 25.0625 35.1465C27.0459 35.1465 28.9837 34.5512 30.625 33.4375C30.6856 33.3818 30.7341 33.3143 30.7672 33.239C30.8003 33.1637 30.8175 33.0822 30.8175 33C30.8175 32.9178 30.8003 32.8362 30.7672 32.7609C30.7341 32.6856 30.6856 32.6181 30.625 32.5625C30.5666 32.5009 30.4962 32.4522 30.4184 32.4187C30.3406 32.3853 30.2566 32.3678 30.1719 32.3678C30.0872 32.3678 30.0031 32.3853 29.9253 32.4187C29.8475 32.4522 29.7772 32.5009 29.7188 32.5625ZM30.5 25C30.0056 25 29.5222 25.1465 29.1109 25.4212C28.7 25.6959 28.3794 26.0865 28.1903 26.5434C28.0012 27 27.9516 27.5028 28.0481 27.9878C28.1444 28.4728 28.3825 28.9181 28.7322 29.2678C29.0819 29.6175 29.5272 29.8556 30.0122 29.9518C30.4972 30.0484 31 29.999 31.4569 29.8097C31.9134 29.6206 32.3041 29.3 32.5788 28.889C32.8534 28.4778 33 27.9943 33 27.5C33 26.8369 32.7366 26.2009 32.2678 25.7322C31.7991 25.2634 31.1631 25 30.5 25Z" fill="#2ACA4B"/></g><defs><clipPath id="clip0_2281_72"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
     icon_keet:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24.5 50L49 0L24.5 7.54717L0 0L24.5 50Z" fill="#2ACA4B"/></svg>    `,
     // terminal
-    icon_consortium: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1927)"><path d="M38 41.1776V50.0011H12V41.1776H20.6667V23.5306H14.8889V14.707H29.3333V41.1776H38Z" fill="#293648"/><path d="M29.3337 0H20.667V8.82353H29.3337V0Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1927"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_info: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1927)"><path d="M38 41.1776V50.0011H12V41.1776H20.6667V23.5306H14.8889V14.707H29.3333V41.1776H38Z" fill="#293648"/><path d="M29.3337 0H20.667V8.82353H29.3337V0Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1927"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
     icon_terminal: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M47.619 9.70588V7.35294H45.2381V5H4.7619V7.35294H2.38095V9.70588H0V40.2941H2.38095V42.6471H4.7619V45H45.2381V42.6471H47.619V40.2941H50V9.70588H47.619ZM19.0476 30.8824H16.6667V33.2353H14.2857V35.5882H9.52381V33.2353H11.9048V30.8824H14.2857V28.5294H16.6667V26.1765H19.0476V23.8235H16.6667V21.4706H14.2857V19.1176H11.9048V16.7647H9.52381V14.4118H14.2857V16.7647H16.6667V19.1176H19.0476V21.4706H21.4286V23.8235H23.8095V26.1765H21.4286V28.5294H19.0476V30.8824ZM40.4762 35.5882H21.4286V33.2353H40.4762V35.5882Z" fill="#293648"/></svg>`,
     icon_theme: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1948)"><path d="M39.4634 26.3141V28.944H34.2037V26.3141H28.944V23.6843H26.3141V21.0544H23.6843V18.4246H21.0544V13.1649H18.4246V0.015625H10.535V2.64547H7.90517V5.27532H5.27532V7.90517H2.64547V13.1649H0.015625V34.2037H2.64547V39.4634H5.27532V42.0932H7.90517V44.7231H10.535V47.3529H15.7947V49.9828H34.2037V47.3529H39.4634V44.7231H42.0932V42.0932H44.7231V39.4634H47.3529V36.8335H49.9828V26.3141H39.4634ZM47.3529 34.2037H44.7231V36.8335H42.0932V39.4634H39.4634V42.0932H36.8335V44.7231H31.5738V47.3529H18.4246V44.7231H13.1649V42.0932H10.535V39.4634H7.90517V36.8335H5.27532V31.5738H2.64547V15.7947H5.27532V10.535H7.90517V7.90517H10.535V5.27532H13.1649V2.64547H15.7947V15.7947H18.4246V21.0544H21.0544V23.6843H23.6843V26.3141H26.3141V28.944H31.5738V31.5738H42.0932V28.944H47.3529V34.2037Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1948"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
     // window icons
@@ -11702,7 +11775,7 @@ const light_theme = {
     icon_reddit:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2284_212)"><path d="M19.5 30C19.0056 30 18.5222 29.8534 18.1111 29.5787C17.7 29.304 17.3795 28.9134 17.1903 28.4565C17.0011 28 16.9516 27.4972 17.0481 27.0122C17.1445 26.5272 17.3826 26.0819 17.7323 25.7322C18.0819 25.3825 18.5273 25.1444 19.0122 25.0481C19.4972 24.9515 20 25.0009 20.4566 25.1903C20.9134 25.3794 21.3041 25.7 21.5788 26.1109C21.8534 26.5222 22 27.0056 22 27.5C22 27.8284 21.9353 28.1534 21.8097 28.4565C21.6841 28.76 21.5 29.0356 21.2678 29.2678C21.0356 29.5 20.76 29.684 20.4566 29.8097C20.1534 29.9353 19.8284 30 19.5 30ZM50 25C50 29.9447 48.5338 34.7781 45.7869 38.8893C43.0397 43.0006 39.1353 46.2046 34.5672 48.0968C29.9991 49.989 24.9722 50.4843 20.1228 49.5196C15.2732 48.555 10.8187 46.174 7.32234 42.6778C3.82603 39.1812 1.445 34.7268 0.480373 29.8772C-0.484252 25.0278 0.0108423 20.0009 1.90303 15.4329C3.79522 10.8647 6.99953 6.96027 11.1107 4.21325C15.222 1.46622 20.0556 0 25 0C31.6303 0 37.9894 2.6339 42.6778 7.32234C47.3659 12.0107 50 18.3696 50 25ZM36.6562 20.8437C35.7947 20.8944 34.9822 21.2619 34.375 21.875C31.8047 20.1762 28.7994 19.254 25.7187 19.2187L27.4687 11.3125L33.0625 12.5625C33.0584 12.8893 33.1191 13.2137 33.2413 13.5168C33.3638 13.82 33.5447 14.0958 33.7744 14.3284C34.0041 14.561 34.2778 14.7456 34.5794 14.8716C34.8809 14.9976 35.2044 15.0625 35.5312 15.0625C36.1972 15.0543 36.8331 14.784 37.3009 14.3101C37.7691 13.8363 38.0313 13.1972 38.0313 12.5312C38.05 11.9598 37.8697 11.3997 37.5216 10.9464C37.1731 10.493 36.6781 10.1746 36.1212 10.0456C35.5644 9.91646 34.98 9.98468 34.4675 10.2385C33.9553 10.4924 33.5472 10.9161 33.3125 11.4375L27.0625 10.0625C26.9137 10.034 26.7597 10.0633 26.6319 10.1447C26.5041 10.226 26.4122 10.3531 26.375 10.5L24.4375 19.2187C21.3581 19.2628 18.3553 20.184 15.7813 21.875C15.443 21.5256 15.0326 21.2544 14.5787 21.08C14.1248 20.9056 13.6383 20.8322 13.1532 20.8653C12.6681 20.8981 12.1959 21.0362 11.7697 21.2703C11.3435 21.5044 10.9735 21.8287 10.6854 22.2203C10.3974 22.6122 10.1982 23.0622 10.1019 23.5387C10.0056 24.0153 10.0143 24.5072 10.1276 24.98C10.2408 25.4528 10.4558 25.8953 10.7576 26.2765C11.0594 26.6578 11.4407 26.9687 11.875 27.1875C11.8272 27.7072 11.8272 28.2303 11.875 28.75C11.875 34.0312 17.8437 38.3437 25.1875 38.3437C32.5313 38.3437 38.5 34.0312 38.5 28.75C38.5012 28.2131 38.4381 27.6781 38.3125 27.1562C38.9441 26.7984 39.4422 26.245 39.7313 25.5794C40.0206 24.9137 40.0856 24.1722 39.9162 23.4662C39.7469 22.7606 39.3522 22.129 38.7925 21.6672C38.2325 21.2056 37.5375 20.9384 36.8125 20.9062L36.6562 20.8437ZM29.7188 32.5625C28.3144 33.4447 26.6897 33.9125 25.0312 33.9125C23.3728 33.9125 21.7481 33.4447 20.3438 32.5625C20.2284 32.4572 20.0781 32.3987 19.9219 32.3987C19.7656 32.3987 19.6153 32.4572 19.5 32.5625C19.4394 32.6181 19.3909 32.6856 19.3578 32.7609C19.3247 32.8362 19.3078 32.9178 19.3078 33C19.3078 33.0822 19.3247 33.1637 19.3578 33.239C19.3909 33.3143 19.4394 33.3818 19.5 33.4375C21.1412 34.5512 23.0791 35.1465 25.0625 35.1465C27.0459 35.1465 28.9837 34.5512 30.625 33.4375C30.6856 33.3818 30.7341 33.3143 30.7672 33.239C30.8003 33.1637 30.8175 33.0822 30.8175 33C30.8175 32.9178 30.8003 32.8362 30.7672 32.7609C30.7341 32.6856 30.6856 32.6181 30.625 32.5625C30.5666 32.5009 30.4962 32.4522 30.4184 32.4187C30.3406 32.3853 30.2566 32.3678 30.1719 32.3678C30.0872 32.3678 30.0031 32.3853 29.9253 32.4187C29.8475 32.4522 29.7772 32.5009 29.7188 32.5625ZM30.5 25C30.0056 25 29.5222 25.1465 29.1109 25.4212C28.7 25.6959 28.3794 26.0865 28.1903 26.5434C28.0012 27 27.9516 27.5028 28.0481 27.9878C28.1444 28.4728 28.3825 28.9181 28.7322 29.2678C29.0819 29.6175 29.5272 29.8556 30.0122 29.9518C30.4972 30.0484 31 29.999 31.4569 29.8097C31.9134 29.6206 32.3041 29.3 32.5788 28.889C32.8534 28.4778 33 27.9943 33 27.5C33 26.8369 32.7366 26.2009 32.2678 25.7322C31.7991 25.2634 31.1631 25 30.5 25Z" fill="#293648"/></g><defs><clipPath id="clip0_2284_212"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
     icon_keet:`<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.99472 15.2267C6.51879 16.9459 3.66532 22.1035 4.0589 28.9802C4.55088 37.5761 10.9462 46.9088 21.0317 48.6279C29.1002 50.0033 34.7251 47.2362 36.529 45.6808C36.611 44.8621 36.8734 42.9792 37.267 41.9968C37.759 40.7688 39.2349 36.8393 35.791 32.4185C35.0697 31.4925 34.3604 30.6943 33.7053 29.9571C31.2332 27.175 29.5334 25.2622 30.8713 20.6299C32.5026 14.9814 38.1603 14.2446 41.6948 14.7356C39.8909 12.1159 34.7087 6.77848 28.4114 6.38552C26.2419 6.25015 24.4648 6.18939 22.9153 6.13642C18.8427 5.99718 16.3424 5.9117 12.4221 4.66634C8.09274 3.291 5.86245 0.982388 5.28848 0C4.8785 0.982388 4.40292 3.291 5.78045 4.66634C7.15799 6.04169 8.32233 7.36791 8.73231 7.85911C7.58437 7.85911 5.23928 7.95734 5.04249 8.3503C4.8457 8.74325 7.25638 10.3151 8.48633 11.0519C6.76441 11.1337 3.12378 11.6413 2.33661 13.0166C1.79771 13.9582 1.92279 13.9421 2.59079 13.8559C3.14246 13.7847 4.06442 13.6658 5.28848 13.999C7.45347 14.5885 7.99472 15.0631 7.99472 15.2267ZM23.302 24.4897C23.2528 24.6956 22.9727 24.7314 22.8311 24.5738C22.7196 24.4498 22.596 24.3349 22.4622 24.2297C21.9452 23.8229 21.2736 23.5773 20.5395 23.5773C19.6136 23.5773 18.7877 23.9637 18.2464 24.5724C18.1056 24.7308 17.8261 24.6955 17.7769 24.4895C17.6543 23.9769 17.5876 23.4208 17.5876 22.8405C17.5876 20.2637 18.9088 18.1742 20.5395 18.1742C22.1701 18.1742 23.4913 20.2637 23.4913 22.8405C23.4913 23.4208 23.4246 23.977 23.302 24.4897Z" fill="#293648"/><path d="M47.2957 32.1806C49.2239 24.7096 47.0547 17.7207 42.4752 15.7923C38.8598 14.829 33.0327 15.8675 31.6293 21.3318C30.4241 26.0239 32.4772 27.4531 34.7625 30.0089C35.4066 30.729 36.2107 31.7188 36.9317 32.6598C40.065 36.7497 38.3606 41.0203 37.8928 42.2081C37.5854 42.9898 37.5127 44.1328 37.4529 44.955C37.4383 45.1552 37.6543 45.293 37.8245 45.1862C40.566 43.4654 45.4631 39.281 47.2957 32.1806Z" fill="#293648"/></svg>`,
     // terminal
-    icon_consortium: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1927)"><path d="M38 41.1776V50.0011H12V41.1776H20.6667V23.5306H14.8889V14.707H29.3333V41.1776H38Z" fill="#293648"/><path d="M29.3337 0H20.667V8.82353H29.3337V0Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1927"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
+    icon_info: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1927)"><path d="M38 41.1776V50.0011H12V41.1776H20.6667V23.5306H14.8889V14.707H29.3333V41.1776H38Z" fill="#293648"/><path d="M29.3337 0H20.667V8.82353H29.3337V0Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1927"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
     icon_terminal: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M47.619 9.70588V7.35294H45.2381V5H4.7619V7.35294H2.38095V9.70588H0V40.2941H2.38095V42.6471H4.7619V45H45.2381V42.6471H47.619V40.2941H50V9.70588H47.619ZM19.0476 30.8824H16.6667V33.2353H14.2857V35.5882H9.52381V33.2353H11.9048V30.8824H14.2857V28.5294H16.6667V26.1765H19.0476V23.8235H16.6667V21.4706H14.2857V19.1176H11.9048V16.7647H9.52381V14.4118H14.2857V16.7647H16.6667V19.1176H19.0476V21.4706H21.4286V23.8235H23.8095V26.1765H21.4286V28.5294H19.0476V30.8824ZM40.4762 35.5882H21.4286V33.2353H40.4762V35.5882Z" fill="#293648"/></svg>`,
     icon_theme: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_2038_1948)"><path d="M39.4634 26.3141V28.944H34.2037V26.3141H28.944V23.6843H26.3141V21.0544H23.6843V18.4246H21.0544V13.1649H18.4246V0.015625H10.535V2.64547H7.90517V5.27532H5.27532V7.90517H2.64547V13.1649H0.015625V34.2037H2.64547V39.4634H5.27532V42.0932H7.90517V44.7231H10.535V47.3529H15.7947V49.9828H34.2037V47.3529H39.4634V44.7231H42.0932V42.0932H44.7231V39.4634H47.3529V36.8335H49.9828V26.3141H39.4634ZM47.3529 34.2037H44.7231V36.8335H42.0932V39.4634H39.4634V42.0932H36.8335V44.7231H31.5738V47.3529H18.4246V44.7231H13.1649V42.0932H10.535V39.4634H7.90517V36.8335H5.27532V31.5738H2.64547V15.7947H5.27532V10.535H7.90517V7.90517H10.535V5.27532H13.1649V2.64547H15.7947V15.7947H18.4246V21.0544H21.0544V23.6843H23.6843V26.3141H26.3141V28.944H31.5738V31.5738H42.0932V28.944H47.3529V34.2037Z" fill="#293648"/></g><defs><clipPath id="clip0_2038_1948"><rect width="50" height="50" fill="white"/></clipPath></defs></svg>`,
     // window icons
@@ -12851,7 +12924,10 @@ function year_filter (opts = default_opts, protocol) {
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
-  const on = { update_year_filter: on_active_state }
+  const on = { 
+    'update_year_filter': on_active_state,
+    'flip': flip
+   }
   const channel = use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
   // TEMPLATE
@@ -12894,6 +12970,18 @@ function year_filter (opts = default_opts, protocol) {
     if (active_state) year_buttons[active_state].classList.remove('active')
     year_buttons[year_button].classList.add('active')
     active_state = year_button
+  }
+  function flip ({ data: sorting }) {
+    const action = sorting ? 'prepend' : 'append'
+    year_wrapper.innerHTML = ''
+    for (let i = oldest_year; i <= latest_year; i++) {
+      const year_button = document.createElement('span')
+      year_button.classList.add('year_button')
+      year_button.innerHTML = i.toString()
+      year_button.onclick = toggle_active_state
+      year_buttons[i.toString()] = year_button
+      year_wrapper[action](year_button)
+    }
   }
 }
 function get_theme () {
