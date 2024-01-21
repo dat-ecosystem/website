@@ -1526,7 +1526,7 @@ function cover_app (opts = default_opts, protocol) {
       name: 'Cover.pdf',
       src: icon_pdf_reader_solid,
       action_buttons: [
-      {text: 'TELL ME MORE', action: 'toggle_desc', toggle_able: true}
+      {text: 'TELL ME MORE', action: 'toggle_desc', activate: true}
       ],
       data
     }
@@ -2881,6 +2881,8 @@ function app_timeline (opts = default_opts, protocol) {
   // Assigning all the icons
   const { img_src: {
       icon_folder_solid= `${prefix}/icon_folder_solid.svg`,
+      sort_down,
+      sort_up
   } } = data
 
   let cards_data = require(`../data/data.json`)['timeline']
@@ -2960,7 +2962,7 @@ function app_timeline (opts = default_opts, protocol) {
       name: 'TIMELINE', 
       src: icon_folder_solid,
       icon_buttons: [
-        { icon: icon_folder_solid, action: 'toggle_sorting' }
+        { icon: sort_down, icon_active: sort_up, action: 'toggle_sorting', toggle: true }
       ],
       data: data
     }
@@ -3753,7 +3755,7 @@ function icon_button (opts = default_opts, protocol) {
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
-  const on = { 'activate': onactivate, 'inactivate': oninactivate }
+  const on = { 'activate': onactivate, 'deactivate': ondeactivate }
   const channel = use_protocol('up')({ protocol, state,  on })
   // ----------------------------------------
   // TEMPLATE
@@ -3787,7 +3789,7 @@ function icon_button (opts = default_opts, protocol) {
 
   return el
 
-  function oninactivate () {
+  function ondeactivate () {
     state.status.active = false
     icon_button.classList.toggle('active', state.status.active)
     if (svg_active) icon_button.replaceChildren(svg_icon)
@@ -4382,7 +4384,7 @@ function sm_icon_button_alt (opts = default_opts, protocol) {
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
-  let { toggle, src, src_active } = opts
+  let { activate, toggle, src, src_active } = opts
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
@@ -4414,7 +4416,8 @@ function sm_icon_button_alt (opts = default_opts, protocol) {
     })
     if (!toggle) return
     if (src_active) sm_icon_button_alt.innerHTML = active_state ? src_active : src
-    sm_icon_button_alt.classList.toggle('active', active_state)
+    if(activate)
+      sm_icon_button_alt.classList.toggle('active', active_state)
     active_state = !active_state
   }
 }
@@ -4983,7 +4986,7 @@ function text_button (opts = default_opts, protocol) {
   // ----------------------------------------
   // PROTOCOL
   // ----------------------------------------
-  const on = { 'activate': onactivate, 'inactivate': oninactivate }
+  const on = { 'activate': onactivate, 'deactivate': ondeactivate }
   const channel = use_protocol('up')({ protocol, state , on })
   // ----------------------------------------
   // TEMPLATE
@@ -5003,7 +5006,7 @@ function text_button (opts = default_opts, protocol) {
 
   return el
 
-  function oninactivate (message) {
+  function ondeactivate (message) {
     state.status.active = false
     text_button.classList.toggle('active', state.status.active)
   }
@@ -7099,12 +7102,6 @@ function important_documents (opts = default_opts, protocol) {
     async function toggle_active_state (message) {
       const { active_state } = message.data
       if (active_state === 'active') important_documents_wrapper.style.display = 'none'
-      const channel = state.net[state.aka.up]
-      channel.send({
-        head: [id, channel.send.id, channel.mid++],
-        type: 'deactivate_tick',
-        data: opts.name
-      })
     }
   }
   // ----------------------------------------
@@ -7412,7 +7409,7 @@ function info_page (opts = default_opts, protocol) {
 
   function watch_scrollbar () {
     const channel = state.net[state.aka.scrollbar]
-    ro.observe(scrollbar_wrapper)
+    ro.observe(popup_wrapper)
   }
   function on_scroll (message) {
     const channel = state.net[state.aka.scrollbar]
@@ -7517,7 +7514,7 @@ function get_theme () {
       top: 0;
       left: 0;
       z-index: 20;
-      height: 100%;
+      height: max-content;
       scrollbar-width: none; /* For Firefox */
     }
     
@@ -7542,8 +7539,7 @@ function get_theme () {
     }
     @container (min-width: 768px) {
       .main_wrapper .popup_wrapper {
-        padding: 30px;
-        padding-left: 100px;
+        padding: 30px 30px 0 100px;
       }
     }
     @container (min-width: 1200px) {
@@ -7745,12 +7741,6 @@ function manifesto (opts = default_opts, protocol) {
     async function toggle_active_state (message) {
       const { active_state } = message.data
       if (active_state === 'active') mission_statement_wrapper.style.display = 'none'
-      const channel = state.net[state.aka.up]
-      channel.send({
-        head: [id, channel.send.id, channel.mid++],
-        type: 'deactivate_tick',
-        data: opts.name
-      })
     }
   }
   { // scrollbar
@@ -8594,7 +8584,7 @@ function navbar (opts = default_opts, protocol) {
       channel.send({
         head: [id, channel.send.id, channel.mid++],
         refs: { cause: message.head },
-        type: state.status.dropdown_collapsed ? 'activate' : 'inactivate',
+        type: state.status.dropdown_collapsed ? 'activate' : 'deactivate',
       })
     }
   }
@@ -8711,7 +8701,7 @@ function navbar (opts = default_opts, protocol) {
       channel.send({
         head: [id, channel.send.id, channel.mid++],
         refs: { cause: message.head },
-        type: state.status.theme_dark ? 'activate' : 'inactivate',
+        type: state.status.theme_dark ? 'activate' : 'deactivate',
       })
     }
   }
@@ -8763,7 +8753,7 @@ function navbar (opts = default_opts, protocol) {
     if (ex_channel) ex_channel.send({ // old active nav button
       head: [id, ex_channel.send.id, ex_channel.mid++],
       refs: { cause: head },
-      type: 'inactivate',
+      type: 'deactivate',
     })
     if (be_channel) be_channel.send({ // new active nav button
       head: [id, be_channel.send.id, be_channel.mid++],
@@ -8785,7 +8775,7 @@ function navbar (opts = default_opts, protocol) {
     if (ex_channel) ex_channel.send({ // old active nav button
       head: [id, ex_channel.send.id, ex_channel.mid++],
       refs: { cause: head },
-      type: 'inactivate',
+      type: 'deactivate',
     })
     if (be_channel) be_channel.send({ // new active nav button
       head: [id, be_channel.send.id, be_channel.mid++],
@@ -8798,7 +8788,7 @@ function navbar (opts = default_opts, protocol) {
     const channel = state.net[state.aka.terminal_button]
     channel.send({
       head: [id, channel.send.id, channel.mid++],
-      type: state.status.terminal_collapsed ? 'activate' : 'inactivate',
+      type: state.status.terminal_collapsed ? 'activate' : 'deactivate',
     })
   }
 }
@@ -9071,12 +9061,6 @@ function our_alumni (opts = default_opts, protocol) {
     async function toggle_active_state (message) {
       const { active_state } = message.data
       if (active_state === 'active') our_alumni_wrapper.style.display = 'none'
-      const channel = state.net[state.aka.up]
-      channel.send({
-        head: [id, channel.send.id, channel.mid++],
-        type: 'deactivate_tick',
-        data: opts.name
-      })
     }
   }
   { // scrollbar
@@ -9347,12 +9331,6 @@ function our_members (opts = default_opts, protocol) {
     async function toggle_active_state (message) {
       const { active_state } = message.data
       if (active_state === 'active') our_members_wrapper.style.display = 'none'
-      const channel = state.net[state.aka.up]
-      channel.send({
-        head: [id, channel.send.id, channel.mid++],
-        type: 'deactivate_tick',
-        data: opts.name
-      })
     }
   }
   // ----------------------------------------
@@ -11693,6 +11671,9 @@ const dark_theme = {
     icon_arrow_up: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.5789 9H18.4211V17H7.89473V27.6667H0V41H18.4211V33H31.5789V41H50V27.6667H42.1053V17H31.5789V9Z" fill="#293648"/></svg>`,
     icon_arrow_down_light: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="white"/></svg>`,
     icon_arrow_up_light: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.579 9L18.421 9V17H7.89475V27.6667H1.2659e-06L0 41H18.421V33H31.579V41H50V27.6667H42.1054V17H31.579V9Z" fill="white"/></svg>`,
+    sort: `<svg width="12" height="18" viewBox="0 0 12 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 3.29814e-06L8 0V2L10 2V4H12L12 8H0V4H2L2 2H4V3.29814e-06ZM11 7L11 5L9 5L9 3L7 3V1L5 1V3H3L3 5L1 5.00001L0.999999 7.00001L11 7Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M4 18L8 18V16L10 16V14H12L12 10H0V14H2L2 16H4V18ZM11 11L11 13L9 13L9 15L7 15V17H5V15H3L3 13L1 13L0.999999 11L11 11Z" fill="#293648"/></svg>`,
+    sort_down: `<svg width="12" height="18" viewBox="0 0 12 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 3.29814e-06L8 0V2L10 2V4H12L12 8H0V4H2L2 2H4V3.29814e-06ZM11 7L11 5L9 5L9 3L7 3V1L5 1V3H3L3 5L1 5.00001L0.999999 7.00001L11 7Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M4 18L8 18V16L10 16V14H12L12 10H0V14H2L2 16H4V18Z" fill="#293648"/></svg>`,
+    sort_up: `<svg width="12" height="18" viewBox="0 0 12 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 3.29814e-06L8 0V2L10 2V4H12L12 8H0V4H2L2 2H4V3.29814e-06Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M4 18L8 18V16L10 16V14H12L12 10H0V14H2L2 16H4V18ZM11 11L11 13L9 13L9 15L7 15V17H5V15H3L3 13L1 13L0.999999 11L11 11Z" fill="#293648"/></svg>`,
     // actions
     icon_search : `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.7627 2.27344H25.5832V4.73044H12.7627V2.27344Z" fill="#293648"/><path d="M12.7627 32.9844H25.5832V35.4414H12.7627V32.9844Z" fill="#293648"/><path d="M6.93457 4.73047H12.7621V7.18747H6.93457V4.73047Z" fill="#293648"/><path d="M6.93457 30.5273H12.7621V32.9844H6.93457V30.5273Z" fill="#293648"/><path d="M4.60352 7.1875H6.93452V14.5585H4.60352V7.1875Z" fill="#293648"/><path d="M4.60352 23.1562H6.93452V30.5272H4.60352V23.1562Z" fill="#293648"/><path d="M2.27246 13.3281H4.60346V24.3846H2.27246V13.3281Z" fill="#293648"/><path d="M31.4102 7.1875H33.7413V14.5585H31.4102V7.1875Z" fill="#293648"/><path d="M33.7416 35.4433H31.4105V32.9863H25.583V30.5292H31.4105V24.3867H33.7416V30.5292H36.0726V32.9863H38.4035V35.4433H40.7346V37.9004H43.0655V40.3574H45.3966V42.8142H47.7276V47.7283H43.0655V45.2713H40.7346V42.8142H38.4035V40.3574H36.0726V37.9004H33.7416V35.4433Z" fill="#293648"/><path d="M33.7412 13.3281H36.0721V24.3846H33.7412V13.3281Z" fill="#293648"/><path d="M25.583 4.73047H31.4105V7.18747H25.583V4.73047Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12.1936 1.70312H26.1505V4.16012H31.978V6.61712H34.3091V12.7596H36.64V24.9524H34.3091V29.9586H36.64V32.4156H38.9709V34.8727H41.3021V37.3297H43.633V39.7868H45.9641V42.2436H48.295V48.294H42.4966V45.837H40.1657V43.3799H37.8346V40.9231H35.5036V38.4661H33.1727V36.009H30.8416V33.552H26.1505V36.009H12.1936V33.552H6.3661V31.0949H4.0351V24.9524H1.7041V12.7596H4.0351V6.61712H6.3661V4.16012H12.1936V1.70312ZM12.7618 4.72831H6.93428V7.18531H4.60328V13.3278H2.27228V24.3843H4.60328V30.5268H6.93428V32.9838H12.7618V35.4409H25.5823V32.9838H31.4098V35.4409H33.7409V37.8979H36.0718V40.3549H38.4027V42.8118H40.7339V45.2688H43.0648V47.7259H47.7268V42.8118H45.3959V40.3549H43.0648V37.8979H40.7339V35.4409H38.4027V32.9838H36.0718V30.5268H33.7409V24.3843H36.0718V13.3278H33.7409V7.18531H31.4098V4.72831H25.5823V2.27131H12.7618V4.72831ZM25.5823 4.72831H12.7618V7.18531H6.93428V14.5563H4.60328V23.1559H6.93428V30.5268H12.7618V32.9838H25.5823V30.5268H31.4098V24.3843H33.7409V14.5563H31.4098V7.18531H25.5823V4.72831ZM25.0141 5.29649H13.33V7.75349H7.50247V15.1245H5.17147V22.5876H7.50247V29.9586H13.33V32.4156H25.0141V29.9586H30.8416V23.8161H33.1727V15.1245H30.8416V7.75349H25.0141V5.29649Z" fill="#293648"/></svg>`,
     // images - @TODO: those images below should be svgs as well:
@@ -11790,6 +11771,9 @@ const light_theme = {
     icon_arrow_up: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.5789 9H18.4211V17H7.89473V27.6667H0V41H18.4211V33H31.5789V41H50V27.6667H42.1053V17H31.5789V9Z" fill="#293648"/></svg>`,
     icon_arrow_down_light: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.421 41H31.579V33H42.1054V22.3333H50V9L31.579 9V17H18.421V9L1.2659e-06 9L0 22.3333H7.89475V33H18.421V41Z" fill="white"/></svg>`,
     icon_arrow_up_light: `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.579 9L18.421 9V17H7.89475V27.6667H1.2659e-06L0 41H18.421V33H31.579V41H50V27.6667H42.1054V17H31.579V9Z" fill="white"/></svg>`,
+    sort: `<svg width="12" height="18" viewBox="0 0 12 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 3.29814e-06L8 0V2L10 2V4H12L12 8H0V4H2L2 2H4V3.29814e-06ZM11 7L11 5L9 5L9 3L7 3V1L5 1V3H3L3 5L1 5.00001L0.999999 7.00001L11 7Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M4 18L8 18V16L10 16V14H12L12 10H0V14H2L2 16H4V18ZM11 11L11 13L9 13L9 15L7 15V17H5V15H3L3 13L1 13L0.999999 11L11 11Z" fill="#293648"/></svg>`,
+    sort_down: `<svg width="12" height="18" viewBox="0 0 12 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 3.29814e-06L8 0V2L10 2V4H12L12 8H0V4H2L2 2H4V3.29814e-06ZM11 7L11 5L9 5L9 3L7 3V1L5 1V3H3L3 5L1 5.00001L0.999999 7.00001L11 7Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M4 18L8 18V16L10 16V14H12L12 10H0V14H2L2 16H4V18Z" fill="#293648"/></svg>`,
+    sort_up: `<svg width="12" height="18" viewBox="0 0 12 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 3.29814e-06L8 0V2L10 2V4H12L12 8H0V4H2L2 2H4V3.29814e-06Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M4 18L8 18V16L10 16V14H12L12 10H0V14H2L2 16H4V18ZM11 11L11 13L9 13L9 15L7 15V17H5V15H3L3 13L1 13L0.999999 11L11 11Z" fill="#293648"/></svg>`,
     // actions
     icon_search : `<svg width="15" height="15" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.7627 2.27344H25.5832V4.73044H12.7627V2.27344Z" fill="#293648"/><path d="M12.7627 32.9844H25.5832V35.4414H12.7627V32.9844Z" fill="#293648"/><path d="M6.93457 4.73047H12.7621V7.18747H6.93457V4.73047Z" fill="#293648"/><path d="M6.93457 30.5273H12.7621V32.9844H6.93457V30.5273Z" fill="#293648"/><path d="M4.60352 7.1875H6.93452V14.5585H4.60352V7.1875Z" fill="#293648"/><path d="M4.60352 23.1562H6.93452V30.5272H4.60352V23.1562Z" fill="#293648"/><path d="M2.27246 13.3281H4.60346V24.3846H2.27246V13.3281Z" fill="#293648"/><path d="M31.4102 7.1875H33.7413V14.5585H31.4102V7.1875Z" fill="#293648"/><path d="M33.7416 35.4433H31.4105V32.9863H25.583V30.5292H31.4105V24.3867H33.7416V30.5292H36.0726V32.9863H38.4035V35.4433H40.7346V37.9004H43.0655V40.3574H45.3966V42.8142H47.7276V47.7283H43.0655V45.2713H40.7346V42.8142H38.4035V40.3574H36.0726V37.9004H33.7416V35.4433Z" fill="#293648"/><path d="M33.7412 13.3281H36.0721V24.3846H33.7412V13.3281Z" fill="#293648"/><path d="M25.583 4.73047H31.4105V7.18747H25.583V4.73047Z" fill="#293648"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12.1936 1.70312H26.1505V4.16012H31.978V6.61712H34.3091V12.7596H36.64V24.9524H34.3091V29.9586H36.64V32.4156H38.9709V34.8727H41.3021V37.3297H43.633V39.7868H45.9641V42.2436H48.295V48.294H42.4966V45.837H40.1657V43.3799H37.8346V40.9231H35.5036V38.4661H33.1727V36.009H30.8416V33.552H26.1505V36.009H12.1936V33.552H6.3661V31.0949H4.0351V24.9524H1.7041V12.7596H4.0351V6.61712H6.3661V4.16012H12.1936V1.70312ZM12.7618 4.72831H6.93428V7.18531H4.60328V13.3278H2.27228V24.3843H4.60328V30.5268H6.93428V32.9838H12.7618V35.4409H25.5823V32.9838H31.4098V35.4409H33.7409V37.8979H36.0718V40.3549H38.4027V42.8118H40.7339V45.2688H43.0648V47.7259H47.7268V42.8118H45.3959V40.3549H43.0648V37.8979H40.7339V35.4409H38.4027V32.9838H36.0718V30.5268H33.7409V24.3843H36.0718V13.3278H33.7409V7.18531H31.4098V4.72831H25.5823V2.27131H12.7618V4.72831ZM25.5823 4.72831H12.7618V7.18531H6.93428V14.5563H4.60328V23.1559H6.93428V30.5268H12.7618V32.9838H25.5823V30.5268H31.4098V24.3843H33.7409V14.5563H31.4098V7.18531H25.5823V4.72831ZM25.0141 5.29649H13.33V7.75349H7.50247V15.1245H5.17147V22.5876H7.50247V29.9586H13.33V32.4156H25.0141V29.9586H30.8416V23.8161H33.1727V15.1245H30.8416V7.75349H25.0141V5.29649Z" fill="#293648"/></svg>`,
     // images - @TODO: should be svgs as well
@@ -12505,12 +12489,6 @@ function tools (opts = default_opts, protocol) {
     async function toggle_active_state (message) {
       const { active_state } = message.data
       if (active_state === 'active') tools_wrapper.style.display = 'none'
-      const channel = state.net[state.aka.up]
-      channel.send({
-        head: [id, channel.send.id, channel.mid++],
-        type: 'deactivate_tick',
-        data: opts.name
-      })
     }
   }
   // ----------------------------------------
@@ -12735,10 +12713,10 @@ function window_bar (opts = default_opts, protocol) {
   }
   { // icon buttons
     if (opts.icon_buttons) {
-      function make_element ({ icon, action: type }, i) {
+      function make_element ({ icon, icon_active, toggle, action: type }, i) {
         const on = { 'click': onclick }
         const protocol = use_protocol(`${type}_${i}`)({ state, on })
-        const icon_opts = { src: icon }
+        const icon_opts = { src: icon, src_active: icon_active, toggle }
         const element = shadowfy()(sm_icon_button_alt(icon_opts, protocol))
         return element
         function onclick (message) {
