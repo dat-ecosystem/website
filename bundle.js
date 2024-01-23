@@ -3473,7 +3473,7 @@ function get_theme () {
       display: none;
       z-index: 2;
       height: 0;
-      top: -165px;
+      top: -166px;
       position: relative;
       /*border: 1px solid var(--primary_color);*/
     }
@@ -8380,8 +8380,9 @@ function month_filter (opts = default_opts, protocol) {
 function get_theme () {
   return `
     .main_wrapper{
-      background-image: radial-gradient(var(--bg_color_3) 1px, var(--bg_color_2) 2px);
-      background-size: 8px 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: end;
       min-height: 165px;
     }
     .month_filter_wrapper {
@@ -8393,6 +8394,8 @@ function get_theme () {
       overflow-x: scroll;
       overflow-y: hidden;
       scrollbar-width:none;
+      background-image: radial-gradient(var(--bg_color_3) 1px, var(--bg_color_2) 2px);
+      background-size: 8px 8px;
     }
     .scrollbar_wrapper{
       --s: 15px; /* control the size */
