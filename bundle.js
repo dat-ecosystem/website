@@ -7477,6 +7477,7 @@ function get_theme () {
       height: 94vh;
       max-height: 94vh;
       padding: 0 0 30px 20px;
+      scrollbar-width: none; /* For Firefox */
     }
     .scrollbar_wrapper::-webkit-scrollbar {
       display: none;
@@ -10576,7 +10577,9 @@ function tab_window (opts = default_opts, protocol) {
   // PROTOCOL
   // ----------------------------------------
   const on = { 
-    'toggle_fullscreen': toggle_fullscreen
+    'toggle_fullscreen': toggle_fullscreen,
+    'shrink': on_shrink,
+    'stretch': on_stretch
   }
   const channel = use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
@@ -10810,7 +10813,12 @@ function tab_window (opts = default_opts, protocol) {
   function toggle_fullscreen (msg){
     scrollbar_wrapper.classList.toggle('fullscreen')
   }
-
+  async function on_shrink (){
+    scrollbar_wrapper.classList.add('shrink')
+  }
+  async function on_stretch (){
+    scrollbar_wrapper.classList.remove('shrink')
+  }
 }
 
 function get_theme() {
@@ -10826,9 +10834,16 @@ function get_theme() {
       overflow-y: scroll;
       overflow-x: clip;
       width: 100%;
+      scrollbar-width: none; /* For Firefox */
+    }
+    .scrollbar_wrapper.shrink{
+      max-height: 190px;
     }
     .scrollbar_wrapper.fullscreen{
       max-height: calc(100vh - 80px);
+    }
+    .scrollbar_wrapper.fullscreen.shrink{
+      max-height: calc(100vh - 110px);
     }
     .scrollbar_wrapper::-webkit-scrollbar {
       display: none;
@@ -10963,12 +10978,32 @@ function terminal (opts = default_opts, protocol) {
       refs: { },
       type: 'handle_scroll',
     })
+    //Added this to avoid a very sticky situation where the height of tabs_window needs to be changed when scrollbar appear
+    if(scrollbar_wrapper.clientHeight !== status.scrollbar_height){
+      status.scrollbar_height = scrollbar_wrapper.clientHeight
+      if(scrollbar_wrapper.clientHeight > 0)
+        for(let i = 0; i < status.tab_id; i++){
+          const channel = state.net[state.aka[`win-tab-${i}`]]
+          channel.send({
+            head: [id, scroll_channel.send.id, scroll_channel.mid++],
+            type: 'shrink'
+          })
+        }
+      else
+        for(let i = 0; i < status.tab_id; i++){
+          const channel = state.net[state.aka[`win-tab-${i}`]]
+          channel.send({
+            head: [id, scroll_channel.send.id, scroll_channel.mid++],
+            type: 'stretch'
+          })
+        }
+    }
   })
   // ----------------------------------------
   // ID + JSON STATE
   // ----------------------------------------
   const id = `${ID}:${count++}` // assigns their own name
-  const status = { active_tab: null, tab_id: 0, tab: {} }
+  const status = { active_tab: null, tab_id: 1, tab: {}, scrollbar_height: 0 }
   const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
   const cache = resources({})
   // ----------------------------------------
@@ -10998,18 +11033,19 @@ function terminal (opts = default_opts, protocol) {
       <div class="footer">
         <div class="tabs_bar">
           <div class="tab_buttons"></div>
-          <div class="scrollbar-wrapper"></div>
         </div>
         <div class="buttons"></div>
       </div>
+      <div class="scrollbar_wrapper"></div>
     </div>
   </div>`
   const terminal_wrapper = shadow.querySelector('.terminal')
   const tab_buttons = shadow.querySelector('.tab_buttons')
+  const tabs_bar = shadow.querySelector('.tabs_bar')
   // ----------------------------------------
   const tab_buttons_shadow = tab_buttons.attachShadow(shopts)
   const tab_display = shadow.querySelector('.tab_display').attachShadow(shopts)
-  const scrollbar_wrapper = shadow.querySelector('.scrollbar-wrapper').attachShadow(shopts)
+  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
   const buttons = shadow.querySelector('.buttons').attachShadow(shopts)
   // ----------------------------------------
   // ELEMENTS
@@ -11111,7 +11147,7 @@ function terminal (opts = default_opts, protocol) {
   // ----------------------------------------
   // INIT
   // ----------------------------------------
-  add_tab('Home')
+  add_tab('tab-0')
 
   return el
 
@@ -11272,8 +11308,8 @@ function get_theme () {
     }
     .tabs_bar .tab_buttons {
       display: flex;
-      overflow-x: hidden;
-      overflow-y: scroll;
+      overflow-x: scroll;
+      scrollbar-width: none; /* For Firefox */
     }
     .tabs_bar .tab_buttons::-webkit-scrollbar {
       display: none;
