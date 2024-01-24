@@ -3056,18 +3056,10 @@ function app_timeline (opts = default_opts, protocol) {
     main_wrapper.append(element)
     function on_value (message) { set_filter(message.data) }
     async function toggle_month_filter (message) {
-      if (month_wrapper.contains(month_filter_wrapper)) {
-        month_wrapper.removeChild(month_filter_wrapper)
-        timeline_wrapper.classList.remove('shrink')
-      } else {
-        month_wrapper.append(month_filter_wrapper)
-        timeline_wrapper.classList.add('shrink')
-      }
+      month_filter_wrapper.classList.toggle('show')
     }
     async function toggle_year_filter (message) {
-      if (filter_wrapper.contains(year_filter_wrapper)) {
-        filter_wrapper.removeChild(year_filter_wrapper)
-      } else filter_wrapper.append(year_filter_wrapper)
+      year_filter_wrapper.classList.toggle('hide')
     }
   }
   var year_filter_wrapper
@@ -3094,6 +3086,7 @@ function app_timeline (opts = default_opts, protocol) {
     const opts = { data }
     month_filter_wrapper = shadowfy()(month_filter(opts, protocol))
     month_filter_wrapper.classList.add('month_filter_wrapper')
+    month_wrapper.append(month_filter_wrapper)
     function on_set_scroll ({ data }) {
       set_scroll(data)
       updateCalendar()
@@ -3412,9 +3405,6 @@ function get_theme () {
       gap: 20px;
       scrollbar-width: none; /* For Firefox */
     }
-    .main_wrapper .filter_wrapper .timeline_wrapper.shrink {
-      height: 333px;
-    }
     .main_wrapper .filter_wrapper .timeline_wrapper.hide > div {
       display: none;
     }
@@ -3476,15 +3466,19 @@ function get_theme () {
       background-size: var(--s) var(--s);  
       border :1px solid var(--primary_color);
     }
+    .main_wrapper .filter_wrapper .year_filter_wrapper.hide{
+      display: none;
+    }
     .month_filter_wrapper{
-      --s: 15px; /* control the size */
-      --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
-      background:
-        repeating-conic-gradient(at 33% 33%,var(--_g)),
-        repeating-conic-gradient(at 66% 66%,var(--_g)),
-        var(--bg_color_3);  /* second color */  
-      background-size: var(--s) var(--s);  
-      border: 1px solid var(--primary_color);
+      display: none;
+      z-index: 2;
+      height: 0;
+      top: -166px;
+      position: relative;
+      /*border: 1px solid var(--primary_color);*/
+    }
+    .month_filter_wrapper.show{
+      display: block;
     }
     @container(min-width: 400px) {
       .main_wrapper .filter_wrapper .timeline_wrapper .card_group:last-child,
@@ -3500,11 +3494,6 @@ function get_theme () {
     @container(min-width: 1200px) {
       .main_wrapper .filter_wrapper .timeline_wrapper .card_group {
         grid-template-columns: repeat(3, 4fr);
-      }
-    }
-    @container(min-width: 1900px) {
-      .main_wrapper .filter_wrapper .timeline_wrapper.shrink {
-        height: 355px;
       }
     }
 
@@ -7488,6 +7477,7 @@ function get_theme () {
       height: 94vh;
       max-height: 94vh;
       padding: 0 0 30px 20px;
+      scrollbar-width: none; /* For Firefox */
     }
     .scrollbar_wrapper::-webkit-scrollbar {
       display: none;
@@ -8191,12 +8181,12 @@ function month_filter (opts = default_opts, protocol) {
   const el = document.createElement('div')
   const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
-  shadow.innerHTML = `<div class="scrollbar_wrapper">
+  shadow.innerHTML = `<div class="main_wrapper">
     <div class="month_filter_wrapper"></div>
-    <div class="scrollbar-wrapper"></div>
+    <div class="scrollbar_wrapper"></div>
   </div>`
   const month_filter_wrapper = shadow.querySelector('.month_filter_wrapper')
-  const scrollbar_wrapper = shadow.querySelector('.scrollbar-wrapper')
+  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
   // ----------------------------------------
   const scrollbar_wrapper_shadow = scrollbar_wrapper.attachShadow(shopts)
   // ----------------------------------------
@@ -8389,6 +8379,12 @@ function month_filter (opts = default_opts, protocol) {
 }
 function get_theme () {
   return `
+    .main_wrapper{
+      display: flex;
+      flex-direction: column;
+      justify-content: end;
+      min-height: 165px;
+    }
     .month_filter_wrapper {
       display: flex;
       height: 131px;
@@ -8398,6 +8394,17 @@ function get_theme () {
       overflow-x: scroll;
       overflow-y: hidden;
       scrollbar-width:none;
+      background-image: radial-gradient(var(--bg_color_3) 1px, var(--bg_color_2) 2px);
+      background-size: 8px 8px;
+    }
+    .scrollbar_wrapper{
+      --s: 15px; /* control the size */
+      --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
+      background:
+        repeating-conic-gradient(at 33% 33%,var(--_g)),
+        repeating-conic-gradient(at 66% 66%,var(--_g)),
+        var(--bg_color_3);  /* second color */  
+      background-size: var(--s) var(--s);
     }
     ::-webkit-scrollbar {
       display: none;
@@ -10573,7 +10580,9 @@ function tab_window (opts = default_opts, protocol) {
   // PROTOCOL
   // ----------------------------------------
   const on = { 
-    'toggle_fullscreen': toggle_fullscreen
+    'toggle_fullscreen': toggle_fullscreen,
+    'shrink': on_shrink,
+    'stretch': on_stretch
   }
   const channel = use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
@@ -10807,7 +10816,12 @@ function tab_window (opts = default_opts, protocol) {
   function toggle_fullscreen (msg){
     scrollbar_wrapper.classList.toggle('fullscreen')
   }
-
+  async function on_shrink (){
+    scrollbar_wrapper.classList.add('shrink')
+  }
+  async function on_stretch (){
+    scrollbar_wrapper.classList.remove('shrink')
+  }
 }
 
 function get_theme() {
@@ -10823,9 +10837,16 @@ function get_theme() {
       overflow-y: scroll;
       overflow-x: clip;
       width: 100%;
+      scrollbar-width: none; /* For Firefox */
+    }
+    .scrollbar_wrapper.shrink{
+      max-height: 190px;
     }
     .scrollbar_wrapper.fullscreen{
       max-height: calc(100vh - 80px);
+    }
+    .scrollbar_wrapper.fullscreen.shrink{
+      max-height: calc(100vh - 110px);
     }
     .scrollbar_wrapper::-webkit-scrollbar {
       display: none;
@@ -10960,12 +10981,32 @@ function terminal (opts = default_opts, protocol) {
       refs: { },
       type: 'handle_scroll',
     })
+    //Added this to avoid a very sticky situation where the height of tabs_window needs to be changed when scrollbar appear
+    if(scrollbar_wrapper.clientHeight !== status.scrollbar_height){
+      status.scrollbar_height = scrollbar_wrapper.clientHeight
+      if(scrollbar_wrapper.clientHeight > 0)
+        for(let i = 0; i < status.tab_id; i++){
+          const channel = state.net[state.aka[`win-tab-${i}`]]
+          channel.send({
+            head: [id, scroll_channel.send.id, scroll_channel.mid++],
+            type: 'shrink'
+          })
+        }
+      else
+        for(let i = 0; i < status.tab_id; i++){
+          const channel = state.net[state.aka[`win-tab-${i}`]]
+          channel.send({
+            head: [id, scroll_channel.send.id, scroll_channel.mid++],
+            type: 'stretch'
+          })
+        }
+    }
   })
   // ----------------------------------------
   // ID + JSON STATE
   // ----------------------------------------
   const id = `${ID}:${count++}` // assigns their own name
-  const status = { active_tab: null, tab_id: 0, tab: {} }
+  const status = { active_tab: null, tab_id: 1, tab: {}, scrollbar_height: 0 }
   const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
   const cache = resources({})
   // ----------------------------------------
@@ -10995,18 +11036,19 @@ function terminal (opts = default_opts, protocol) {
       <div class="footer">
         <div class="tabs_bar">
           <div class="tab_buttons"></div>
-          <div class="scrollbar-wrapper"></div>
         </div>
         <div class="buttons"></div>
       </div>
+      <div class="scrollbar_wrapper"></div>
     </div>
   </div>`
   const terminal_wrapper = shadow.querySelector('.terminal')
   const tab_buttons = shadow.querySelector('.tab_buttons')
+  const tabs_bar = shadow.querySelector('.tabs_bar')
   // ----------------------------------------
   const tab_buttons_shadow = tab_buttons.attachShadow(shopts)
   const tab_display = shadow.querySelector('.tab_display').attachShadow(shopts)
-  const scrollbar_wrapper = shadow.querySelector('.scrollbar-wrapper').attachShadow(shopts)
+  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
   const buttons = shadow.querySelector('.buttons').attachShadow(shopts)
   // ----------------------------------------
   // ELEMENTS
@@ -11108,7 +11150,7 @@ function terminal (opts = default_opts, protocol) {
   // ----------------------------------------
   // INIT
   // ----------------------------------------
-  add_tab('Home')
+  add_tab('tab-0')
 
   return el
 
@@ -11269,8 +11311,8 @@ function get_theme () {
     }
     .tabs_bar .tab_buttons {
       display: flex;
-      overflow-x: hidden;
-      overflow-y: scroll;
+      overflow-x: scroll;
+      scrollbar-width: none; /* For Firefox */
     }
     .tabs_bar .tab_buttons::-webkit-scrollbar {
       display: none;
@@ -12158,7 +12200,7 @@ function get_theme () {
       .filter_wrapper {
       }
       .timeline_filter {
-        grid-template-columns: 1fr 1fr 9fr 1fr;
+        grid-template-columns: 1fr 1fr 9fr .5fr;
       }
     }
   `
@@ -12975,7 +13017,7 @@ function get_theme () {
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      width: 94px;
+      width: 91px;
       height: 100%;
       border: 1px solid var(--primary_color);
       box-sizing: border-box;
