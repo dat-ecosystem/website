@@ -57,6 +57,7 @@ async function desktop (opts = default_opts, protocol) {
   const navbar_sh = shadow.querySelector('.navbar').attachShadow(shopts)
   const content_sh = shadow.querySelector('.content').attachShadow(shopts)
   const terminal_sh = shadow.querySelector('.shell').attachShadow(shopts)
+  const content = shadow.querySelector('.content')
   // ----------------------------------------
   // RESOURCE POOL (can't be serialized)
   // ----------------------------------------
@@ -92,6 +93,7 @@ async function desktop (opts = default_opts, protocol) {
     const { data: active_page } = msg
     const page = navigate(active_page)
     content_sh.replaceChildren(page)
+    content.scrollTop = 0
   }
   function on_navigate (msg) {
     on_navigate_page(msg)
