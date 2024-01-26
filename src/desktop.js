@@ -80,12 +80,21 @@ async function desktop (opts = default_opts, protocol) {
     const element = navbar(opts, protocol)
     navbar_sh.append(element)
   }
+  if(screen.width < 900)
+    content.onscroll = on_scroll
   // ----------------------------------------
   // INIT
   // ----------------------------------------
 
   return el
 
+  function on_scroll () {
+    const nav_channel = state.net[state.aka.navbar]
+    nav_channel.send({
+      head: [id, nav_channel.send.id, nav_channel.mid++],
+      type: 'close_navmenu',
+    })
+  }
   function on_social (message) {
     console.log('@TODO: open ', message.data)
   }
@@ -100,7 +109,7 @@ async function desktop (opts = default_opts, protocol) {
     const { data: active_page } = msg
     const nav_channel = state.net[state.aka.navbar]
     nav_channel.send({
-      head: [id, channel.send.id, channel.mid++],
+      head: [id, nav_channel.send.id, nav_channel.mid++],
       type: 'change_highlight',
       data: active_page
     })
