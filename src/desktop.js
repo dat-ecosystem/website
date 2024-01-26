@@ -194,6 +194,9 @@ async function desktop (opts = default_opts, protocol) {
 function get_theme (opts) {
   return`
     * { box-sizing: border-box; }
+    body {
+        overscroll-behavior: contain;
+    }
     :host {
       display: flex;
       flex-direction: column;

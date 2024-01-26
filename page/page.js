@@ -74,7 +74,7 @@ async function config () {
   }
   `)
   const sheet = new CSSStyleSheet()
-  sheet.replaceSync(`html, body { padding:0px; margin: 0px; }`)
+  sheet.replaceSync(`html, body { padding:0px; margin: 0px; overscroll-behavior: contain; }`)
   document.adoptedStyleSheets = [fonts, sheet]
   document.head.append(meta, favicon)
   await document.fonts.ready // @TODO: investigate why there is a FOUC
