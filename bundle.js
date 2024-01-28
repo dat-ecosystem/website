@@ -799,7 +799,7 @@ async function config () {
   }
   `)
   const sheet = new CSSStyleSheet()
-  sheet.replaceSync(`html, body { padding:0px; margin: 0px; }`)
+  sheet.replaceSync(`html, body { padding:0px; margin: 0px; overscroll-behavior: contain; }`)
   document.adoptedStyleSheets = [fonts, sheet]
   document.head.append(meta, favicon)
   await document.fonts.ready // @TODO: investigate why there is a FOUC
@@ -818,7 +818,7 @@ async function boot (opts) {
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
-  const { page = 'INFO', theme = 'dark_theme' } = opts
+  const { page = 'HOME', theme = 'dark_theme' } = opts
   const { light_theme, dark_theme } = opts.themes
   const themes = { light_theme, dark_theme }
   // ----------------------------------------
@@ -979,6 +979,7 @@ async function desktop (opts = default_opts, protocol) {
   const navbar_sh = shadow.querySelector('.navbar').attachShadow(shopts)
   const content_sh = shadow.querySelector('.content').attachShadow(shopts)
   const terminal_sh = shadow.querySelector('.shell').attachShadow(shopts)
+  const content = shadow.querySelector('.content')
   // ----------------------------------------
   // RESOURCE POOL (can't be serialized)
   // ----------------------------------------
@@ -1001,12 +1002,21 @@ async function desktop (opts = default_opts, protocol) {
     const element = navbar(opts, protocol)
     navbar_sh.append(element)
   }
+  if(screen.width < 900)
+    content.onscroll = on_scroll
   // ----------------------------------------
   // INIT
   // ----------------------------------------
 
   return el
 
+  function on_scroll () {
+    const nav_channel = state.net[state.aka.navbar]
+    nav_channel.send({
+      head: [id, nav_channel.send.id, nav_channel.mid++],
+      type: 'close_navmenu',
+    })
+  }
   function on_social (message) {
     console.log('@TODO: open ', message.data)
   }
@@ -1014,13 +1024,14 @@ async function desktop (opts = default_opts, protocol) {
     const { data: active_page } = msg
     const page = navigate(active_page)
     content_sh.replaceChildren(page)
+    content.scrollTop = 0
   }
   function on_navigate (msg) {
     on_navigate_page(msg)
     const { data: active_page } = msg
     const nav_channel = state.net[state.aka.navbar]
     nav_channel.send({
-      head: [id, channel.send.id, channel.mid++],
+      head: [id, nav_channel.send.id, nav_channel.mid++],
       type: 'change_highlight',
       data: active_page
     })
@@ -1346,16 +1357,18 @@ function get_theme () {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 20px;
+    gap: 0px;
     position: relative;
     z-index: 1;
     color: var(--primary_color);
     text-align: center;
+    margin: 10px;
   }
   .about_us_wrapper .content_wrapper .img{
     background-image: var(--img_robot_3);
-    background-size: cover;
+    background-size: contain;
     background-position: center;
+    background-repeat: no-repeat;
     width: 122px;
     height: 190px;
   }
@@ -1384,7 +1397,11 @@ function get_theme () {
       height: auto;
     }
   }
-
+  @container (min-width: 510px) {
+    .about_us_wrapper .content_wrapper {
+      gap: 20px;
+    }
+  }
   `
 }
 // ----------------------------------------------------------------------------
@@ -1510,7 +1527,6 @@ function cover_app (opts = default_opts, protocol) {
   </div>`
   const cover_wrapper = shadow.querySelector('.cover_wrapper')
   // ----------------------------------------
-  const cover_desc = shadow.querySelector('.cover_desc')
   // ----------------------------------------
   const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
   // ----------------------------------------
@@ -1519,14 +1535,12 @@ function cover_app (opts = default_opts, protocol) {
   {
     const on = {
       'toggle_active_state': toggle_active_state,
-      'toggle_desc': toggle_desc
     }
     const protocol = use_protocol('windowbar')({ state, on })
     const opts = {
       name: 'Cover.pdf',
       src: icon_pdf_reader_solid,
       action_buttons: [
-      {text: 'TELL ME MORE', action: 'toggle_desc', activate: true}
       ],
       data
     }
@@ -1535,9 +1549,6 @@ function cover_app (opts = default_opts, protocol) {
     async function toggle_active_state (message) {
       const { active_state } = message.data
       if (active_state === 'active') el.style.display = 'none'
-    }
-    async function toggle_desc (message){
-      cover_desc.classList.toggle('active')
     }
   }
   // ----------------------------------------
@@ -1564,6 +1575,7 @@ function get_theme () {
       background-size: 10px 10px;
       background-color: var(--bg_color);
       border: 1px solid var(--primary_color);
+      container-type: inline-size;
     }
     .cover_content .cover_image {
       position: absolute;
@@ -1590,18 +1602,10 @@ function get_theme () {
       text-align: center;
     }
     .cover_content .content_wrapper img {
-      width: 400px;
+      width: 86vw;
       height: auto;
     }
     .cover_desc{
-      margin-bottom: 30px;
-      height: 0;
-      overflow: hidden;
-    }
-    .cover_desc h3{
-      margin-top: 0;
-    }
-    .cover_desc.active{
       height: auto;
       padding: 10px;
       width: 100% !important;
@@ -1611,6 +1615,12 @@ function get_theme () {
       letter-spacing: -2px;
       line-height: 18px;
       font-size: 16px;
+      margin-bottom: 30px;
+    }
+    @container (min-width: 510px) {
+      .cover_content .content_wrapper img {
+        width: 400px;
+      }
     }
   `
 }
@@ -1780,7 +1790,7 @@ function get_theme () {
       display: flex;
       flex-direction: column-reverse;
       align-items: flex-start;
-      padding: 20px 20px 0 0;
+      padding: 20px 20px 0 20px;
     }
     
     .main_wrapper .footer_wrapper .robot_img_2{
@@ -1832,6 +1842,9 @@ function get_theme () {
       .main_wrapper .pattern_img img {
         width: 300px;
         height: auto;
+      }
+      .main_wrapper .footer_wrapper {
+        padding: 20px 20px 0 0;
       }
     }
   `
@@ -3056,18 +3069,10 @@ function app_timeline (opts = default_opts, protocol) {
     main_wrapper.append(element)
     function on_value (message) { set_filter(message.data) }
     async function toggle_month_filter (message) {
-      if (month_wrapper.contains(month_filter_wrapper)) {
-        month_wrapper.removeChild(month_filter_wrapper)
-        timeline_wrapper.classList.remove('shrink')
-      } else {
-        month_wrapper.append(month_filter_wrapper)
-        timeline_wrapper.classList.add('shrink')
-      }
+      month_filter_wrapper.classList.toggle('show')
     }
     async function toggle_year_filter (message) {
-      if (filter_wrapper.contains(year_filter_wrapper)) {
-        filter_wrapper.removeChild(year_filter_wrapper)
-      } else filter_wrapper.append(year_filter_wrapper)
+      year_filter_wrapper.classList.toggle('hide')
     }
   }
   var year_filter_wrapper
@@ -3094,6 +3099,7 @@ function app_timeline (opts = default_opts, protocol) {
     const opts = { data }
     month_filter_wrapper = shadowfy()(month_filter(opts, protocol))
     month_filter_wrapper.classList.add('month_filter_wrapper')
+    month_wrapper.append(month_filter_wrapper)
     function on_set_scroll ({ data }) {
       set_scroll(data)
       updateCalendar()
@@ -3412,9 +3418,6 @@ function get_theme () {
       gap: 20px;
       scrollbar-width: none; /* For Firefox */
     }
-    .main_wrapper .filter_wrapper .timeline_wrapper.shrink {
-      height: 333px;
-    }
     .main_wrapper .filter_wrapper .timeline_wrapper.hide > div {
       display: none;
     }
@@ -3476,15 +3479,19 @@ function get_theme () {
       background-size: var(--s) var(--s);  
       border :1px solid var(--primary_color);
     }
+    .main_wrapper .filter_wrapper .year_filter_wrapper.hide{
+      display: none;
+    }
     .month_filter_wrapper{
-      --s: 15px; /* control the size */
-      --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
-      background:
-        repeating-conic-gradient(at 33% 33%,var(--_g)),
-        repeating-conic-gradient(at 66% 66%,var(--_g)),
-        var(--bg_color_3);  /* second color */  
-      background-size: var(--s) var(--s);  
-      border: 1px solid var(--primary_color);
+      display: none;
+      z-index: 2;
+      height: 0;
+      top: -166px;
+      position: relative;
+      /*border: 1px solid var(--primary_color);*/
+    }
+    .month_filter_wrapper.show{
+      display: block;
     }
     @container(min-width: 400px) {
       .main_wrapper .filter_wrapper .timeline_wrapper .card_group:last-child,
@@ -3500,11 +3507,6 @@ function get_theme () {
     @container(min-width: 1200px) {
       .main_wrapper .filter_wrapper .timeline_wrapper .card_group {
         grid-template-columns: repeat(3, 4fr);
-      }
-    }
-    @container(min-width: 1900px) {
-      .main_wrapper .filter_wrapper .timeline_wrapper.shrink {
-        height: 355px;
       }
     }
 
@@ -3749,7 +3751,7 @@ function icon_button (opts = default_opts, protocol) {
   // ----------------------------------------
   // OPTS
   // ----------------------------------------
-  const { src = '', src_active = '', activate = true, link = '' } = opts
+  const { src = '', src_active = '', activate = true, link = '', inverse = false } = opts
   const $src = src // @TODO: make those subscribable signals
   const $src_acitve = src_active
   // ----------------------------------------
@@ -3766,12 +3768,12 @@ function icon_button (opts = default_opts, protocol) {
 
   let icon_button
   if (link) {
-    shadow.innerHTML = `<div class="icon_btn">
+    shadow.innerHTML = `<div class="icon_btn ${inverse && 'inverse'}">
       <a target="_blank" href=${link}></a>
     </div>`
     icon_button = shadow.querySelector('.icon_btn a')
   } else {
-    shadow.innerHTML = `<div class="icon_btn"> </div>`
+    shadow.innerHTML = `<div class="icon_btn ${inverse && 'inverse'}"> </div>`
     icon_button = shadow.querySelector('.icon_btn')
   }
   // ----------------------------------------
@@ -3827,8 +3829,17 @@ function get_theme () {
       fill: var(--primary_color);
       pointer-events: none;
     }
+    .icon_btn.inverse{
+      background-color: var(--primary_color);
+    }
+    .icon_btn.inverse svg {
+      fill: var(--bg_color);
+    }
     .icon_btn *{
       fill: var(--primary_color);
+    }
+    .icon_btn.inverse *{
+      fill: var(--bg_color);
     }
     .icon_btn.active {
       background-color: var(--ac-2)
@@ -7095,6 +7106,7 @@ function important_documents (opts = default_opts, protocol) {
     const opts = {
       name: 'important_documents.md', 
       src: icon_pdf_reader,
+      close_button: true,
       data
     }
     const element = window_bar(opts, protocol)
@@ -7123,19 +7135,18 @@ function get_theme () {
       box-sizing: border-box;
     }
     .important_documents {
-      display: inline;
+      display: none;
     }
     .important_documents .documents_content {
       position: relative;
       display: flex;
-      width: 92vw;
-      height: 100vh;
+      width: 100%;
+      height: calc(100vh - 72px);
       flex-direction: column;
       padding: 10px;
       background-size: 10px 10px;
       background-color: var(--bg_color);
       border: 1px solid var(--primary_color);
-      margin-bottom: 30px;
     }
     .important_documents .documents_content h2 {
       margin: 0;
@@ -7151,6 +7162,10 @@ function get_theme () {
       .important_documents .documents_content {
         width: auto;
         height: auto;
+      }
+      .important_documents {
+        display: block;
+        margin-bottom: 30px;
       }
     }
   `
@@ -7208,7 +7223,7 @@ function resources (pool) {
 }).call(this)}).call(this,require('_process'),"/src/node_modules/important-documents/important-documents.js")
 },{"_process":2,"window-bar":55}],30:[function(require,module,exports){
 (function (process,__filename){(function (){
-const mission_statement = require('manifesto/manifesto')
+const manifesto = require('manifesto/manifesto')
 const important_documents = require('important-documents')
 const our_members = require('our-members')
 const our_alumni = require('our-alumni/our-alumni')
@@ -7381,10 +7396,10 @@ function info_page (opts = default_opts, protocol) {
     mini_popup_wrapper.append(element)
   }
   { // mission statement
-    const { name: petname } = mission_statement
+    const { name: petname } = manifesto
     const protocol = use_protocol(petname)({ state, on })
     const opts = { data }
-    const element = shadowfy()(mission_statement(opts, protocol))
+    const element = shadowfy()(manifesto(opts, protocol))
     status.windows[petname] = element
     popup_wrapper.append(element)
     // @TODO: why popup_wrapper vs. mini_popup_wrapper ?
@@ -7407,11 +7422,10 @@ function info_page (opts = default_opts, protocol) {
 
   return el
 
-  function watch_scrollbar () {
-    const channel = state.net[state.aka.scrollbar]
+  async function watch_scrollbar () {
     ro.observe(popup_wrapper)
   }
-  function on_scroll (message) {
+  async function on_scroll (message) {
     const channel = state.net[state.aka.scrollbar]
     channel.send({
       head: [id, channel.send.id, channel.mid++],
@@ -7419,11 +7433,11 @@ function info_page (opts = default_opts, protocol) {
       type: 'handle_scroll',
     })
   }
-  function on_set_scroll (message) {
+  async function on_set_scroll (message) {
     console.log('set_scroll', message) 
     setScrollTop(message.data)
   }
-  function onstatus (message) {
+  async function onstatus (message) {
     const channel = state.net[state.aka.scrollbar]
     channel.send({
       head: [id, channel.send.id, channel.mid++],
@@ -7462,8 +7476,10 @@ function get_theme () {
     .main_wrapper{
       display: flex;
       height: calc(100vh - 42px);
+      container-type: inline-size;
     }
     .main_wrapper > div:last-child{
+      display: none;
       border: 1px solid var(--primary_color);
       --s: 15px; /* control the size */
       --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
@@ -7475,7 +7491,6 @@ function get_theme () {
     }
     .scrollbar_wrapper {
       box-sizing: border-box;
-      container-type: inline-size;
       display: flex;
       width: 100%;
       gap: 20px;
@@ -7488,6 +7503,7 @@ function get_theme () {
       height: 94vh;
       max-height: 94vh;
       padding: 0 0 30px 20px;
+      scrollbar-width: none; /* For Firefox */
     }
     .scrollbar_wrapper::-webkit-scrollbar {
       display: none;
@@ -7503,6 +7519,7 @@ function get_theme () {
       user-select: none;
       position:sticky;
       top: 10px;
+      z-index: 1;
     }
     .main_wrapper .icon_wrapper:hover {
       cursor: pointer;
@@ -7535,6 +7552,9 @@ function get_theme () {
         flex-direction: column;
         position: relative;
         top: 0;
+      }
+      .main_wrapper > div:last-child{
+        display: block;
       }
     }
     @container (min-width: 768px) {
@@ -7734,6 +7754,7 @@ function manifesto (opts = default_opts, protocol) {
     const opts = {
       name: 'manifesto.md', 
       src: icon_pdf_reader,
+      close_button: true,
       data
     }
     const element = window_bar(opts, protocol)
@@ -7804,7 +7825,7 @@ function get_theme () {
       color: var(--primary_color);
     }
     .mission_statement {
-      display: inline;
+      display: none;
     } 
     .main_wrapper{
       display: flex;
@@ -7816,7 +7837,6 @@ function get_theme () {
         var(--bg_color_3);  /* second color */  
       background-size: var(--s) var(--s);  
       border: 1px solid var(--primary_color);
-      margin-bottom: 30px;
     }
     .mission_statement .mission_content {
       position: relative;
@@ -7826,7 +7846,7 @@ function get_theme () {
       letter-spacing: -1px;
       line-height: 18px;
       width: 100%;
-      height: 100vh;
+      height: calc(100vh - 72px);
       padding: 10px;
       overflow:scroll;
       scrollbar-width: none; /* For Firefox */
@@ -7849,6 +7869,10 @@ function get_theme () {
         height: 100%;
         max-width:1200px;
         max-height:600px;
+      }
+      .mission_statement {
+        display: block;
+        margin-bottom: 30px;
       }
     }
   `
@@ -8191,12 +8215,12 @@ function month_filter (opts = default_opts, protocol) {
   const el = document.createElement('div')
   const shadow = el.attachShadow(shopts)
   shadow.adoptedStyleSheets = [sheet]
-  shadow.innerHTML = `<div class="scrollbar_wrapper">
+  shadow.innerHTML = `<div class="main_wrapper">
     <div class="month_filter_wrapper"></div>
-    <div class="scrollbar-wrapper"></div>
+    <div class="scrollbar_wrapper"></div>
   </div>`
   const month_filter_wrapper = shadow.querySelector('.month_filter_wrapper')
-  const scrollbar_wrapper = shadow.querySelector('.scrollbar-wrapper')
+  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
   // ----------------------------------------
   const scrollbar_wrapper_shadow = scrollbar_wrapper.attachShadow(shopts)
   // ----------------------------------------
@@ -8389,6 +8413,12 @@ function month_filter (opts = default_opts, protocol) {
 }
 function get_theme () {
   return `
+    .main_wrapper{
+      display: flex;
+      flex-direction: column;
+      justify-content: end;
+      min-height: 165px;
+    }
     .month_filter_wrapper {
       display: flex;
       height: 131px;
@@ -8398,6 +8428,17 @@ function get_theme () {
       overflow-x: scroll;
       overflow-y: hidden;
       scrollbar-width:none;
+      background-image: radial-gradient(var(--bg_color_3) 1px, var(--bg_color_2) 2px);
+      background-size: 8px 8px;
+    }
+    .scrollbar_wrapper{
+      --s: 15px; /* control the size */
+      --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
+      background:
+        repeating-conic-gradient(at 33% 33%,var(--_g)),
+        repeating-conic-gradient(at 66% 66%,var(--_g)),
+        var(--bg_color_3);  /* second color */  
+      background-size: var(--s) var(--s);
     }
     ::-webkit-scrollbar {
       display: none;
@@ -8501,6 +8542,7 @@ function navbar (opts = default_opts, protocol) {
     icon_twitter,
     icon_github,
     icon_mastodon,
+    icon_opencollective,
     icon_terminal,
     icon_theme,
     icon_arrow_down,
@@ -8513,7 +8555,8 @@ function navbar (opts = default_opts, protocol) {
     'theme': handle_active_change,
     'do_page_change': do_page_change,
     'change_highlight': change_highlight,
-    'toggle_terminal': on_toggle_terminal
+    'toggle_terminal': on_toggle_terminal,
+    'close_navmenu': close_navmenu
   }
   const channel = use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
@@ -8641,7 +8684,13 @@ function navbar (opts = default_opts, protocol) {
       src: icon_mastodon,
       activate: false,
       link: 'https://fosstodon.org/@dat_ecosystem'
-    }]
+    }, {
+      name: 'opencollective_button',
+      src: icon_opencollective,
+      activate: false,
+      link: 'https://opencollective.com/dat'
+    }
+  ]
     function make_button ({ name: petname, src, activate, link }) {
       const on = { 'click': onclick }
       const protocol = use_protocol(petname)({ state, on })
@@ -8665,7 +8714,7 @@ function navbar (opts = default_opts, protocol) {
     const petname = 'terminal_button'
     const on = { 'click': onclick }
     const protocol = use_protocol(petname)({ state, on })
-    const opts = { src: icon_terminal }
+    const opts = { src: icon_terminal, inverse: true }
     const element = icon_button(opts, protocol)
     icon_wrapper.append(element)
     function onclick (message) {
@@ -8682,7 +8731,7 @@ function navbar (opts = default_opts, protocol) {
     const petname = 'theme_button'
     const on = { 'click': onclick }
     const protocol = use_protocol(petname)({ state, on })
-    const opts = { src: icon_theme, activate: true }
+    const opts = { src: icon_theme, activate: true, inverse: true }
     const element = icon_button(opts, protocol)
     const channel = state.net[state.aka.theme_button]
     icon_wrapper.append(element)
@@ -8790,6 +8839,17 @@ function navbar (opts = default_opts, protocol) {
       head: [id, channel.send.id, channel.mid++],
       type: state.status.terminal_collapsed ? 'activate' : 'deactivate',
     })
+  }
+  function close_navmenu () {
+    if (state.status.dropdown_collapsed) {
+      state.status.dropdown_collapsed = false
+      navbar.classList.remove('active')
+      const channel = state.net[state.aka.navtoggle]
+      channel.send({
+        head: [id, channel.send.id, channel.mid++],
+        type: 'deactivate',
+      })
+    }
   }
 }
 function get_theme () {
@@ -9054,6 +9114,7 @@ function our_alumni (opts = default_opts, protocol) {
     const opts = {
       name:'our_alumni.md', 
       src: icon_pdf_reader,
+      close_button: true,
       data
     }
     const element = window_bar(opts, protocol)
@@ -9081,7 +9142,6 @@ function our_alumni (opts = default_opts, protocol) {
   return el
 
   function watch_scrollbar () {
-    const channel = state.net[state.aka.scrollbar]
     ro.observe(alumni_content)
   }
   function on_scroll (message) {
@@ -9120,9 +9180,9 @@ function get_theme () {
     }
     .our_alumni {
       display: none;
-      margin-bottom: 30px;
     }
     .our_alumni .scrollbar_wrapper{
+      display: flex;
       border: 1px solid var(--primary_color);
       --s: 15px; /* control the size */
       --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
@@ -9136,8 +9196,8 @@ function get_theme () {
       position: relative;
       display: flex;
       flex-direction: column;
-      width: 100%;
-      height: 100%;
+      width: calc(100vw - 32px);
+      height: calc(100vh - 72px);
       padding: 10px;
       background-size: 10px 10px;
       background-color: var(--bg_color);
@@ -9162,8 +9222,15 @@ function get_theme () {
       border: 1px solid var(--primary_color);
       padding: 8px;
     }
-    .our_alumni .scrollbar_wrapper{
-      display: flex;
+    @container (min-width: 510px) {
+      .our_alumni .alumni_content {
+        width: 100%;
+        height: 100%;
+        max-height:600px;
+      }
+      .our_alumni {
+        margin-bottom: 30px;
+      }
     }
   `
 }
@@ -9324,6 +9391,7 @@ function our_members (opts = default_opts, protocol) {
     const opts = {
       name:'our_members.md', 
       src: icon_pdf_reader,
+      close_button: true,
       data
     }
     const element = window_bar(opts, protocol)
@@ -9351,13 +9419,12 @@ function get_theme () {
       position: relative;
       display: flex;
       flex-direction: column;
-      width: 100%;
-      height: 100vh;
+      width: 100vw;
+      height: calc(100vh - 72px);
       padding: 10px;
       background-size: 10px 10px;
       background-color: var(--bg_color);
       border: 1px solid var(--primary_color);
-      margin-bottom: 30px;
     }
     .member_content h2 {
       margin: 0;
@@ -9376,6 +9443,7 @@ function get_theme () {
       .our_member .member_content {
         width: auto;
         height: auto;
+        margin-bottom: 30px;
       }
     }
   `
@@ -9853,7 +9921,7 @@ function projects_page (opts = default_opts, protocol) {
     const protocol = use_protocol('the_dat')({ state, on })
     const opts = { data }
     const element = shadowfy()(the_dat(opts, protocol))
-    main.append(element)
+    // main.append(element)
   }
   { // projects
     const on = {}
@@ -10256,9 +10324,9 @@ sheet.replaceSync(get_theme())
 const default_opts = { }
 const shopts = { mode: 'closed' }
 // ----------------------------------------
-module.exports = input_search
+module.exports = search_input
 // ----------------------------------------
-function input_search (opts = default_opts, protocol) {
+function search_input (opts = default_opts, protocol) {
   // ----------------------------------------
   // ID + JSON STATE
   // ----------------------------------------
@@ -10573,7 +10641,9 @@ function tab_window (opts = default_opts, protocol) {
   // PROTOCOL
   // ----------------------------------------
   const on = { 
-    'toggle_fullscreen': toggle_fullscreen
+    'toggle_fullscreen': toggle_fullscreen,
+    'shrink': on_shrink,
+    'stretch': on_stretch
   }
   const channel = use_protocol('up')({ protocol, state, on })
   // ----------------------------------------
@@ -10807,7 +10877,12 @@ function tab_window (opts = default_opts, protocol) {
   function toggle_fullscreen (msg){
     scrollbar_wrapper.classList.toggle('fullscreen')
   }
-
+  async function on_shrink (){
+    scrollbar_wrapper.classList.add('shrink')
+  }
+  async function on_stretch (){
+    scrollbar_wrapper.classList.remove('shrink')
+  }
 }
 
 function get_theme() {
@@ -10823,9 +10898,16 @@ function get_theme() {
       overflow-y: scroll;
       overflow-x: clip;
       width: 100%;
+      scrollbar-width: none; /* For Firefox */
+    }
+    .scrollbar_wrapper.shrink{
+      max-height: 190px;
     }
     .scrollbar_wrapper.fullscreen{
       max-height: calc(100vh - 80px);
+    }
+    .scrollbar_wrapper.fullscreen.shrink{
+      max-height: calc(100vh - 110px);
     }
     .scrollbar_wrapper::-webkit-scrollbar {
       display: none;
@@ -10960,12 +11042,32 @@ function terminal (opts = default_opts, protocol) {
       refs: { },
       type: 'handle_scroll',
     })
+    //Added this to avoid a very sticky situation where the height of tabs_window needs to be changed when scrollbar appear
+    if(scrollbar_wrapper.clientHeight !== status.scrollbar_height){
+      status.scrollbar_height = scrollbar_wrapper.clientHeight
+      if(scrollbar_wrapper.clientHeight > 0)
+        for(let i = 0; i < status.tab_id; i++){
+          const channel = state.net[state.aka[`win-tab-${i}`]]
+          channel.send({
+            head: [id, scroll_channel.send.id, scroll_channel.mid++],
+            type: 'shrink'
+          })
+        }
+      else
+        for(let i = 0; i < status.tab_id; i++){
+          const channel = state.net[state.aka[`win-tab-${i}`]]
+          channel.send({
+            head: [id, scroll_channel.send.id, scroll_channel.mid++],
+            type: 'stretch'
+          })
+        }
+    }
   })
   // ----------------------------------------
   // ID + JSON STATE
   // ----------------------------------------
   const id = `${ID}:${count++}` // assigns their own name
-  const status = { active_tab: null, tab_id: 0, tab: {} }
+  const status = { active_tab: null, tab_id: 1, tab: {}, scrollbar_height: 0 }
   const state = STATE.ids[id] = { id, status, wait: {}, net: {}, aka: {} } // all state of component instance
   const cache = resources({})
   // ----------------------------------------
@@ -10995,18 +11097,19 @@ function terminal (opts = default_opts, protocol) {
       <div class="footer">
         <div class="tabs_bar">
           <div class="tab_buttons"></div>
-          <div class="scrollbar-wrapper"></div>
         </div>
         <div class="buttons"></div>
       </div>
+      <div class="scrollbar_wrapper"></div>
     </div>
   </div>`
   const terminal_wrapper = shadow.querySelector('.terminal')
   const tab_buttons = shadow.querySelector('.tab_buttons')
+  const tabs_bar = shadow.querySelector('.tabs_bar')
   // ----------------------------------------
   const tab_buttons_shadow = tab_buttons.attachShadow(shopts)
   const tab_display = shadow.querySelector('.tab_display').attachShadow(shopts)
-  const scrollbar_wrapper = shadow.querySelector('.scrollbar-wrapper').attachShadow(shopts)
+  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
   const buttons = shadow.querySelector('.buttons').attachShadow(shopts)
   // ----------------------------------------
   // ELEMENTS
@@ -11108,7 +11211,7 @@ function terminal (opts = default_opts, protocol) {
   // ----------------------------------------
   // INIT
   // ----------------------------------------
-  add_tab('Home')
+  add_tab('tab-0')
 
   return el
 
@@ -11269,8 +11372,8 @@ function get_theme () {
     }
     .tabs_bar .tab_buttons {
       display: flex;
-      overflow-x: hidden;
-      overflow-y: scroll;
+      overflow-x: scroll;
+      scrollbar-width: none; /* For Firefox */
     }
     .tabs_bar .tab_buttons::-webkit-scrollbar {
       display: none;
@@ -12152,13 +12255,11 @@ function get_theme () {
     }
     .date_wrapper {
       display: grid;
-      grid-template-columns: 1fr 12fr;
+      grid-template-columns: .5fr 12fr;
     }
-    @container (min-width: 450px) {
-      .filter_wrapper {
-      }
+    @container (min-width: 510px) {
       .timeline_filter {
-        grid-template-columns: 1fr 1fr 9fr 1fr;
+        grid-template-columns: 1fr 1fr 9fr .5fr;
       }
     }
   `
@@ -12360,6 +12461,8 @@ function resources (pool) {
 },{"_process":2,"app-footer":9,"app-timeline":14}],54:[function(require,module,exports){
 (function (process,__filename){(function (){
 const window_bar = require('window-bar')
+const scrollbar = require('scrollbar')
+
 /******************************************************************************
   TOOLS COMPONENT
 ******************************************************************************/
@@ -12378,6 +12481,18 @@ const shopts = { mode: 'closed' }
 module.exports = tools
 // ----------------------------------------
 function tools (opts = default_opts, protocol) {
+  // ----------------------------------------
+  // RESOURCE POOL (can't be serialized)
+  // ----------------------------------------
+  const ro = new ResizeObserver(entries => {
+    console.log('ResizeObserver:terminal:resize')
+    const scroll_channel = state.net[state.aka.scrollbar]
+    scroll_channel.send({
+      head: [id, scroll_channel.send.id, scroll_channel.mid++],
+      refs: { },
+      type: 'handle_scroll',
+    })
+  })
   // ----------------------------------------
   // ID + JSON STATE
   // ----------------------------------------
@@ -12423,52 +12538,56 @@ function tools (opts = default_opts, protocol) {
   shadow.adoptedStyleSheets = [sheet]
   shadow.innerHTML = `<div class="tools">
     <div class="windowbar"></div>
-    <div class="tools_content">
-      <a href="https://fosstodon.org/@dat_ecosystem" target="_blank"> 
-        <div class="icon"> ${icon_mastodon} Mastodon </div> 
-      </a>
-      <a href="https://opencollective.com/dat" target="_blank"> 
-        <div class="icon"> ${icon_opencollective} OpenCollective </div> 
-      </a>
-      <a href="https://matrix.to/#/%23datproject_discussions:gitter.im" target="_blank"> 
-        <div class="icon"> ${icon_matrix} Matrix </div> 
-      </a>
-      <a href="https://twitter.com/dat_ecosystem" target="_blank"> 
-        <div class="icon"> ${icon_twitter_smooth} Twitter </div> 
-      </a>
-      <a href="https://github.com/dat-ecosystem" target="_blank"> 
-        <div class="icon"> ${icon_github_smooth} github </div> 
-      </a>
-      <a href="https://github.com/dat-ecosystem/dat-ecosystem.github.io/blob/main/README.md#connect-to-cabal-with-cli-or-download-cabal-desktop" target="_blank"> 
-        <div class="icon"> ${icon_cabal} Cabal </div> 
-      </a>
-      <a href="https://meet.jit.si/dat-ecosystem" target="_blank"> 
-        <div class="icon"> ${icon_jitsi} Jitsi </div> 
-      </a>
-      <a href="https://discord.gg/egsvGc9TkQ" target="_blank"> 
-        <div class="icon"> ${icon_discord_smooth} discord </div> 
-      </a>
-      <a href="https://bigbluebutton.org/" target="_blank"> 
-        <div class="icon"> ${icon_bigbluebutton} BigBlueButton </div> 
-      </a>
-      <a href="https://www.youtube.com/@DatEcosystem-" target="_blank"> 
-        <div class="icon"> ${icon_youtube} Youtube </div> 
-      </a>
-      <a href="https://hackmd.io/@T6Wf5EsOQKe-6wyPjJPtuw/Hycn0F63r/%2Fx_4tQHwtT3u7vrksrposHw" target="_blank"> 
-        <div class="icon"> ${icon_hackmd} HackMD </div> 
-      </a>
-      <a href="dat-ecosystem@protonmail.com" target="_blank"> 
-        <div class="icon"> ${icon_protonmail} Protonmail </div> 
-      </a>
-      <a href="https://www.reddit.com/r/dat_ecosystem/" target="_blank"> 
-        <div class="icon"> ${icon_reddit} Reddit </div> 
-      </a>
-      <a href="https://keet.io/" target="_blank"> 
-        <div class="icon"> ${icon_keet} Keet </div> 
-      </a>
+    <div class="scrollbar_wrapper">
+      <div class="tools_content">
+        <a href="https://fosstodon.org/@dat_ecosystem" target="_blank"> 
+          <div class="icon"> ${icon_mastodon} Mastodon </div> 
+        </a>
+        <a href="https://opencollective.com/dat" target="_blank"> 
+          <div class="icon"> ${icon_opencollective} OpenCollective </div> 
+        </a>
+        <a href="https://matrix.to/#/%23datproject_discussions:gitter.im" target="_blank"> 
+          <div class="icon"> ${icon_matrix} Matrix </div> 
+        </a>
+        <a href="https://twitter.com/dat_ecosystem" target="_blank"> 
+          <div class="icon"> ${icon_twitter_smooth} Twitter </div> 
+        </a>
+        <a href="https://github.com/dat-ecosystem" target="_blank"> 
+          <div class="icon"> ${icon_github_smooth} github </div> 
+        </a>
+        <a href="https://github.com/dat-ecosystem/dat-ecosystem.github.io/blob/main/README.md#connect-to-cabal-with-cli-or-download-cabal-desktop" target="_blank"> 
+          <div class="icon"> ${icon_cabal} Cabal </div> 
+        </a>
+        <a href="https://meet.jit.si/dat-ecosystem" target="_blank"> 
+          <div class="icon"> ${icon_jitsi} Jitsi </div> 
+        </a>
+        <a href="https://discord.gg/egsvGc9TkQ" target="_blank"> 
+          <div class="icon"> ${icon_discord_smooth} discord </div> 
+        </a>
+        <a href="https://bigbluebutton.org/" target="_blank"> 
+          <div class="icon"> ${icon_bigbluebutton} BigBlueButton </div> 
+        </a>
+        <a href="https://www.youtube.com/@DatEcosystem-" target="_blank"> 
+          <div class="icon"> ${icon_youtube} Youtube </div> 
+        </a>
+        <a href="https://hackmd.io/@T6Wf5EsOQKe-6wyPjJPtuw/Hycn0F63r/%2Fx_4tQHwtT3u7vrksrposHw" target="_blank"> 
+          <div class="icon"> ${icon_hackmd} HackMD </div> 
+        </a>
+        <a href="dat-ecosystem@protonmail.com" target="_blank"> 
+          <div class="icon"> ${icon_protonmail} Protonmail </div> 
+        </a>
+        <a href="https://www.reddit.com/r/dat_ecosystem/" target="_blank"> 
+          <div class="icon"> ${icon_reddit} Reddit </div> 
+        </a>
+        <a href="https://keet.io/" target="_blank"> 
+          <div class="icon"> ${icon_keet} Keet </div> 
+        </a>
+      </div>
     </div>
   </div>`
   const tools_wrapper = shadow.querySelector('.tools')
+  const tools_content = shadow.querySelector('.tools_content')
+  const scrollbar_wrapper = shadow.querySelector('.scrollbar_wrapper')
   // ----------------------------------------
   const windowbar_shadow = shadow.querySelector('.windowbar').attachShadow(shopts)
   // ----------------------------------------
@@ -12482,6 +12601,7 @@ function tools (opts = default_opts, protocol) {
     const opts = {
       name: 'tools/', 
       src: icon_folder,
+      close_button: true,
       data: data
     }
     const element = window_bar(opts, protocol)
@@ -12491,9 +12611,20 @@ function tools (opts = default_opts, protocol) {
       if (active_state === 'active') tools_wrapper.style.display = 'none'
     }
   }
+  { // scrollbar
+    const on = { 'set_scroll': on_set_scroll, status: onstatus }
+    const protocol = use_protocol('scrollbar')({ state, on })
+    opts.data.img_src.icon_arrow_start = opts.data.img_src.icon_arrow_up
+    opts.data.img_src.icon_arrow_end = opts.data.img_src.icon_arrow_down
+    const opts1 = { data }
+    const element = shadowfy()(scrollbar(opts1, protocol))
+    scrollbar_wrapper.append(element)
+    tools_content.onscroll = on_scroll
+  }
   // ----------------------------------------
   // INIT
   // ----------------------------------------
+  watch_scrollbar()
 
   return el
 
@@ -12502,6 +12633,37 @@ function tools (opts = default_opts, protocol) {
   }
   function on_hide (event) {
     tools_wrapper.style.display = 'none'
+  }
+  function watch_scrollbar () {
+    ro.observe(tools_content)
+  }
+  function on_scroll (message) {
+    const channel = state.net[state.aka.scrollbar]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      refs: { },
+      type: 'handle_scroll',
+    })
+  }
+  function on_set_scroll (message) {
+    console.log('set_scroll', message) 
+    setScrollTop(message.data)
+  }
+  function onstatus (message) {
+    const channel = state.net[state.aka.scrollbar]
+    channel.send({
+      head: [id, channel.send.id, channel.mid++],
+      refs: { cause: message.head },
+      type: 'update_size',
+      data: {
+        sh: tools_content.scrollHeight,
+        ch: tools_content.clientHeight,
+        st: tools_content.scrollTop
+      }
+    })
+  }
+  async function setScrollTop (value) {
+    tools_content.scrollTop = value
   }
 }
 
@@ -12513,18 +12675,33 @@ function get_theme () {
     .tools {
       display: none;
     }
+    .tools .scrollbar_wrapper{
+      display: flex;
+      border: 1px solid var(--primary_color);
+      --s: 15px; /* control the size */
+      --_g: var(--bg_color_2) /* first color */ 0 25%, #0000 0 50%;
+      background:
+        repeating-conic-gradient(at 33% 33%,var(--_g)),
+        repeating-conic-gradient(at 66% 66%,var(--_g)),
+        var(--bg_color_3);  /* second color */  
+        background-size: var(--s) var(--s);  
+    }
     .tools_content {
       position: relative;
       display: grid;
-      grid-template-columns: 4fr 4fr 4fr;
+      grid-template-columns: 4fr 4fr;
       padding: 10px;
-      width: 100%;
-      height: 100vh;
+      width: calc(100vw - 32px);
+      height: calc(100vh - 72px);
       background-size: 10px 10px;
       background-color: var(--bg_color);
       border: 1px solid var(--primary_color);
       gap: 25px;
-      margin-bottom: 30px;
+      overflow-y: scroll;
+      scrollbar-width: none; /* For Firefox */
+    }
+    .tools_content::-webkit-scrollbar{
+      display: none;
     }
     .tools_content a{
       text-decoration:none;
@@ -12546,8 +12723,12 @@ function get_theme () {
     }
     @container (min-width: 510px) {
       .tools_content {
+        grid-template-columns: 4fr 4fr 4fr;
         width: auto;
         height: auto;
+      }
+      .tools{
+        margin-bottom: 30px;
       }
     }
   `
@@ -12603,7 +12784,7 @@ function resources (pool) {
   }
 }
 }).call(this)}).call(this,require('_process'),"/src/node_modules/tools/tools.js")
-},{"_process":2,"window-bar":55}],55:[function(require,module,exports){
+},{"_process":2,"scrollbar":42,"window-bar":55}],55:[function(require,module,exports){
 (function (process,__filename){(function (){
 const sm_icon_button_alt = require('buttons/sm-icon-button-alt')
 const sm_text_button = require('buttons/sm-text-button')
@@ -12731,17 +12912,19 @@ function window_bar (opts = default_opts, protocol) {
     }
   }
   { // close button
-    const on = { 'click': onclose }
-    const protocol = use_protocol('close_window')({ state, on })
-    const opts = { src: icon_close_light }
-    const element = shadowfy()(sm_icon_button_alt(opts, protocol))
-    window_bar_actions.append(element)
-    function onclose (event) {
-      up_channel.send({
-        head: [id, up_channel.send.id, up_channel.mid++],
-        type: 'toggle_active_state',
-        data: { active_state : 'active' }
-      })
+    if (opts.close_button){
+      const on = { 'click': onclose }
+      const protocol = use_protocol('close_window')({ state, on })
+      const opts = { src: icon_close_light }
+      const element = shadowfy()(sm_icon_button_alt(opts, protocol))
+      window_bar_actions.append(element)
+      function onclose (event) {
+        up_channel.send({
+          head: [id, up_channel.send.id, up_channel.mid++],
+          type: 'toggle_active_state',
+          data: { active_state : 'active' }
+        })
+      }
     }
   }
   // ----------------------------------------
@@ -12975,7 +13158,7 @@ function get_theme () {
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      width: 94px;
+      width: 91px;
       height: 100%;
       border: 1px solid var(--primary_color);
       box-sizing: border-box;

@@ -57,6 +57,7 @@ async function desktop (opts = default_opts, protocol) {
   const navbar_sh = shadow.querySelector('.navbar').attachShadow(shopts)
   const content_sh = shadow.querySelector('.content').attachShadow(shopts)
   const terminal_sh = shadow.querySelector('.shell').attachShadow(shopts)
+  const content = shadow.querySelector('.content')
   // ----------------------------------------
   // RESOURCE POOL (can't be serialized)
   // ----------------------------------------
@@ -79,12 +80,21 @@ async function desktop (opts = default_opts, protocol) {
     const element = navbar(opts, protocol)
     navbar_sh.append(element)
   }
+  if(screen.width < 900)
+    content.onscroll = on_scroll
   // ----------------------------------------
   // INIT
   // ----------------------------------------
 
   return el
 
+  function on_scroll () {
+    const nav_channel = state.net[state.aka.navbar]
+    nav_channel.send({
+      head: [id, nav_channel.send.id, nav_channel.mid++],
+      type: 'close_navmenu',
+    })
+  }
   function on_social (message) {
     console.log('@TODO: open ', message.data)
   }
@@ -92,13 +102,14 @@ async function desktop (opts = default_opts, protocol) {
     const { data: active_page } = msg
     const page = navigate(active_page)
     content_sh.replaceChildren(page)
+    content.scrollTop = 0
   }
   function on_navigate (msg) {
     on_navigate_page(msg)
     const { data: active_page } = msg
     const nav_channel = state.net[state.aka.navbar]
     nav_channel.send({
-      head: [id, channel.send.id, channel.mid++],
+      head: [id, nav_channel.send.id, nav_channel.mid++],
       type: 'change_highlight',
       data: active_page
     })
