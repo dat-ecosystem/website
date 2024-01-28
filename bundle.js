@@ -1357,7 +1357,7 @@ function get_theme () {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 20px;
+    gap: 0px;
     position: relative;
     z-index: 1;
     color: var(--primary_color);
@@ -1399,7 +1399,7 @@ function get_theme () {
   }
   @container (min-width: 510px) {
     .about_us_wrapper .content_wrapper {
-      gap: 0;
+      gap: 20px;
     }
   }
   `
