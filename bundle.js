@@ -3085,7 +3085,10 @@ function app_timeline (opts = default_opts, protocol) {
     }
     year_filter_wrapper = shadowfy()(year_filter(opts, protocol))
     filter_wrapper.append(year_filter_wrapper)
-    
+    if(screen.width < 510){
+      year_filter_wrapper.classList.add('hide')
+    }
+
     function on_set_scroll ({ data }) {
       set_scroll(data)
       updateCalendar()
@@ -5150,7 +5153,7 @@ function year_button (opts = default_opts, protocol) {
   const shadow = el.attachShadow(shopts)
   const date = new Date(latest_date)
   shadow.adoptedStyleSheets = [sheet]
-  shadow.innerHTML = `<div class="year_button active">
+  shadow.innerHTML = `<div class="year_button ${screen.width > 509 && 'active'}">
     <div class="text_wrapper">${date.getFullYear()}</div>
     ${icon_arrow_up}
   </div>`
@@ -5404,8 +5407,14 @@ function get_theme () {
       text-align: center;
     }
     .cover_content .content_wrapper img {
-      width: 400px;
+      width: 86vw;
       height: auto;
+    }
+
+    @container (min-width: 510px) {
+      .cover_content .content_wrapper img {
+        width: 400px;
+      }
     }
   `
 }
@@ -7344,12 +7353,14 @@ function info_page (opts = default_opts, protocol) {
       return element
       function show () {
         return event => {
-          const channel = state.net[state.aka[name]]
-          channel.send({
-            head: [id, channel.send.id, channel.mid++],
-            type: 'show'
-          })
-          setScrollTop(status.windows[name].getBoundingClientRect().top - popup_wrapper.getBoundingClientRect().top + popup_wrapper.scrollTop)
+          setTimeout(() => {
+            const channel = state.net[state.aka[name]]
+            channel.send({
+              head: [id, channel.send.id, channel.mid++],
+              type: 'show'
+            })
+            setScrollTop(status.windows[name].getBoundingClientRect().top - popup_wrapper.getBoundingClientRect().top + popup_wrapper.scrollTop)
+          }, 200)
         }
       }
     }
@@ -7500,8 +7511,8 @@ function get_theme () {
       background-size: 16px 16px;
       position: relative;
       overflow-y: scroll;
-      height: 94vh;
-      max-height: 94vh;
+      height: 95vh;
+      max-height: 95vh;
       padding: 0 0 30px 20px;
       scrollbar-width: none; /* For Firefox */
     }
@@ -8570,7 +8581,7 @@ function navbar (opts = default_opts, protocol) {
       <div class="nav_toggle_wrapper">
         <div class="info_wrapper"></div>
         <div class="logo_wrapper"></div>
-        <div class="nav_toggle"></div>
+        <div tabindex="0" class="nav_toggle"></div>
       </div>
       <div class="page_btns_wrapper"></div>
       <div class="icon_btn_wrapper"></div>
@@ -8583,6 +8594,7 @@ function navbar (opts = default_opts, protocol) {
   const info_sh = shadow.querySelector('.info_wrapper').attachShadow(shopts)
   const logo_sh = shadow.querySelector('.logo_wrapper').attachShadow(shopts)
   const nav_sh = shadow.querySelector('.nav_toggle').attachShadow(shopts)
+  const nav_toggle = shadow.querySelector('.nav_toggle')
   // ----------------------------------------
   // ELEMENTS
   // ----------------------------------------
@@ -8620,6 +8632,8 @@ function navbar (opts = default_opts, protocol) {
     const opts = { src: icon_arrow_down, src_active: icon_arrow_up, activate: true }
     const element = icon_button(opts, protocol)
     const channel = state.net[state.aka.navtoggle]
+
+    nav_toggle.onblur = () => setTimeout(close_navmenu, 100)
     nav_sh.append(element)
     function onclick (message) {
       state.status.dropdown_collapsed = !state.status.dropdown_collapsed
@@ -9202,7 +9216,6 @@ function get_theme () {
       background-size: 10px 10px;
       background-color: var(--bg_color);
       border: 1px solid var(--primary_color);
-      max-height: 600px;
       overflow-y: scroll;
       scrollbar-width: none; /* For Firefox */
     }
@@ -9437,13 +9450,16 @@ function get_theme () {
     }
     .member_content table td {
       border: 1px solid var(--primary_color);
-      padding: 8px;
+      padding: 8px 4px;
     }
     @container (min-width: 510px) {
       .our_member .member_content {
         width: auto;
         height: auto;
         margin-bottom: 30px;
+      }
+      .member_content table td {
+        padding: 8px;
       }
     }
   `
