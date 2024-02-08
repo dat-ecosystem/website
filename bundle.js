@@ -6126,11 +6126,11 @@ module.exports={
         "active_state": "ACTIVE"
       },
       {
-        "title": "digital democracy",
+        "title": "mapeo by digital democracy",
         "date": "December 01, 2019",
         "time": "",
-        "link": "https://www.digital-democracy.org/",
-        "desc": "Digital Democracy joins the ecosystem",
+        "link": "https://www.digital-democracy.org/mapeo",
+        "desc": "Mapeo by Digital Democracy joins the ecosystem",
         "tags": [
           "project"
         ],
@@ -6335,6 +6335,17 @@ module.exports={
         "active_state": "ACTIVE"
       },
       {
+        "title": "peershare",
+        "date": "june 16, 2022",
+        "time": "",
+        "link": "https://peershare.lone-wolf.software/",
+        "desc": "peershare joins the ecosystem",
+        "tags": [
+          "project"
+        ],
+        "active_state": "ACTIVE"
+      },
+      {
         "title": "keet",
         "date": "July 25, 2022",
         "time": "",
@@ -6416,6 +6427,14 @@ module.exports={
         "tags": ["presentation"],
         "active_state": "ACTIVE"
       },{
+        "title": "data shell",
+        "date": "May 21, 2023",
+        "time": "",
+        "link": "https://playproject.io/datashell/",
+        "desc": "datashell project joins the ecosystem",
+        "tags": ["project"],
+        "active_state": "ACTIVE"
+      },{
         "title": "dxos",
         "date": "May 15, 2023",
         "time": "",
@@ -6448,8 +6467,16 @@ module.exports={
         "tags": ["event"],
         "active_state": "ACTIVE"
       },{
+        "title": "peerviewer",
+        "date": "January 22, 2024",
+        "time": "",
+        "link": "https://peerviewer.org/",
+        "desc": "Peerviewer joins the ecosystem",
+        "tags": ["project"],
+        "active_state": "ACTIVE"
+      },{
         "title": "new dat ecosystem web page is released",
-        "date": "January 11, 2024",
+        "date": "February 8, 2024",
         "time": "",
         "link": "https://dat-ecosystem.org",
         "desc": "Dat ecosystem releases new web page",
@@ -6531,7 +6558,8 @@ module.exports={
           "p2p", 
           "chat", 
           "desktop", 
-          "terminal"
+          "terminal",
+          "communities"
         ],
         "project_active_state": "ACTIVE"
       },
@@ -6555,6 +6583,27 @@ module.exports={
           "p2p", 
           "hosting network", 
           "backup"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "data shell",
+        "project_desc": "DataShell - A Peer-to-Peer Prototyping Environment for Web Apps with User-Owned Data Vaults",
+        "project_website": "https://playproject.io/datashell/",
+        "project_socials": [
+          {
+            "github": "https://github.com/playproject-io/datashell"
+          },
+          {
+            "discord": "https://discord.gg/94stuq8Dnn"
+          }
+        ],
+        "project_tags": [
+          "hypercore", 
+          "p2p", 
+          "data vault", 
+          "prototyping",
+          "webapps"
         ],
         "project_active_state": "ACTIVE"
       },
@@ -6694,6 +6743,27 @@ module.exports={
         "project_active_state": "ACTIVE"
       },
       {
+        "project_name": "Mapeo",
+        "project_desc": "Mapeo is a free digital toolset for documenting, monitoring, and mapping many types of data.",
+        "project_website": "https://digital-democracy.org/mapeo",
+        "project_socials": [
+          {
+            "twitter": "https://twitter.com/digidem"
+          },
+          {
+            "discord": "https://discord.gg/KWRFDh3v73"
+          }
+        ],
+        "project_tags": [
+          "hypercore", 
+          "p2p", 
+          "map", 
+          "offline",
+          "communities"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
         "project_name": "peermaps",
         "project_desc": "Peermaps is a distributed, offline-friendly alternative to commercial map providers such as google maps. Instead of fetching data from a centralized tile service, your computer fetches map data from other peers across the network.",
         "project_website": "https://peermaps.org/",
@@ -6727,6 +6797,25 @@ module.exports={
         ],
         "project_tags": [
           "hypercore"
+        ],
+        "project_active_state": "INACTIVE"
+      },
+      {
+        "project_name": "peerviewer",
+        "project_desc": "PeerViewer is a remote desktop and support solution, completely free for unlimited personal and commercial use.",
+        "project_website": "https://peerviewer.org/",
+        "project_socials": [
+          {
+            "github": "https://github.com/PeerViewer/codebase"
+          },
+          {
+            "twitter": "https://twitter.com/ThomasFarstrike"
+          }
+        ],
+        "project_tags": [
+          "hypercore",
+          "remote-desktop",
+          "p2p"
         ],
         "project_active_state": "INACTIVE"
       },
