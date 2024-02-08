@@ -6118,7 +6118,7 @@ module.exports={
         "title": "geut",
         "date": "December 01, 2019",
         "time": "",
-        "link": "https://www.geutstudio.com/",
+        "link": "https://geutstudio.com/",
         "desc": "Geut joins the ecosystem",
         "tags": [
           "project"
