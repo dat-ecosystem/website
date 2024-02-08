@@ -6427,6 +6427,14 @@ module.exports={
         "tags": ["presentation"],
         "active_state": "ACTIVE"
       },{
+        "title": "data shell",
+        "date": "May 21, 2023",
+        "time": "",
+        "link": "https://playproject.io/datashell/",
+        "desc": "datashell project joins the ecosystem",
+        "tags": ["project"],
+        "active_state": "ACTIVE"
+      },{
         "title": "dxos",
         "date": "May 15, 2023",
         "time": "",
@@ -6575,6 +6583,27 @@ module.exports={
           "p2p", 
           "hosting network", 
           "backup"
+        ],
+        "project_active_state": "ACTIVE"
+      },
+      {
+        "project_name": "data shell",
+        "project_desc": "DataShell - A Peer-to-Peer Prototyping Environment for Web Apps with User-Owned Data Vaults",
+        "project_website": "https://playproject.io/datashell/",
+        "project_socials": [
+          {
+            "github": "https://github.com/playproject-io/datashell"
+          },
+          {
+            "discord": "https://discord.gg/94stuq8Dnn"
+          }
+        ],
+        "project_tags": [
+          "hypercore", 
+          "p2p", 
+          "data vault", 
+          "prototyping",
+          "webapps"
         ],
         "project_active_state": "ACTIVE"
       },
