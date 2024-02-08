@@ -10718,6 +10718,7 @@ function tab_window (opts = default_opts, protocol) {
   const ro = new ResizeObserver(entries => {
     console.log('ResizeObserver:terminal:resize')
     const scroll_channel = state.net[state.aka.scrollbar]
+    textAreaAdjust()
     scroll_channel.send({
       head: [id, scroll_channel.send.id, scroll_channel.mid++],
       refs: { },
@@ -10776,7 +10777,6 @@ function tab_window (opts = default_opts, protocol) {
   // ----------------------------------------
   // ELEMENTS
   // ----------------------------------------
-  input.onkeyup = textAreaAdjust
   input.onkeydown = handleKeyDown
   
   { // scrollbar
@@ -10829,9 +10829,13 @@ function tab_window (opts = default_opts, protocol) {
 
   return el
 
-  function textAreaAdjust (e) {
-    e.target.style.height = "1px";
-    e.target.style.height = (25+e.target.scrollHeight)+"px";
+  function textAreaAdjust () {
+    if(scrollbar_wrapper.classList.contains('fullscreen')){
+      input.style.minHeight = `${window.innerHeight - 110 - history.getBoundingClientRect().height}px`
+    }
+    else{
+      input.style.minHeight = `${194 - history.getBoundingClientRect().height}px`
+    }
   }
   function handleKeyDown (e) {
     if (e.which === 13){
@@ -10874,7 +10878,6 @@ function tab_window (opts = default_opts, protocol) {
       response = command_list
       const arguments = data.split('/') 
       arguments.forEach(argument => {
-          console.error(argument)
           if(argument){
             response = response[argument]
             check = false
@@ -10908,7 +10911,6 @@ function tab_window (opts = default_opts, protocol) {
       response = command_list
       const arguments = data.split('/') 
       arguments.forEach(argument => {
-          console.error(response)
           if(argument){
             response = response[argument]
             check = false
@@ -10981,6 +10983,7 @@ function tab_window (opts = default_opts, protocol) {
   }
   function toggle_fullscreen (msg){
     scrollbar_wrapper.classList.toggle('fullscreen')
+    textAreaAdjust()
   }
   async function on_shrink (){
     scrollbar_wrapper.classList.add('shrink')
@@ -11024,11 +11027,15 @@ function get_theme() {
       border: none;
       outline: none;
       width: 100%;
+      min-height: 194px;
       text-indent: 20px;
       font-family: Silkscreen;
       font-size: 16px;
       padding: 0;
       resize: none;
+    }
+    .tab_wrapper .scrollbar_wrapper.fullscreen #input{
+      min-height: calc(100vh - 110px);
     }
     .tab_wrapper .dollar{
       position: relative;
@@ -11147,7 +11154,7 @@ function terminal (opts = default_opts, protocol) {
       refs: { },
       type: 'handle_scroll',
     })
-    //Added this to avoid a very sticky situation where the height of tabs_window needs to be changed when scrollbar appear
+    //Added this to avoid a very sticky situation where the height of tabs_window needs to be changed when scrollbar appears
     if(scrollbar_wrapper.clientHeight !== status.scrollbar_height){
       status.scrollbar_height = scrollbar_wrapper.clientHeight
       if(scrollbar_wrapper.clientHeight > 0)
