@@ -6236,17 +6236,6 @@ module.exports={
         "active_state": "ACTIVE"
       },
       {
-        "title": "earthstar",
-        "date": "January 10, 2021",
-        "time": "",
-        "link": "https://github.com/earthstar-project/earthstar",
-        "desc": "Earthstar joins the ecosystem",
-        "tags": [
-          "project"
-        ],
-        "active_state": "ACTIVE"
-      },
-      {
         "title": "dat manifesto",
         "date": "March 09, 2021",
         "time": "",
@@ -6628,25 +6617,6 @@ module.exports={
         "project_active_state": "ACTIVE"
       },
       {
-        "project_name": "earthstar",
-        "project_desc": "Earthstar is a small and resilient distributed storage protocol designed with a strong focus on simplicity and versatility, with the social realities of peer-to-peer computing kept in mind.",
-        "project_website": "https://github.com/earthstar-project/earthstar",
-        "project_socials": [
-          {
-            "github": "https://github.com/earthstar-project/earthstar"
-          },
-          {
-            "discord": "https://discord.gg/5b8q7VtunU"
-          }
-        ],
-        "project_tags": [
-          "p2p", 
-          "key-value database", 
-          "offline"
-        ],
-        "project_active_state": "ACTIVE"
-      },
-      {
         "project_name": "gatewaybrowser",
         "project_desc": "An experimental mobile browser that aims to help build a sustainable community-owned P2P web.",
         "project_website": "https://twitter.com/GatewayBrowser",
@@ -6937,6 +6907,7 @@ module.exports={
     ]
 }
   
+
 },{}],28:[function(require,module,exports){
 (function (process,__filename){(function (){
 const cover_app = require('app-cover')
