@@ -10159,7 +10159,7 @@ function projects_page (opts = default_opts, protocol) {
     const protocol = use_protocol('the_dat')({ state, on })
     const opts = { data }
     const element = shadowfy()(the_dat(opts, protocol))
-    // main.append(element)
+    main.append(element)
   }
   { // projects
     const on = {}
@@ -11743,8 +11743,7 @@ function the_dat (opts = default_opts, protocol) {
     <div class="dat_content">
       <iframe class="visualization" src="https://micahscopes.github.io/webscape-wanderer/" title="the dat garden visualization"></iframe>
       <div class="dat_desc">
-        An interactive visualization of the Dat community open source project ecosystem.<br>
-        With data provided by <a target="_blank" href="https://github.com/dat-ecosystem/dat-garden-rake">dat-garden-rake</a>
+        An interactive visualization of the Dat community open source ecosystem of projects with data provided by <a target="_blank" href="https://github.com/dat-ecosystem/dat-garden-rake">dat-garden-rake</a> and visualization generated with <a target="_blank" href="https://github.com/micahscopes/webscape-wanderer">webscape wanderer</a>
       </div>
     </div>
   </div>`
